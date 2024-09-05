@@ -4,6 +4,7 @@
 #   - parallel: https://www.gnu.org/software/parallel/
 #   - rgfiles: included in the bash-fileops project
 #   - nproc: https://savannah.gnu.org/git/?group=coreutils
+#   - sed
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-fileops
@@ -54,21 +55,20 @@ display_quoted_args() {
   local first=1
   local arg
   for arg in "$@"; do
-    # Escape double quotes in the argument
-    escaped_arg=$(printf '%s' "$arg" | sed 's/"/\\"/g')
+    escaped_arg="${arg//\"/\\\"}"
 
     if [[ $first -ne 0 ]]; then
       first=0
     else
-      echo -n " "
+      printf " "
     fi
 
-    if [[ "$escaped_arg" =~ " " ]]; then
+    if [[ "$escaped_arg" =~ \  ]]; then
       # Quote and escape the argument if it contains spaces
-      echo -n "\"$escaped_arg\""
+      printf "\"%s\"" "$escaped_arg"
     else
       # Display the argument without quoting if it does not contain spaces
-      echo -n "$escaped_arg"
+      printf "%s" "$escaped_arg"
     fi
   done
 }
@@ -92,7 +92,8 @@ RGFILES_CMD=(rgfiles "$DIR")
 PARALLEL_CMD=(qparallel "$@")
 
 # display_quoted_args "[DEBUG]" "${RGFILES_CMD[@]}" "|" "${PARALLEL_CMD[@]}"
-display_quoted_args "[COMMAND]" "$@"
+echo -n "[COMMAND] "
+display_quoted_args "$@"
 echo
 
 echo
