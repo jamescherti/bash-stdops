@@ -35,20 +35,16 @@
 
 set -euf -o pipefail
 
-if [[ $# -gt 1 ]]; then
+if [[ $# -ne 1 ]]; then
   echo "Usage: $0 <dir>" >&2
   exit 1
 fi
 
-if [[ $# -eq 1 ]]; then
-  DIR="$1"
-else
-  DIR="."
-fi
-
+DIR="$1"
 if ! [[ -d "$DIR" ]]; then
   echo "Error: The directory does not exist: $DIR" >&2
   exit 1
 fi
 
-exec rg --hidden --no-messages --color=never --glob '!.git' --files "$DIR"
+exec rg --hidden --no-messages --color=never --glob '!.git' \
+  --files -- "$DIR"
