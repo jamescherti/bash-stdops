@@ -3,11 +3,40 @@
 
 The **bash-fileops** project is a collection of helpful Bash scripts that simplify various file operations such as searching for files, performing operations on them, and modifying their contents.
 
+## Installation
+
+### System-wide installation
+
+To install it system wide:
+
+```
+make install
+```
+
+### User installation
+
+```
+PREFIX=~/.local make install
+```
+
+## Requirements
+
+- rg
+- make
+- parallel
+
 ## Scripts
+
+### rgfind
+
+The `rgfind` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores:
+- `.git` directories,
+- files that match `.gitignore` rules,
+- and binary files.
 
 ## License
 
-Copyright (C) 2024 [James Cherti](https://www.jamescherti.com)
+Copyright (C) 2023-2024 [James Cherti](https://www.jamescherti.com)
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
