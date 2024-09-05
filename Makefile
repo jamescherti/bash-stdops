@@ -3,7 +3,8 @@ ifeq ($(PREFIX),)
 endif
 
 all:
-	@echo "Run the following to install the bash scripts: make install"
+	@echo "System-side installation: make install"
+	@echo "Local installation (home directory): PREFIX=~/.local make install"
 
 install:
 	install -d "$(PREFIX)/bin"
