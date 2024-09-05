@@ -84,6 +84,11 @@ Usage: /home/dev/.local/bin/sre [-h] [-i] <string-before> <string-after>
   -h    Show this help message and exit
 ```
 
+Here is an interesting example where you can combine `rgfiles-run` and `sre` to modify replace Text1 with Text2 in a Git repository:
+```
+rgfiles-run /path/to/git-repository/ sre Text1 Text2 {}
+```
+
 ## License
 
 Copyright (C) 2023-2024 [James Cherti](https://www.jamescherti.com)
