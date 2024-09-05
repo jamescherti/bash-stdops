@@ -22,6 +22,11 @@ Use the following command to install the scripts into the `~/.local/bin` directo
 PREFIX=~/.local make install
 ```
 
+Ensure that `~/.local/bin` is included in your `$PATH` by adding the following line to your `~/.bashrc`:
+```
+export PATH=$PATH:~/.local/bin
+```
+
 ## Requirements
 
 - rg
@@ -41,7 +46,7 @@ sudo apt install coreutils parallel ripgrep sed
 
 ### Script: rgfiles
 
-The `rgfiles` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores: `.git` directories, files that match `.gitignore` rules, and binary files.
+The `rgfiles` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores: ".git" directories, files that match ".gitignore" rules, and binary files.
 
 ### Script: rgfiles-run
 
