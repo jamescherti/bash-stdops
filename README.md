@@ -5,7 +5,7 @@ The `bash-fileops` project is a collection of helpful Bash scripts that simplify
 
 ## Installation
 
-### System-wide Installation
+### System-wide installation
 
 To install the `bash-fileops` scripts system-wide, use the following command:
 ```bash
@@ -25,12 +25,11 @@ PREFIX=~/.local make install
 ## Requirements
 
 - rg
-- make
 - parallel
 
 ## Scripts
 
-### rgfiles
+### Script: rgfiles
 
 The `rgfiles` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores:
 - `.git` directories,
