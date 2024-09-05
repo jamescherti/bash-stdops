@@ -92,6 +92,14 @@ Here is an example of how you can combine `rgfiles-run` and `sre` to replace `Te
 rgfiles-run /path/to/git-repository/ sre Text1 Text2 {}
 ```
 
+### Scripts: file-tr, file-uppercase, file-lowercase
+
+- `file-tr`: This script processes a given file path, extracts the directory and filename, converts the filename using the specified `tr` options (e.g., to lowercase), and prints the modified full path. Example usage: `script.sh /Path/TO/FILE '[:upper:]' '[:lower:]'` This will convert the filename to lowercase, producing: `/Path/TO/file`.
+
+- `file-uppercase`: This script processes a given file path, extracts the directory and filename, converts the filename to uppercase. Example usage: `script.sh /Path/TO/FILE` This will convert the filename to uppercase, producing: `/Path/to/FILE`.
+
+- `file-lowercase`: This script processes a given file path, extracts the directory and filename, converts the filename to lowercase. Example usage: `script.sh /Path/TO/FILE`. This will convert the filename to lowercase, producing: `/Path/TO/file`.
+
 ## License
 
 Copyright (C) 2023-2024 [James Cherti](https://www.jamescherti.com)

@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-fileops
+#
+# Description:
+# ------------
+#
+# This script processes a given file path, extracts the directory and filename,
+# converts the filename using the specified `tr` options (e.g., to lowercase),
+# and prints the modified full path.
+#
+# Example usage:
+#   script.sh /Path/TO/FILE '[:upper:]' '[:lower:]'
+#   This will convert the filename to lowercase, producing: /Path/TO/file
+#
+# License:
+# --------
+#
+# Copyright (C) 2020-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+FILE_PATH=$(readlink -m "$1")
+shift
+
+DIR=$(dirname "$FILE_PATH")
+FILENAME=$(basename "$FILE_PATH")
+LC_FILENAME=$(printf "%s\n" "$FILENAME" | tr "$@")
+
+printf "%s/%s\n" "$DIR" "$LC_FILENAME"

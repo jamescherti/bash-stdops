@@ -16,9 +16,15 @@ install:
 	install -m 755 bin/rgfiles "$(PREFIX)/bin/"
 	install -m 755 bin/rgfiles-run "$(PREFIX)/bin/"
 	install -m 755 bin/sre "$(PREFIX)/bin/"
+	install -m 755 bin/file-uppercase "$(PREFIX)/bin/"
+	install -m 755 bin/file-tr "$(PREFIX)/bin/"
+	install -m 755 bin/file-lowercase "$(PREFIX)/bin/"
 
 uninstall:
 	rm "$(PREFIX)/bin/sre"
 	rm "$(PREFIX)/bin/qparallel"
 	rm "$(PREFIX)/bin/rgfiles"
 	rm "$(PREFIX)/bin/rgfiles-run"
+	rm "$(PREFIX)/bin/file-uppercase"
+	rm "$(PREFIX)/bin/file-lowercase"
+	rm "$(PREFIX)/bin/file-tr"
