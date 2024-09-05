@@ -100,6 +100,18 @@ rgfiles-run /path/to/git-repository/ sre Text1 Text2 {}
 
 - `path-lowercase`: This script processes a given file path, extracts the directory and filename, converts the filename to lowercase. Example usage: `path-lowercase /Path/TO/FILE`. This will convert the filename to lowercase, producing: `/Path/TO/file`.
 
+### Script: autoperm
+
+This script sets permissions for files or directories:
+- If it's a directory: 755
+- If it's a file with a shebang (e.g., "#!/bin/bash"): 755
+- If it's a file: 644
+
+Usage:
+```
+autoperm /path/to/file-or-directory
+```
+
 ## License
 
 Copyright (C) 2023-2024 [James Cherti](https://www.jamescherti.com)

@@ -19,6 +19,7 @@ install:
 	install -m 755 bin/path-uppercase "$(PREFIX)/bin/"
 	install -m 755 bin/path-tr "$(PREFIX)/bin/"
 	install -m 755 bin/path-lowercase "$(PREFIX)/bin/"
+	install -m 755 bin/autoperm "$(PREFIX)/bin/"
 
 uninstall:
 	rm "$(PREFIX)/bin/sre"
@@ -28,3 +29,4 @@ uninstall:
 	rm "$(PREFIX)/bin/path-uppercase"
 	rm "$(PREFIX)/bin/path-lowercase"
 	rm "$(PREFIX)/bin/path-tr"
+	rm "$(PREFIX)/bin/autoperm"

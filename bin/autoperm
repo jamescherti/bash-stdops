@@ -1,0 +1,62 @@
+#!/bin/bash
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-fileops
+#
+# Description:
+# ------------
+#
+# This script sets permissions for files or directories:
+# - If it's a directory: 755
+# - If it's a file with a shebang (e.g., "#!/bin/bash"): 755
+# - If it's a file: 644
+#
+# Usage:
+#   autoperm /path/to/file-or-directory
+#
+# License:
+# --------
+#
+# Copyright (C) 2020-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $0 </path/to/file-or-directory> <file2/dir2> <...>"
+  exit 1
+fi
+
+change_filemod() {
+  echo "[$1] $2"
+  chmod "$1" "$2"
+}
+
+for TARGET in "$@"; do
+  if [[ -d "$TARGET" ]]; then
+    change_filemod 755 "$TARGET"
+  elif [[ -f "$TARGET" ]]; then
+    if head -n 1 "$TARGET" | grep -q '^#!'; then
+      change_filemod 755 "$TARGET"
+    else
+      change_filemod 644 "$TARGET"
+    fi
+  else
+    echo "[SKIP] $TARGET"
+    exit 1
+  fi
+done
