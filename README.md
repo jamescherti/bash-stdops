@@ -73,7 +73,7 @@ sre "text-before" "text-after" file
 
 Here are the `sre` options:
 ```
-Usage: sre [-h] [-i] <string-before> <string-after>
+Usage: sre [-ierdh] <string-before> <string-after>
 
   -i    Ignore case when comparing files
   -e    Use regular expressions instead of exact strings.

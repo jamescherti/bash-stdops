@@ -50,7 +50,7 @@
 set -eu -o pipefail
 
 show_usage() {
-  echo "Usage: $0 [-h] [-i] <string-before> <string-after>" >&2
+  echo "Usage: $0 [-ierdh] <string-before> <string-after>" >&2
   echo
   echo "  -i    Ignore case when comparing files"
   echo "  -e    Use regular expressions instead of exact strings."
