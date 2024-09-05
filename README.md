@@ -57,6 +57,11 @@ rgfiles-run /etc cat {}
 
 (`{}` is replaced with the path to each file.)
 
+Here is an example of how you can combine `rgfiles-run` and `sed` to replace `Text1` with `Text2` in a Git repository:
+```
+rgfiles-run /path/to/git-repository/ sed -i -e "s/Text1/Text2/g" {}
+```
+
 ### Script: sre
 
 This script replaces occurrences of a specified string or regular expression pattern with support for exact string matching, regular expressions, and case-insensitive matching.
@@ -84,7 +89,7 @@ Usage: /home/dev/.local/bin/sre [-h] [-i] <string-before> <string-after>
   -h    Show this help message and exit
 ```
 
-Here is an interesting example where you can combine `rgfiles-run` and `sre` to modify replace Text1 with Text2 in a Git repository:
+Here is an example of how you can combine `rgfiles-run` and `sre` to replace `Text1` with `Text2` in a Git repository:
 ```
 rgfiles-run /path/to/git-repository/ sre Text1 Text2 {}
 ```
