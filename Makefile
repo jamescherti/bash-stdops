@@ -3,8 +3,12 @@ ifeq ($(PREFIX),)
 endif
 
 all:
-	@echo "System-side installation: make install"
-	@echo "Local installation (home directory): PREFIX=~/.local make install"
+	@echo "System-side installation:"
+	@echo "    sudo make install"
+	@echo ""
+	@echo "Alternative: Install in your home directory:"
+	@echo "    PREFIX=~/.local make install"
+	@echo ""
 
 install:
 	install -d "$(PREFIX)/bin"
