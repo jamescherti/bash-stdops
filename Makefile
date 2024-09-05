@@ -7,7 +7,7 @@ all:
 
 install:
 	install -d "$(PREFIX)/bin"
-	install -m 755 bin/rgfind "$(PREFIX)/bin/"
+	install -m 755 bin/rgfiles "$(PREFIX)/bin/"
 
 uninstall:
-	rm "$(PREFIX)/bin/rgfind"
+	rm "$(PREFIX)/bin/rgfiles"

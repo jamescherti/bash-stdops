@@ -27,9 +27,9 @@ PREFIX=~/.local make install
 
 ## Scripts
 
-### rgfind
+### rgfiles
 
-The `rgfind` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores:
+The `rgfiles` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores:
 - `.git` directories,
 - files that match `.gitignore` rules,
 - and binary files.
