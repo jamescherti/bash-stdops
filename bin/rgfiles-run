@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - parallel: https://www.gnu.org/software/parallel/
+#   - rgfiles: included in the bash-fileops project
+#   - nproc: https://savannah.gnu.org/git/?group=coreutils
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-fileops
+#
+# Description:
+# ------------
+# Recursively execute a command on all files listed by the `rg --files` command.
+#
+# License:
+# --------
+#
+# Copyright (C) 2020-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+if [[ $# -lt 2 ]]; then
+  echo "Usage: $0 <directory> <command> <arg1> [args...]" >&2
+  exit 1
+fi
+
+JOBS="$(nproc)"
+
+# Functions
+display_quoted_args() {
+  local first=1
+  local arg
+  for arg in "$@"; do
+    # Escape double quotes in the argument
+    escaped_arg=$(printf '%s' "$arg" | sed 's/"/\\"/g')
+
+    if [[ $first -ne 0 ]]; then
+      first=0
+    else
+      echo -n " "
+    fi
+
+    if [[ "$escaped_arg" =~ " " ]]; then
+      # Quote and escape the argument if it contains spaces
+      echo -n "\"$escaped_arg\""
+    else
+      # Display the argument without quoting if it does not contain spaces
+      echo -n "$escaped_arg"
+    fi
+  done
+}
+
+#
+# Directory
+#
+DIR="$1"
+shift
+
+if ! [[ -d "$DIR" ]]; then
+  echo "Error: The specified directory does not exist: $DIR" >&2
+  exit 1
+fi
+
+#
+# Executable
+#
+EXEC_FILE=""
+EXEC_FILE=$(type -P "$1") || true
+
+if ! [[ -f "$EXEC_FILE" ]]; then
+  echo "Error: The specified executable file does not exist: '$1'" >&2
+  exit 1
+fi
+
+if ! [[ -x "$EXEC_FILE" ]]; then
+  echo "Error: The specified executable file cannot be executed: '$1'" >&2
+  exit 1
+fi
+
+#
+# RUN
+#
+
+RGFILES_CMD=(rgfiles "$DIR")
+PARALLEL_CMD=(parallel -q -j "$JOBS" -- "$@")
+
+# display_quoted_args "[DEBUG]" "${RGFILES_CMD[@]}" "|" "${PARALLEL_CMD[@]}"
+display_quoted_args "[COMMAND]" "$@"
+echo
+
+echo
+read -r -p "Execute against all the files in '$DIR'? [y,n] " ANSWER
+if [[ "$ANSWER" != "y" ]]; then
+  echo "Interrupted." >&2
+  exit 1
+fi
+
+"${RGFILES_CMD[@]}" | "${PARALLEL_CMD[@]}"

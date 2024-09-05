@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 #
+# Requirements: rg (ripgrep)
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-fileops
-# Requirements:
-#   - rg (ripgrep)
 #
 # Description:
 # ------------
@@ -16,7 +15,7 @@
 # License:
 # --------
 #
-# Copyright (C) 2023-2024 James Cherti
+# Copyright (C) 2020-2024 James Cherti
 #
 # Distributed under terms of the GNU General Public License version 3.
 #
@@ -32,6 +31,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 set -euf -o pipefail
 

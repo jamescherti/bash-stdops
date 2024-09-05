@@ -27,6 +27,14 @@ PREFIX=~/.local make install
 - rg
 - parallel
 
+## Install requirements on Debian/Ubuntu based systems
+
+```
+sudo apt install coreutils parallel ripgrep
+```
+
+(coreutils installs nproc)
+
 ## Scripts
 
 ### Script: rgfiles
@@ -35,6 +43,10 @@ The `rgfiles` bash script recursively search the specified directory and print t
 - `.git` directories,
 - files that match `.gitignore` rules,
 - and binary files.
+
+### Script: rgfiles-run
+
+Recursively execute a command on all files listed by the `rg --files` command.
 
 ## License
 
