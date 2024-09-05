@@ -11,7 +11,7 @@
 # and prints the modified full path.
 #
 # Example usage:
-#   file-tr /Path/TO/FILE '[:upper:]' '[:lower:]'
+#   path-tr /Path/TO/FILE '[:upper:]' '[:lower:]'
 #   This will convert the filename to lowercase, producing: /Path/TO/file
 #
 # License:

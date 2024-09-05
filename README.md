@@ -92,13 +92,13 @@ Here is an example of how you can combine `rgfiles-run` and `sre` to replace `Te
 rgfiles-run /path/to/git-repository/ sre Text1 Text2 {}
 ```
 
-### Scripts: file-tr, file-uppercase, file-lowercase
+### Scripts: path-tr, path-uppercase, path-lowercase
 
-- `file-tr`: This script processes a given file path, extracts the directory and filename, converts the filename using the specified `tr` options (e.g., to lowercase), and prints the modified full path. Example usage: `file-tr /Path/TO/FILE '[:upper:]' '[:lower:]'` This will convert the filename to lowercase, producing: `/Path/TO/file`.
+- `path-tr`: This script processes a given file path, extracts the directory and filename, converts the filename using the specified `tr` options (e.g., to lowercase), and prints the modified full path. Example usage: `path-tr /Path/TO/FILE '[:upper:]' '[:lower:]'` This will convert the filename to lowercase, producing: `/Path/TO/file`.
 
-- `file-uppercase`: This script processes a given file path, extracts the directory and filename, converts the filename to uppercase. Example usage: `file-uppercase /Path/TO/FILE` This will convert the filename to uppercase, producing: `/Path/to/FILE`.
+- `path-uppercase`: This script processes a given file path, extracts the directory and filename, converts the filename to uppercase. Example usage: `path-uppercase /Path/TO/FILE` This will convert the filename to uppercase, producing: `/Path/to/FILE`.
 
-- `file-lowercase`: This script processes a given file path, extracts the directory and filename, converts the filename to lowercase. Example usage: `file-lowercase /Path/TO/FILE`. This will convert the filename to lowercase, producing: `/Path/TO/file`.
+- `path-lowercase`: This script processes a given file path, extracts the directory and filename, converts the filename to lowercase. Example usage: `path-lowercase /Path/TO/FILE`. This will convert the filename to lowercase, producing: `/Path/TO/file`.
 
 ## License
 

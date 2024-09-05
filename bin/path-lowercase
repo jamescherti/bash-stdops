@@ -7,11 +7,11 @@
 # ------------
 #
 # This script processes a given file path, extracts the directory and filename,
-# converts the filename to uppercase.
+# converts the filename to lowercase.
 #
 # Example usage:
-#   file-uppercase /Path/TO/FILE
-#   This will convert the filename to uppercase, producing: /Path/to/FILE
+#   path-lowercase /Path/TO/FILE
+#   This will convert the filename to lowercase, producing: /Path/TO/file
 #
 # License:
 # --------
@@ -41,4 +41,4 @@ if [[ $# -lt 1 ]]; then
   exit 1
 fi
 
-exec file-tr "$1" '[:lower:]' '[:upper:]'
+exec path-tr "$1" '[:upper:]' '[:lower:]'
