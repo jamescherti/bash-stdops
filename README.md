@@ -41,32 +41,25 @@ sudo apt install coreutils parallel ripgrep sed
 
 ### Script: rgfiles
 
-The `rgfiles` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores:
-- `.git` directories,
-- files that match `.gitignore` rules,
-- and binary files.
+The `rgfiles` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores: `.git` directories, files that match `.gitignore` rules, and binary files.
 
 ### Script: rgfiles-run
 
-Recursively execute a command on all files listed by the `rg --files` command.
-
-For example, to recursively `cat` all text files in `/etc`, use the following command:
+Recursively execute a command on all files listed by the `rg --files` command. For example, to recursively `cat` all text files in `/etc`, use the following command:
 ```
 rgfiles-run /etc cat {}
 ```
 
 (`{}` is replaced with the path to each file.)
 
-Here is an example of how you can combine `rgfiles-run` and `sed` to replace `Text1` with `Text2` in a Git repository:
+Here is an example of how you can combine `rgfiles-run` and `sed` to replace "Text1" with "Text2" in a Git repository:
 ```
 rgfiles-run /path/to/git-repository/ sed -i -e "s/Text1/Text2/g" {}
 ```
 
 ### Script: sre
 
-This script replaces occurrences of a specified string or regular expression pattern with support for exact string matching, regular expressions, and case-insensitive matching.
-
-Unlike `sed`, which uses a single argument for replacements, this script allows specifying the text-to-find and text-to-replace as two distinct arguments.
+The `sre` script replaces occurrences of a specified string or regular expression pattern with support for exact string matching, regular expressions, and case-insensitive matching. Unlike `sed`, which uses a single argument for replacements, this script allows specifying the text-to-find and text-to-replace as two distinct arguments.
 
 To replace text in the standard input and output the result to the standard output:
 ```
@@ -80,7 +73,7 @@ sre "text-before" "text-after" file
 
 Here are the `sre` options:
 ```
-Usage: /home/dev/.local/bin/sre [-h] [-i] <string-before> <string-after>
+Usage: sre [-h] [-i] <string-before> <string-after>
 
   -i    Ignore case when comparing files
   -e    Use regular expressions instead of exact strings.
