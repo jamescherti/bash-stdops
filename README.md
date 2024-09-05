@@ -1,7 +1,7 @@
-# helpful-bash-scripts
-![License](https://img.shields.io/github/license/jamescherti/helpful-bash-scripts)
+# bash-fileops - A collection of Bash Scripts for file operations and management
+![License](https://img.shields.io/github/license/jamescherti/bash-fileops)
 
-The `helpful-bash-scripts` repository is a collection of helpful scripts.
+The **bash-fileops** project is a collection of helpful Bash scripts that simplify various file operations such as searching for files, performing operations on them, and modifying their contents.
 
 ## Scripts
 
@@ -17,4 +17,4 @@ You should have received a copy of the GNU General Public License along with thi
 
 ## Links
 
-- [helpful-bash-scripts @GitHub](https://github.com/jamescherti/helpful-bash-scripts)
+- [bash-fileops @GitHub](https://github.com/jamescherti/bash-fileops)
