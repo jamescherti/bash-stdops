@@ -10,7 +10,7 @@
 # converts the filename to lowercase.
 #
 # Example usage:
-#   script.sh /Path/TO/FILE
+#   file-lowercase /Path/TO/FILE
 #   This will convert the filename to lowercase, producing: /Path/TO/file
 #
 # License:
@@ -35,4 +35,10 @@
 #
 
 set -euf -o pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $0 <path-to-file>"
+  exit 1
+fi
+
 exec file-tr "$1" '[:upper:]' '[:lower:]'

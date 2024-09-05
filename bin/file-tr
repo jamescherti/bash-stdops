@@ -11,7 +11,7 @@
 # and prints the modified full path.
 #
 # Example usage:
-#   script.sh /Path/TO/FILE '[:upper:]' '[:lower:]'
+#   file-tr /Path/TO/FILE '[:upper:]' '[:lower:]'
 #   This will convert the filename to lowercase, producing: /Path/TO/file
 #
 # License:
@@ -36,6 +36,11 @@
 #
 
 set -euf -o pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $0 <path-to-file> <tr-args>"
+  exit 1
+fi
 
 FILE_PATH=$(readlink -m "$1")
 shift
