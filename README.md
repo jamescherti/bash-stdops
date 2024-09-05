@@ -26,11 +26,13 @@ PREFIX=~/.local make install
 
 - rg
 - parallel
+- sed
+- nproc
 
 ## Install requirements on Debian/Ubuntu based systems
 
 ```
-sudo apt install coreutils parallel ripgrep
+sudo apt install coreutils parallel ripgrep sed
 ```
 
 (coreutils installs nproc)
@@ -51,6 +53,35 @@ Recursively execute a command on all files listed by the `rg --files` command.
 For example, to recursively `cat` all text files in `/etc`, use the following command:
 ```
 rgfiles-run /etc cat {}
+```
+
+(`{}` is replaced with the path to each file.)
+
+### Script: sre
+
+This script replaces occurrences of a specified string or regular expression pattern with support for exact string matching, regular expressions, and case-insensitive matching.
+
+Unlike `sed`, which uses a single argument for replacements, this script allows specifying the text-to-find and text-to-replace as two distinct arguments.
+
+To replace text in the standard input and output the result to the standard output:
+```
+echo "text-before" | sre "text-before" "text-after"
+```
+
+To replace text directly in a file (overwriting the file):
+```
+sre "text-before" "text-after" file
+```
+
+Here are the `sre` options:
+```
+Usage: /home/dev/.local/bin/sre [-h] [-i] <string-before> <string-after>
+
+  -i    Ignore case when comparing files
+  -e    Use regular expressions instead of exact strings.
+  -r    Use extended regular expressions.
+  -d    Show the sed command
+  -h    Show this help message and exit
 ```
 
 ## License

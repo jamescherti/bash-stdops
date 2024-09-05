@@ -1,0 +1,202 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - sed
+#   - rgfiles-run (included in the bash-fileops project)
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-fileops
+#
+# Description:
+# ------------
+# This script replaces occurrences of a specified string or regular expression
+# pattern with support for exact string matching, regular expressions, and
+# case-insensitive matching.
+#
+# Unlike `sed`, which uses a single argument for replacements, this script
+# allows specifying the text-to-find and text-to-replace as two distinct
+# arguments:
+#
+# To replace text in the standard input and output the result to the standard
+# output:
+#     echo "text-before" | sre "text-before" "text-after"
+#
+# To replace text directly in a file (overwriting the file):
+#     sre "text-before" "text-after" file
+#
+# (If no file is provided, the script uses standard input.)
+#
+# License:
+# --------
+#
+# Copyright (C) 2020-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -eu -o pipefail
+
+show_usage() {
+  echo "Usage: $0 [-h] [-i] <string-before> <string-after>" >&2
+  echo
+  echo "  -i    Ignore case when comparing files"
+  echo "  -e    Use regular expressions instead of exact strings."
+  echo "  -r    Use extended regular expressions."
+  echo "  -d    Show the sed command"
+  echo "  -h    Show this help message and exit"
+  exit 1
+}
+
+init() {
+  IGNORE_CASE=0
+  DEBUG=0
+  FILE=""
+  ERRNO=0
+  IS_FILE=0
+  IS_STDIN=0
+  USE_REGEX=0
+  USE_REGEX_EXTENDED=0
+
+  # Process command line options
+  while getopts ":erdih" opt; do
+    case ${opt} in
+    r)
+      USE_REGEX=1
+      USE_REGEX_EXTENDED=1
+      ;;
+    e)
+      USE_REGEX=1
+      ;;
+    i)
+      IGNORE_CASE=1
+      ;;
+    d)
+      DEBUG=1
+      ;;
+    h)
+      show_usage
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Invalid option: -$OPTARG requires an argument" >&2
+      exit 1
+      ;;
+    esac
+  done
+  shift $((OPTIND - 1))
+
+  if [ $# -lt 2 ]; then
+    show_usage
+  fi
+
+  STRING_BEFORE="$1"
+  STRING_AFTER="$2"
+
+  if [[ $# -gt 2 ]]; then
+    FILE="$3"
+    if ! [[ -f $FILE ]]; then
+      echo "Error: No such file or directory: $FILE" >&2
+      exit 1
+    else
+      IS_FILE=1
+    fi
+  else
+    IS_STDIN=1
+  fi
+}
+
+sed_str_replace() {
+  # I am using printf because It is more reliable for this purpose. Using echo
+  # and sed together might lead to issues with special characters, especially
+  # with characters that echo might handle differently.
+  local sed_options=()
+  if [[ $# -gt 0 ]]; then
+    sed_options+=("-i")
+  fi
+
+  local general_sed_options=()
+  if [[ $USE_REGEX_EXTENDED -ne 0 ]]; then
+    general_sed_options+=(-r)
+  fi
+
+  local text_before
+  local text_after
+
+  if [[ $USE_REGEX -ne 0 ]]; then
+    # Escape forward slashes
+    text_before=$(printf '%s' "$STRING_BEFORE" \
+      | sed "${general_sed_options[@]}" -e 's/[/]/\\&/g')
+    text_after=$(printf '%s' "$STRING_AFTER" \
+      | sed "${general_sed_options[@]}" -e 's/[/]/\\&/g')
+  else
+    # Sed pattersn The sed regular expression '[]\/$*.^[]' contains special
+    # characters that have specific meanings in regular expressions and need to
+    # be escaped such as:
+    # - [ and ]: These are character class delimiters in regex. They are used to
+    #   define a set of characters but are not used as individual characters to
+    #   match.
+    # - \: The backslash itself needs escaping, so it becomes \\.
+    # - /: The delimiter for sed substitution commands.
+    # - $: Matches the end of a line in regex.
+    # - *: Matches zero or more occurrences of the preceding character or group.
+    # - .: Matches any single character except newline.
+    # - ^: Matches the beginning of a line in regex.
+    #
+    # The sed replacement pattern: '/\\&/': . \\& is used to escape each special
+    # character. Each special character matched by the pattern is replaced with
+    # \\&. Here, \\ is used to insert a literal backslash, and & represents the
+    # matched character.
+    text_before=$(printf '%s' "$STRING_BEFORE" \
+      | sed "${general_sed_options[@]}" -e 's/[]\/$*.^[]/\\&/g')
+    text_after=$(printf '%s' "$STRING_AFTER" \
+      | sed "${general_sed_options[@]}" -e 's/[]\/$*.^[]/\\&/g')
+  fi
+
+  local sed_ignore_case=""
+  if [[ $IGNORE_CASE -ne 0 ]]; then
+    sed_ignore_case="i"
+  fi
+
+  if [[ $USE_REGEX_EXTENDED -ne 0 ]]; then
+    sed_options+=(-r)
+  fi
+
+  sed_options+=(-e "s/${text_before}/${text_after}/g${sed_ignore_case}")
+
+  if [[ $# -gt 0 ]]; then
+    sed_options+=("$FILE")
+  fi
+  if [[ $DEBUG -ne 0 ]]; then
+    echo sed "${sed_options[@]}"
+  fi
+  sed "${sed_options[@]}"
+}
+
+main() {
+  init "$@"
+  if [[ $IS_STDIN -ne 0 ]]; then
+    sed_str_replace
+  elif [[ $IS_FILE -ne 0 ]]; then
+    sed_str_replace "$FILE"
+  fi
+
+  exit "${ERRNO}"
+}
+
+main "$@"

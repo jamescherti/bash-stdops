@@ -12,9 +12,13 @@ all:
 
 install:
 	install -d "$(PREFIX)/bin"
+	install -m 755 bin/qparallel "$(PREFIX)/bin/"
 	install -m 755 bin/rgfiles "$(PREFIX)/bin/"
 	install -m 755 bin/rgfiles-run "$(PREFIX)/bin/"
+	install -m 755 bin/sre "$(PREFIX)/bin/"
 
 uninstall:
+	rm "$(PREFIX)/bin/sre"
+	rm "$(PREFIX)/bin/qparallel"
 	rm "$(PREFIX)/bin/rgfiles"
 	rm "$(PREFIX)/bin/rgfiles-run"

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - parallel: https://www.gnu.org/software/parallel/
+#   - nproc: https://savannah.gnu.org/git/?group=coreutils
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-fileops
+#
+# Description:
+# ------------
+# Run parallel and make sure that special characters are not interpreted.
+#
+# License:
+# --------
+#
+# Copyright (C) 2020-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $0 <directory> <command> [args...]" >&2
+  exit 1
+fi
+
+JOBS="$(nproc)"
+
+# Executable
+EXEC_FILE=""
+EXEC_FILE=$(type -P "$1") || true
+
+if ! [[ -f "$EXEC_FILE" ]]; then
+  echo "Error: The specified executable file does not exist: '$1'" >&2
+  exit 1
+fi
+
+if ! [[ -x "$EXEC_FILE" ]]; then
+  echo "Error: The specified executable file cannot be executed: '$1'" >&2
+  exit 1
+fi
+
+# RUN
+exec parallel -q -j "$JOBS" -- "$@"

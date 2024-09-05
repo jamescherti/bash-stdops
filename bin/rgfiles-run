@@ -12,6 +12,13 @@
 # ------------
 # Recursively execute a command on all files listed by the `rg --files` command.
 #
+# For example, to recursively `cat` all text files in `/etc`, use the following command:
+# ```
+# rgfiles-run /etc cat {}
+# ```
+#
+# (`{}` is replaced with the path to each file.)
+#
 # License:
 # --------
 #
@@ -78,27 +85,11 @@ if ! [[ -d "$DIR" ]]; then
 fi
 
 #
-# Executable
-#
-EXEC_FILE=""
-EXEC_FILE=$(type -P "$1") || true
-
-if ! [[ -f "$EXEC_FILE" ]]; then
-  echo "Error: The specified executable file does not exist: '$1'" >&2
-  exit 1
-fi
-
-if ! [[ -x "$EXEC_FILE" ]]; then
-  echo "Error: The specified executable file cannot be executed: '$1'" >&2
-  exit 1
-fi
-
-#
 # RUN
 #
 
 RGFILES_CMD=(rgfiles "$DIR")
-PARALLEL_CMD=(parallel -q -j "$JOBS" -- "$@")
+PARALLEL_CMD=(qparallel "$@")
 
 # display_quoted_args "[DEBUG]" "${RGFILES_CMD[@]}" "|" "${PARALLEL_CMD[@]}"
 display_quoted_args "[COMMAND]" "$@"
