@@ -1,21 +1,33 @@
 # bash-fileops - A collection of Bash Scripts for file operations and management
 ![License](https://img.shields.io/github/license/jamescherti/bash-fileops)
 
-The **bash-fileops** project is a collection of helpful Bash scripts that simplify various file operations such as searching for files, performing operations on them, and modifying their contents.
+The `bash-fileops` project is a collection of helpful Bash scripts that simplify various file operations such as searching for files, performing operations on them, and modifying their contents.
 
 ## Installation
 
-### System-wide installation
+### System-wide Installation
 
-To install it system wide:
+To install the `bash-fileops` scripts system-wide, follow these steps:
 
+1. **Ensure you have the necessary permissions**: You will need administrative (root) privileges to install software system-wide. Use `sudo` if necessary.
+
+2. **Run the installation command**:
+
+```bash
+   sudo make install
 ```
-make install
-```
 
-### User installation
+### Install in your home directory
 
-```
+If you prefer to install the scripts locally in your home directory, you can use the `~/.local/bin` directory. This method avoids requiring administrative privileges and keeps the installation isolated to your user environment. Follow these steps:
+
+1. **Prepare the Installation Directory**:
+   The scripts can installed into the `~/.local` directory, which is a common location for user-specific installations. The `~/.local/bin` directory will be used for executable files.
+
+2. **Run the Installation Command**:
+   Use the following command to install the scripts into the `~/.local/bin` directory:
+
+```bash
 PREFIX=~/.local make install
 ```
 
