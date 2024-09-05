@@ -48,6 +48,11 @@ The `rgfiles` bash script recursively search the specified directory and print t
 
 Recursively execute a command on all files listed by the `rg --files` command.
 
+For example, to recursively `cat` all text files in `/etc`, use the following command:
+```
+rgfiles-run /etc cat {}
+```
+
 ## License
 
 Copyright (C) 2023-2024 [James Cherti](https://www.jamescherti.com)
