@@ -92,6 +92,10 @@ Here is an example of how you can combine `rgfiles-run` and `sre` to replace `Te
 rgfiles-run /path/to/git-repository/ sre Text1 Text2 {}
 ```
 
+### rgfiles-sre
+
+Recursively replace strings in all files listed by the `rgfiles` command using `sre`.
+
 ### Scripts: path-tr, path-uppercase, path-lowercase
 
 - `path-tr`: This script processes a given file path, extracts the directory and filename, converts the filename using the specified `tr` options (e.g., to lowercase), and prints the modified full path. Example usage: `path-tr /Path/TO/FILE '[:upper:]' '[:lower:]'` This will convert the filename to lowercase, producing: `/Path/TO/file`.
