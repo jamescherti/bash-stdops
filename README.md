@@ -112,6 +112,16 @@ Usage:
 autoperm /path/to/file-or-directory
 ```
 
+### Script: path-is
+
+Print the Path to stdout and exit with the code 0 if it is a binary or text file.
+
+Example usage:
+``` bash
+path-is /Path/TO/FILE binary
+path-is /Path/TO/FILE text
+```
+
 ### Scripts: cbcopy, cbpaste, and tmux-cbpaste
 
 - `cbcopy`: This script copies content to the clipboard.
