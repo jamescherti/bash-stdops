@@ -72,8 +72,8 @@ for REQUEST in "$@"; do
     continue
   fi
 
-  printf "Error: The following path is not '%s': %s\n" "$*" \
-    "$PATH_EXISTING_FILE"
+  printf "Error: The following path is not '%s': %s\n" \
+    "$REQUEST" "$PATH_EXISTING_FILE"
   exit 1
 done
 
