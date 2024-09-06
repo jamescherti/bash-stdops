@@ -139,6 +139,12 @@ Example:
 tmux-run bash
 ```
 
+### Script: tmux-session
+
+The `tmux-session` script attempts to attach to an existing `tmux` session. If the session does not exist, it creates a new session with that name.
+
+If no session name is provided, it defaults to creating or attaching to a session named "0".
+
 ## License
 
 Copyright (C) 2023-2024 [James Cherti](https://www.jamescherti.com)
