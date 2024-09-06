@@ -112,6 +112,12 @@ Usage:
 autoperm /path/to/file-or-directory
 ```
 
+### Scripts: cbcopy, cbpaste, and cbpaste-tmux
+
+- `cbcopy`: This script copies content to the clipboard.
+- `cbpaste`: Reads the contents of the system clipboard and writes it to standard output (stdout).
+- `cbpaste-tmux`: This script enables pasting clipboard content into the current `tmux` window. It ensures safety by requiring user confirmation before pasting, preventing accidental insertion of data.
+
 ## License
 
 Copyright (C) 2023-2024 [James Cherti](https://www.jamescherti.com)

@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# Requirements:
+#   - pbpaste (on macOS)
+#   - xclip (for X11 environments)
+#   - sed
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-fileops
+#
+# Description:
+# ------------
+# The pbpaste command-line utility that reads the contents of the system
+# clipboard and writes it to standard output (stdout). This allows users to
+# access clipboard contents within scripts, the terminal, or other command-line
+# tools.
+#
+# This script pastes content from the clipboard. It adapts based on the
+# environment:
+# - If running on macOS with pbpaste, it uses pbpaste.
+# - If running in an X11 environment with xclip, it uses xclip to access the
+#   clipboard.
+# - If no GUI environment is detected (no $DISPLAY variable), it reads from a
+#   file located at $HOME/.clipboard as a fallback clipboard.
+#
+# Usage:
+#   cbpaste
+#
+# License:
+# --------
+#
+# Copyright (C) 2012-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+[[ $DISPLAY = "" ]] && export DISPLAY=""
+[[ $CBPASTE_STRIP_NEWLINE = "" ]] && export CBPASTE_STRIP_NEWLINE=""
+set -euf -o pipefail
+
+paste_from_xclip() {
+  xclip -o -selection clipboard || return 1
+}
+
+paste_from_file() {
+  local cbfile="$HOME/.clipboard"
+  if [[ -f "$cbfile" ]]; then
+    cat "$HOME/.clipboard" || return 1
+  fi
+}
+
+remove_newline() {
+  if [[ $CBPASTE_STRIP_NEWLINE -eq 0 ]]; then
+    cat
+  else
+    sed -z "s/\\n\+$//"
+  fi
+}
+
+main() {
+  if type -P pbpaste &>/dev/null; then
+    exec pbpaste
+  fi
+
+  local errno=0
+  if [[ $DISPLAY = "" ]]; then
+    paste_from_file | remove_newline || errno=1
+  else
+    paste_from_xclip | remove_newline 2>/dev/null || errno=1
+  fi
+
+  exit "$errno"
+}
+
+main

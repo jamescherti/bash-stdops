@@ -1,14 +1,19 @@
 #!/bin/bash
+#
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-fileops
 #
 # Description:
 # ------------
-#
-# This script sets permissions for files or directories:
+# This script automatically sets commonly used permissions for files or
+# directories:
 # - If it's a directory: 755
-# - If it's a file with a shebang (e.g., "#!/bin/bash"): 755
-# - If it's a file: 644
+# - If it's a regular file with a shebang (e.g., "#!/bin/bash"): 755
+# - If it's a regular file: 644
+#
+# These permissions follow the principle of least privilege, providing enough
+# access for necessary operations without exposing the system to unnecessary
+# risk.
 #
 # Usage:
 #   autoperm /path/to/file-or-directory
@@ -16,7 +21,7 @@
 # License:
 # --------
 #
-# Copyright (C) 2020-2024 James Cherti
+# Copyright (C) 2012-2024 James Cherti
 #
 # Distributed under terms of the GNU General Public License version 3.
 #

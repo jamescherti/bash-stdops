@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# Requirements: xclip
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-fileops
+#
+# Description:
+# ------------
+# This script copies content to the clipboard. It intelligently chooses the
+# appropriate method for the current environment:
+# - If running on macOS with pbcopy available, it uses pbcopy.
+# - If running in an X11 environment with xclip available, it uses xclip.
+# - If no GUI environment is detected (no $DISPLAY variable), it saves the
+#   content to a file at ~/.clipboard.
+#
+# Usage:
+#   echo text | cbcopy
+#
+# The script handles both GUI and non-GUI environments for clipboard
+# management.
+#
+# License:
+# --------
+#
+# Copyright (C) 2012-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+[[ $DISPLAY = "" ]] && export DISPLAY=""
+set -euf -o pipefail
+
+cbcopy_xclip() {
+  # Function to copy content to clipboard using xclip
+  xclip -i -selection primary
+  xclip -o -selection primary | xclip -i -selection clipboard
+}
+
+cbcopy_file() {
+  # Function to copy content to a local file as a fallback clipboard
+  local clipboard_file="$HOME/.clipboard"
+  touch "$clipboard_file"
+  chmod 600 "$clipboard_file"
+  cat - >"$clipboard_file"
+}
+
+main() {
+  if type -P pbcopy &>/dev/null; then
+    exec pbcopy
+  fi
+
+  local errno=0
+  if [[ $DISPLAY = "" ]]; then
+    cbcopy_file || errno=1
+  else
+    cbcopy_xclip 2>/dev/null || errno=1
+  fi
+
+  exit "$errno"
+}
+
+main

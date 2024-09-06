@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# Requirements:
+#   - cbpaste
+#   - tmux
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-fileops
+#
+# Description:
+# ------------
+# This script enables pasting clipboard content into the current `tmux` window.
+# It ensures safety by requiring user confirmation before pasting, preventing
+# accidental insertion of data.
+#
+# It reads clipboard content using the `cbpaste` command and determines how to
+# handle it based on the content length and `tmux` capabilities.
+#
+# Usage:
+#   tmux-cbpaste
+#
+# License:
+# --------
+#
+# Copyright (C) 2012-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+CBPASTE_BIN=cbpaste
+export CBPASTE_STRIP_NEWLINE=1
+
+if [[ $("$CBPASTE_BIN" | wc -l) -le 1 ]]; then
+  tmux run \
+    "'$CBPASTE_BIN' | tmux load-buffer - ; tmux paste-buffer"
+else
+  if tmux list-commands | grep -q '^display-popup ' &>/dev/null; then
+    tmux display-popup -T \
+      "Clipboard" "'$CBPASTE_BIN'" \; confirm-before \
+      -p 'Paste? [y,n]' \
+      "run '$CBPASTE_BIN | tmux load-buffer - ; tmux paste-buffer'" || true
+  else
+    tmux confirm-before -p "'$(cbpaste)' PASTE? [y,n]" \
+      "run '$CBPASTE_BIN | tmux load-buffer - ; tmux paste-buffer'"
+  fi
+fi
