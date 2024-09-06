@@ -23,6 +23,7 @@ install:
 	install -m 755 bin/cbcopy "$(PREFIX)/bin/"
 	install -m 755 bin/cbpaste "$(PREFIX)/bin/"
 	install -m 755 bin/tmux-cbpaste "$(PREFIX)/bin/"
+	install -m 755 bin/tmux-run "$(PREFIX)/bin/"
 
 uninstall:
 	rm "$(PREFIX)/bin/autoperm"
@@ -36,3 +37,4 @@ uninstall:
 	rm "$(PREFIX)/bin/cbcopy"
 	rm "$(PREFIX)/bin/cbpaste"
 	rm "$(PREFIX)/bin/tmux-cbpaste"
+	rm "$(PREFIX)/bin/tmux-run"

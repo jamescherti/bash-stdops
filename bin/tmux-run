@@ -1,0 +1,95 @@
+#!/bin/bash
+#
+# Requirements:
+#   - tmux
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-fileops
+#
+# Description:
+# ------------
+# This script executes a command in a new `tmux` window, which functions
+# similarly to a tab in other applications.
+#
+# - If run within an existing `tmux` session, it creates a new window in the
+#   same session.
+# - If run outside of `tmux`, it creates a new window in the first available
+#   `tmux` session.
+# - If the environment variable `TMUX_RUN_SESSION_NAME` is set, the script will
+#   create the new window in the specified `tmux` session.
+#
+# Usage:
+#   tmux-run <command> [args...]
+#
+# License:
+# --------
+#
+# Copyright (C) 2012-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+[[ $TMUX_RUN_SESSION_NAME = "" ]] && TMUX_RUN_SESSION_NAME=""
+set -euo pipefail
+
+SCRIPT_NAME=$(basename "$0")
+
+parse_args() {
+  if [[ $# -lt 1 ]]; then
+    printf "Usage: %s <command> [args...]\n" "$SCRIPT_NAME" >&2
+    exit 1
+  fi
+
+  local cmd="$1"
+  if ! type -P "$cmd" &>/dev/null; then
+    printf "%s: Command '%s' not found in PATH\n" "$SCRIPT_NAME" "$cmd" >&2
+    exit 1
+  fi
+}
+
+get_tmux_session() {
+  if [[ $TMUX_RUN_SESSION_NAME != "" ]]; then
+    if tmux has-session -t "$TMUX_RUN_SESSION_NAME" 2>/dev/null; then
+      printf "%s\n" "$TMUX_RUN_SESSION_NAME"
+    fi
+  fi
+}
+
+run_in_tmux_window() {
+  local tmux_opts=()
+  local tmux_session
+  tmux_session=$(get_tmux_session)
+
+  if [[ $tmux_session = "" ]]; then
+    if [[ $TMUX_RUN_SESSION_NAME != "" ]]; then
+      printf "%s: tmux session '%s' not found\n" \
+        "$SCRIPT_NAME" "$TMUX_RUN_SESSION_NAME" >&2
+      exit 1
+    fi
+
+    tmux_opts+=(-t "$tmux_session")
+  fi
+
+  if ! tmux new-window "${tmux_opts[@]}" "$@"; then
+    printf "Failed to open a new Tmux window with the command: %s\n" \
+      "$*" >&2
+    exit 1
+  fi
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  run_in_tmux_window "$@"
+fi
