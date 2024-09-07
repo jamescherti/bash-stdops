@@ -1,13 +1,13 @@
-# bash-fileops - A collection of Bash Scripts for file operations and management
-![License](https://img.shields.io/github/license/jamescherti/bash-fileops)
+# bash-stdops - A collection of Bash Scripts for file operations and management
+![License](https://img.shields.io/github/license/jamescherti/bash-stdops)
 
-The `bash-fileops` project is a collection of helpful Bash scripts that simplify various file operations such as searching for files, performing operations on them, and modifying their contents.
+The `bash-stdops` project is a collection of helpful Bash scripts that simplify various file operations such as searching for files, performing operations on them, and modifying their contents.
 
 ## Installation
 
 ### System-wide installation
 
-To install the `bash-fileops` scripts system-wide, use the following command:
+To install the `bash-stdops` scripts system-wide, use the following command:
 ```bash
 sudo make install
 ```
@@ -189,4 +189,4 @@ You should have received a copy of the GNU General Public License along with thi
 
 ## Links
 
-- [bash-fileops @GitHub](https://github.com/jamescherti/bash-fileops)
+- [bash-stdops @GitHub](https://github.com/jamescherti/bash-stdops)

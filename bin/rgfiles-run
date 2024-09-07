@@ -2,12 +2,12 @@
 #
 # Requirements:
 #   - parallel: https://www.gnu.org/software/parallel/
-#   - rgfiles: included in the bash-fileops project
+#   - rgfiles: included in the bash-stdops project
 #   - nproc: https://savannah.gnu.org/git/?group=coreutils
 #   - sed
 #
 # Author: James Cherti
-# URL: https://github.com/jamescherti/bash-fileops
+# URL: https://github.com/jamescherti/bash-stdops
 #
 # Description:
 # ------------

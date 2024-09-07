@@ -2,10 +2,10 @@
 #
 # Requirements:
 #   - sed
-#   - rgfiles-run (included in the bash-fileops project)
+#   - rgfiles-run (included in the bash-stdops project)
 #
 # Author: James Cherti
-# URL: https://github.com/jamescherti/bash-fileops
+# URL: https://github.com/jamescherti/bash-stdops
 #
 # Description:
 # ------------
