@@ -79,7 +79,6 @@ main() {
       fi
     done
 
-    false
     if [[ $brackets_found -eq 0 ]]; then
       echo "Error: the brackets '{}' are required.'" >&2
       exit 1
