@@ -1,7 +1,9 @@
-# bash-stdops - A collection of Bash Scripts for file operations and management
+# bash-stdops - A collection of Bash helper scripts that facilitate operations
 ![License](https://img.shields.io/github/license/jamescherti/bash-stdops)
 
-The `bash-stdops` project is a collection of helpful Bash scripts, written by [James Cherti](https://www.jamescherti.com/), that simplify various file operations such as searching for files, performing operations on them, and modifying their contents.
+The `bash-stdops` project is a collection of helpful Bash scripts, written by [James Cherti](https://www.jamescherti.com/), that simplify various operations, including file searching, text replacement, and content modification.
+
+The author uses these scripts in conjunction with text editors like Emacs and Vim to automate tasks, including managing tmux sessions, replacing text across a Git repository, and securely copying and pasting from the clipboard by prompting the user before executing commands in tmux, among other operations.
 
 ## Installation
 
