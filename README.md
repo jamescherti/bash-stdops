@@ -1,7 +1,7 @@
 # bash-stdops - A collection of Bash Scripts for file operations and management
 ![License](https://img.shields.io/github/license/jamescherti/bash-stdops)
 
-The `bash-stdops` project is a collection of helpful Bash scripts that simplify various file operations such as searching for files, performing operations on them, and modifying their contents.
+The `bash-stdops` project is a collection of helpful Bash scripts, written by [James Cherti](https://www.jamescherti.com/), that simplify various file operations such as searching for files, performing operations on them, and modifying their contents.
 
 ## Installation
 
