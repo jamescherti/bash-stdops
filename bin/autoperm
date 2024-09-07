@@ -6,17 +6,7 @@
 # Description:
 # ------------
 # This script automatically sets commonly used permissions for files or
-# directories:
-# - If it's a directory: 755
-# - If it's a regular file with a shebang (e.g., "#!/bin/bash"): 755
-# - If it's a regular file: 644
-#
-# These permissions follow the principle of least privilege, providing enough
-# access for necessary operations without exposing the system to unnecessary
-# risk.
-#
-# Usage:
-#   autoperm /path/to/file-or-directory
+# directories.
 #
 # License:
 # --------
@@ -42,7 +32,19 @@
 set -euf -o pipefail
 
 if [[ $# -lt 1 ]]; then
+  echo "Automatically set commonly used permissions for files or directories:"
+  echo
   echo "Usage: $0 </path/to/file-or-directory> <file2/dir2> <...>"
+  echo
+  echo "More information:"
+  echo "-----------------"
+  echo "- If it's a directory: 755"
+  echo "- If it's a regular file with a shebang (e.g., ' #!/bin/bash'): 755"
+  echo "- If it's a regular file: 644"
+  echo
+  echo "These permissions follow the principle of least privilege, providing "
+  echo "enough access for necessary operations without exposing the "
+  echo "files to unnecessary risk."
   exit 1
 fi
 

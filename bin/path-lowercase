@@ -5,7 +5,6 @@
 #
 # Description:
 # ------------
-#
 # This script processes a given file path, extracts the directory and filename,
 # converts the filename to lowercase.
 #
@@ -37,7 +36,10 @@
 set -euf -o pipefail
 
 if [[ $# -lt 1 ]]; then
+  echo "Convert filenames to lowercase."
+  echo
   echo "Usage: $0 <path-to-file>"
+  echo
   exit 1
 fi
 

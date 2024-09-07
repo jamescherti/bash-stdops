@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - sed
+#   - rgfiles-run (included in the bash-fileops project)
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-fileops
+#
+# Description:
+# ------------
+# This script reads from standard input and executes a command for each line,
+# replacing `{}` with the content read from stdin. It expects `{}` to be passed
+# as one of the arguments and will fail if `{}` is not provided.
+#
+# This script is an alternative to xargs.
+#
+# { echo "file1"; echo "file2"; } | largs ls {}
+#
+# License:
+# --------
+#
+# Copyright (C) 2012-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+main() {
+  local errno=0
+
+  if [[ $# -lt 1 ]]; then
+    echo "Executes a command for each line in the standard input, "
+    echo "replacing '{}' with the line content."
+    echo
+    echo "Usage: $0 <command> [args] {}" >&2
+    echo
+    echo "Example:"
+    echo "  { echo 'file1'; echo 'file2'; } | largs ls {}"
+    exit 1
+  fi
+
+  local cmd
+  cmd="$1"
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "Error: command not found: $cmd" >&2
+    exit 1
+  fi
+
+  # Set IFS to newline to properly handle lines with spaces
+  IFS=$'\n'
+
+  local line
+
+  while read -r line; do
+    local brackets_found=0
+    local cmd
+    cmd=()
+    for arg in "$@"; do
+      if [[ $arg = '{}' ]]; then
+        cmd+=("$line")
+        brackets_found=1
+      else
+        cmd+=("$arg")
+      fi
+    done
+
+    false
+    if [[ $brackets_found -eq 0 ]]; then
+      echo "Error: the brackets '{}' are required.'" >&2
+      exit 1
+    fi
+
+    # echo "[RUN]" "${cmd[@]}" >&2
+    "${cmd[@]}" || errno=1
+  done
+
+  exit "$errno"
+}
+
+main "$@"

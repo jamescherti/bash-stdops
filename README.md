@@ -159,6 +159,15 @@ The `tmux-session` script attempts to attach to an existing `tmux` session. If t
 
 If no session name is provided, it defaults to creating or attaching to a session named "0".
 
+### Script: largs
+
+This script reads from standard input and executes a command for each line, replacing `{}` with the content read from stdin. It expects `{}` to be passed as one of the arguments and will fail if `{}` is not provided.
+
+This script is an alternative to xargs.
+``` bash
+{ echo "file1"; echo "file2"; } | largs ls {}
+```
+
 ## License
 
 Copyright (C) 2023-2024 [James Cherti](https://www.jamescherti.com)

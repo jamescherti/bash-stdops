@@ -27,6 +27,7 @@ install:
 	install -m 755 bin/tmux-cbpaste "$(PREFIX)/bin/"
 	install -m 755 bin/tmux-run "$(PREFIX)/bin/"
 	install -m 755 bin/tmux-session "$(PREFIX)/bin/"
+	install -m 755 bin/largs "$(PREFIX)/bin/"
 
 uninstall:
 	rm "$(PREFIX)/bin/autoperm"
@@ -44,3 +45,4 @@ uninstall:
 	rm "$(PREFIX)/bin/tmux-cbpaste"
 	rm "$(PREFIX)/bin/tmux-run"
 	rm "$(PREFIX)/bin/tmux-session"
+	rm "$(PREFIX)/bin/largs"

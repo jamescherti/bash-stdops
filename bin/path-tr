@@ -5,10 +5,11 @@
 #
 # Description:
 # ------------
+# This script modifies the file name of the path using the 'tr' command.
 #
-# This script processes a given file path, extracts the directory and filename,
-# converts the filename using the specified `tr` options (e.g., to lowercase),
-# and prints the modified full path.
+# It processes a given file path, extracts the directory and filename, converts
+# the filename using the specified `tr` options (e.g., to lowercase), and prints
+# the modified full path.
 #
 # Example usage:
 #   path-tr /Path/TO/FILE '[:upper:]' '[:lower:]'
@@ -38,6 +39,8 @@
 set -euf -o pipefail
 
 if [[ $# -lt 1 ]]; then
+  echo "Modify the file name using the 'tr' command."
+  echo
   echo "Usage: $0 <path-to-file> <tr-args>"
   exit 1
 fi
