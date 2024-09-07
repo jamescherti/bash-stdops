@@ -33,7 +33,11 @@
 #
 
 if [[ $# -lt 2 ]]; then
+  echo "Recursively replace strings in all files listed by the 'rgfiles' "
+  echo "command using the 'sre' command."
+  echo
   echo "Usage: $0 <directory> <sre-arg1> [sre-args...]" >&2
+  echo
   exit 1
 fi
 

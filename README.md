@@ -153,6 +153,11 @@ Example:
 tmux-run bash
 ```
 
+Example 2:
+```
+tmux-run bash -c htop
+```
+
 ### Script: tmux-session
 
 The `tmux-session` script attempts to attach to an existing `tmux` session. If the session does not exist, it creates a new session with that name.

@@ -21,6 +21,9 @@
 # Usage:
 #   tmux-run <command> [args...]
 #
+# Example:
+#   tmux-run bash -c htop
+#
 # License:
 # --------
 #
@@ -49,7 +52,10 @@ SCRIPT_NAME=$(basename "$0")
 
 parse_args() {
   if [[ $# -lt 1 ]]; then
+    echo "Execute a command in a new Tmux window."
+    echo
     printf "Usage: %s <command> [args...]\n" "$SCRIPT_NAME" >&2
+    echo
     exit 1
   fi
 
@@ -90,6 +96,5 @@ run_in_tmux_window() {
   fi
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  run_in_tmux_window "$@"
-fi
+parse_args "$@"
+run_in_tmux_window "$@"

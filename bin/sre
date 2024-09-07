@@ -50,7 +50,12 @@
 set -eu -o pipefail
 
 show_usage() {
-  echo "Usage: $0 [-ierdh] <string-before> <string-after>" >&2
+  echo "This script replaces occurrences of a specified string or regular "
+  echo "expression pattern with support for exact string matching, regular "
+  echo "expressions, and case-insensitive matching."
+  echo "(If no file is provided, the script uses standard input.)"
+  echo
+  echo "Usage: $0 [-ierdh] <string-before> <string-after> [file]" >&2
   echo
   echo "  -i    Ignore case when comparing files"
   echo "  -e    Use regular expressions instead of exact strings."

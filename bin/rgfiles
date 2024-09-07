@@ -36,7 +36,12 @@
 set -euf -o pipefail
 
 if [[ $# -ne 1 ]]; then
+  echo "Recursively search the specified directory and print the list of paths."
+  echo "(By default, it ignores: '.git' directories, files that match "
+  echo "'.gitignore' rules, and binary files.)"
+  echo
   echo "Usage: $0 <dir>" >&2
+  echo
   exit 1
 fi
 

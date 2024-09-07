@@ -44,7 +44,11 @@
 set -euf -o pipefail
 
 if [[ $# -lt 2 ]]; then
+  echo "Recursively execute a command on all files listed by " \
+    "the 'rg --files' command."
+  echo
   echo "Usage: $0 <directory> <command> <arg1> [args...]" >&2
+  echo
   exit 1
 fi
 
