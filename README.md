@@ -46,11 +46,6 @@ sudo apt install coreutils parallel ripgrep sed
 
 ## Script category: tmux
 
-### Scripts: cbcopy, cbpaste, and tmux-cbpaste
-
-- `cbcopy`: This script copies content to the clipboard.
-- `cbpaste`: Reads the contents of the system clipboard and writes it to standard output (stdout).
-
 ### Script: tmux-cbpaste
 
 The `tmux-cbpaste`: script enables pasting clipboard content into the current `tmux` window. It ensures safety by requiring user confirmation before pasting, preventing accidental insertion of data.
@@ -178,6 +173,11 @@ This script is an alternative to xargs.
 ``` bash
 { echo "file1"; echo "file2"; } | largs ls {}
 ```
+
+### Scripts: cbcopy, cbpaste
+
+- `cbcopy`: This script copies content to the clipboard.
+- `cbpaste`: Reads the contents of the system clipboard and writes it to standard output (stdout).
 
 ## License
 
