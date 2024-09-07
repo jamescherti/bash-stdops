@@ -42,7 +42,47 @@ sudo apt install coreutils parallel ripgrep sed
 
 (coreutils installs nproc)
 
-## Scripts
+## Script category: tmux
+
+### Scripts: cbcopy, cbpaste, and tmux-cbpaste
+
+- `cbcopy`: This script copies content to the clipboard.
+- `cbpaste`: Reads the contents of the system clipboard and writes it to standard output (stdout).
+
+### Script: tmux-cbpaste
+
+The `tmux-cbpaste`: script enables pasting clipboard content into the current `tmux` window. It ensures safety by requiring user confirmation before pasting, preventing accidental insertion of data.
+
+### Script: tmux-run
+
+This script executes a command in a new `tmux` window, which functions similarly to a tab in other applications.
+
+- If run within an existing `tmux` session, it creates a new window in the same session.
+- If run outside of `tmux`, it creates a new window in the first available `tmux` session.
+- If the environment variable `TMUX_RUN_SESSION_NAME` is set, the script will create the new window in the specified `tmux` session.
+
+Usage:
+```
+  tmux-run <command> [args...]
+```
+
+Example:
+```
+tmux-run bash
+```
+
+Example 2:
+```
+tmux-run bash -c htop
+```
+
+### Script: tmux-session
+
+The `tmux-session` script attempts to attach to an existing `tmux` session. If the session does not exist, it creates a new session with that name.
+
+If no session name is provided, it defaults to creating or attaching to a session named "0".
+
+## Script category: files, paths, and strings
 
 ### Script: rgfiles
 
@@ -126,43 +166,7 @@ path-is /Path/TO/FILE binary
 path-is /Path/TO/FILE text
 ```
 
-### Scripts: cbcopy, cbpaste, and tmux-cbpaste
-
-- `cbcopy`: This script copies content to the clipboard.
-- `cbpaste`: Reads the contents of the system clipboard and writes it to standard output (stdout).
-
-### Script: tmux-cbpaste
-
-The `tmux-cbpaste`: script enables pasting clipboard content into the current `tmux` window. It ensures safety by requiring user confirmation before pasting, preventing accidental insertion of data.
-
-### Script: tmux-run
-
-This script executes a command in a new `tmux` window, which functions similarly to a tab in other applications.
-
-- If run within an existing `tmux` session, it creates a new window in the same session.
-- If run outside of `tmux`, it creates a new window in the first available `tmux` session.
-- If the environment variable `TMUX_RUN_SESSION_NAME` is set, the script will create the new window in the specified `tmux` session.
-
-Usage:
-```
-  tmux-run <command> [args...]
-```
-
-Example:
-```
-tmux-run bash
-```
-
-Example 2:
-```
-tmux-run bash -c htop
-```
-
-### Script: tmux-session
-
-The `tmux-session` script attempts to attach to an existing `tmux` session. If the session does not exist, it creates a new session with that name.
-
-If no session name is provided, it defaults to creating or attaching to a session named "0".
+## Script category: Misc
 
 ### Script: largs
 
