@@ -5,6 +5,35 @@ The `bash-stdops` project is a collection of helpful Bash scripts, written by [J
 
 The author uses these scripts in conjunction with text editors like Emacs and Vim to automate tasks, including managing Tmux sessions, replacing text across a Git repository, securely copying and pasting from the clipboard by prompting the user before executing commands in Tmux, fix permissions, among other operations.
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [bash-stdops - A collection of Bash helper scripts that facilitate operations](#bash-stdops---a-collection-of-bash-helper-scripts-that-facilitate-operations)
+    - [Installation](#installation)
+        - [System-wide installation](#system-wide-installation)
+        - [Alternative installation: Install in your home directory](#alternative-installation-install-in-your-home-directory)
+    - [Requirements](#requirements)
+    - [Install requirements on Debian/Ubuntu based systems](#install-requirements-on-debianubuntu-based-systems)
+    - [Script category: tmux](#script-category-tmux)
+        - [Script: tmux-cbpaste](#script-tmux-cbpaste)
+        - [Script: tmux-run](#script-tmux-run)
+        - [Script: tmux-session](#script-tmux-session)
+    - [Script category: files, paths, and strings](#script-category-files-paths-and-strings)
+        - [Script: rgfiles](#script-rgfiles)
+        - [Script: rgfiles-run](#script-rgfiles-run)
+        - [Script: sre](#script-sre)
+        - [rgfiles-sre](#rgfiles-sre)
+        - [Scripts: path-tr, path-uppercase, path-lowercase](#scripts-path-tr-path-uppercase-path-lowercase)
+        - [Script: autoperm](#script-autoperm)
+        - [Script: path-is](#script-path-is)
+    - [Script category: Misc](#script-category-misc)
+        - [Script: largs](#script-largs)
+        - [Scripts: cbcopy, cbpaste](#scripts-cbcopy-cbpaste)
+    - [License](#license)
+    - [Links](#links)
+
+<!-- markdown-toc end -->
+
 ## Installation
 
 ### System-wide installation
