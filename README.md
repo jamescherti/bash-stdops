@@ -73,6 +73,24 @@ sudo apt install coreutils parallel ripgrep sed
 
 (coreutils installs nproc)
 
+## Install requirements on RedHat based systems
+
+```
+sudo dnf install coreutils parallel ripgrep sed
+```
+
+## Install requirements on Gentoo based systems
+
+```
+sudo emerge sys-apps/coreutils  sys-process/parallel sys-apps/ripgrep sys-apps/sed
+```
+
+## Install requirements on Arch Linux based systems
+
+```
+sudo pacman -S coreutils parallel ripgrep sed
+```
+
 ## Script category: tmux
 
 ### Script: tmux-cbpaste
