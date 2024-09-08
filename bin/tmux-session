@@ -38,6 +38,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
+TMUX_SESSION_LOOP=0
 set -euf -o pipefail
 
 TMUX_SESSION_NAME=0
@@ -45,10 +46,21 @@ if [[ $# -gt 0 ]]; then
   TMUX_SESSION_NAME="$1"
 fi
 
-if ! tmux -2 attach-session -t "$TMUX_SESSION_NAME"; then
-  if tmux -2 new -s "$TMUX_SESSION_NAME"; then
-    exit 0
-  fi
+open-tmux-session() {
+  if ! tmux -2 attach-session -t "$TMUX_SESSION_NAME"; then
+    if tmux -2 new -s "$TMUX_SESSION_NAME"; then
+      exit 0
+    fi
 
-  exit 1
+    exit 1
+  fi
+}
+
+if [[ $TMUX_SESSION_LOOP ]]; then
+  while true; do
+    open-tmux-session
+    sleep 1
+  done
+else
+  open-tmux-session
 fi
