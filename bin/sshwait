@@ -43,9 +43,10 @@ fi
 
 HOST="$1"
 FIRST_TRY=1
+ERRNO=0
 while true; do
   if ssh -q -o BatchMode=yes "$HOST" true; then
-    ssh "$HOST" || true
+    ssh "$HOST" || ERRNO=1
     break
   fi
 
@@ -56,3 +57,5 @@ while true; do
 
   sleep 1
 done
+
+exit "$ERRNO"
