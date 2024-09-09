@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - ssh
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Script to repeatedly attempt an SSH connection to a specified host.
+#
+# Usage: ./script_name.sh <host>
+#
+# The script loops until it successfully connects to the SSH host provided as
+# the first argument.
+#
+# License:
+# --------
+# Copyright (C) 2012-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# -*- coding: utf-8 -*-
+
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 <host>"
+  exit 1
+fi
+
+HOST="$1"
+FIRST_TRY=1
+while true; do
+  if ssh -q -o BatchMode=yes "$HOST" true; then
+    ssh "$HOST" || true
+    break
+  fi
+
+  if [[ $FIRST_TRY -ne 0 ]]; then
+    echo "Waiting for a successful connection to '$HOST'..."
+    FIRST_TRY=0
+  fi
+
+  sleep 1
+done

@@ -247,6 +247,19 @@ Features:
 - Automatically squashes all new commits into one, retaining the message of
   the first commit.
 
+## Script category: ssh
+
+### Script: ssh-wait
+
+Script to repeatedly attempt an SSH connection to a specified host.
+
+Usage:
+```
+./script_name.sh <host>
+```
+
+(The script loops until it successfully connects to the SSH host provided as the first argument.)
+
 ## Script category: Misc
 
 ### Script: largs
