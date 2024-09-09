@@ -1,0 +1,186 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - git
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Script to automate common Git commit tasks:
+#   - Automatically add untracked files (prompted)
+#   - Display git diff to the user before committing
+#   - Commit changes to the Git repository
+#   - Optionally reuse the previous Git commit message if available
+#
+# Usage: ./script_name.sh
+#   Run this script from within a Git repository to automate adding,
+#   reviewing, and committing changes.
+#
+# License:
+# --------
+# Copyright (C) 2012-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+# Exclude asc files
+bash_traceback() {
+  local lasterr="$?"
+  set +o xtrace
+  local code="-1"
+  local bash_command=${BASH_COMMAND}
+  echo "Error in ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "('$bash_command' exited with status $lasterr)" >&2
+  if [ ${#FUNCNAME[@]} -gt 2 ]; then
+    echo "Traceback of ${BASH_SOURCE[1]} (most recent call last):" >&2
+    for ((i = 0; i < ${#FUNCNAME[@]} - 1; i++)); do
+      local funcname="${FUNCNAME[$i]}"
+      [ "$i" -eq "0" ] && funcname=$bash_command
+      echo -e "  ${BASH_SOURCE[$i + 1]}:${BASH_LINENO[$i]}\\t$funcname" >&2
+    done
+  fi
+  echo "Exiting with status ${code}" >&2
+  exit "${code}"
+}
+
+trap "bash_traceback" "ERR"
+set -o errtrace
+
+git_add() {
+  if [[ "$(git ls-files --others --exclude-standard | wc -l)" -gt 0 ]]; then
+    echo "Git repository: $GIT_REPO"
+    echo
+    echo "Untracked files detected:"
+    echo "-------------------------"
+    git ls-files --others --exclude-standard
+    echo
+    read -e -r -p "Would you like to add these files to git? [y,n] " answer
+    if [[ "$answer" = "y" ]]; then
+      git add -A
+    fi
+  fi
+}
+
+git_ask_commit_message() {
+  if [[ $num_commits -gt 0 ]]; then
+    git --paginate diff --color --diff-filter=d HEAD || true
+  fi
+  git status -s
+  echo
+
+  echo "Git commit message:"
+  echo "-------------------"
+  if [[ $dcommit_message != "" ]]; then
+    echo "$dcommit_message"
+    echo
+  else
+    if [[ $num_commits -gt 0 ]]; then
+      git --no-pager log -1 --pretty=%B
+    fi
+  fi
+
+  echo "Git repository: $GIT_REPO"
+  while true; do
+    if [[ $num_commits -gt 0 ]]; then
+      echo "Press enter to commit with message above to " \
+        "$(git rev-parse --abbrev-ref HEAD) " \
+        "(author: ${git_author})"
+    else
+      echo "Press enter to commit with message above to " \
+        "(author: ${git_author})"
+    fi
+    read -e -r answer
+
+    if [[ ${#answer} -ne 0 ]] && [[ ${#answer} -le 1 ]]; then
+      echo "Error: the commit message is too short." >&2
+      echo "" >&2
+    else
+      break
+    fi
+  done
+}
+
+git_ci() {
+  git_commit_opts=("-a")
+  git_name="$(git config user.name)"
+  git_email="$(git config user.email)"
+  git_author="$git_name <$git_email>"
+  dcommit_message="$(git config custom.dcommitmessage)" || true
+
+  num_commits=$(git rev-list --all --count)
+  if [[ $num_commits -gt 0 ]]; then
+    local diff_lines
+    diff_lines="$(git --no-pager diff --name-only --diff-filter="TXBU" HEAD \
+      | wc -l)"
+    if [[ $diff_lines -gt "0" ]]; then
+      echo "There is an issue in the repository '$GIT_REPO'."
+      exit 1
+    fi
+
+    git_add
+
+    if [[ "$(git status --porcelain | wc -l)" -eq 0 ]]; then
+      echo "Nothing to commit to '$GIT_REPO'."
+      exit 0
+    fi
+  fi
+
+  git_ask_commit_message
+
+  if [[ $answer = "" ]]; then
+    if [[ "$dcommit_message" != "" ]]; then
+      git_commit_opts+=("-m" "$dcommit_message")
+      echo "Message: ${dcommit_message}"
+    else
+      if [[ $num_commits -gt 0 ]]; then
+        git_commit_opts+=("--reset-author" "--reuse-message=HEAD")
+      else
+        git_commit_opts+=("--reset-author")
+      fi
+    fi
+  else
+    git_commit_opts+=("-m" "$answer")
+    echo "Message: ${answer}"
+  fi
+
+  echo "[RUN] git commit" "${git_commit_opts[@]}"
+  if git commit "${git_commit_opts[@]}"; then
+    echo
+    echo "[COMMIT] git commit was SUCCESSFUL."
+  else
+    echo
+    echo "[COMMIT] git commit has FAILED."
+    exit 1
+  fi
+}
+
+main() {
+  if ! GIT_REPO=$(git rev-parse --show-toplevel); then
+    exit 1
+  fi
+
+  echo "[GIT REPO] $GIT_REPO"
+  echo
+
+  git_ci
+  echo
+}
+
+main

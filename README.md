@@ -231,6 +231,21 @@ path-is /Path/TO/FILE text
 
 ## Script category: git
 
+### git-dcommit
+
+Script to automate common Git commit tasks:
+- Automatically add untracked files (prompted),
+- Display git diff to the user before committing,
+- Commit changes to the Git repository,
+- Optionally reuse the previous Git commit message if available.
+
+Usage:
+```
+./script_name.sh
+```
+
+Run this script from within a Git repository to automate adding, reviewing, and committing changes.
+
 ### git-squash
 
 A script to squash new Git commits between the current branch and a specified branch.
@@ -246,6 +261,7 @@ Features:
 - Prompts for confirmation if there are more than 4 commits.
 - Automatically squashes all new commits into one, retaining the message of
   the first commit.
+
 
 ## Script category: ssh
 
