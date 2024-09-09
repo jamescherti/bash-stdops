@@ -37,25 +37,22 @@
 # -*- coding: utf-8 -*-
 
 if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 <host>"
+  echo "Usage: $0 <ssh-args-except-command>"
   exit 1
 fi
 
 HOST="$1"
 FIRST_TRY=1
-ERRNO=0
 while true; do
   if ssh -q -o BatchMode=yes "$HOST" true; then
-    ssh "$HOST" || ERRNO=1
-    break
+    # echo "Successful connection to '$HOST'."
+    exit 0
   fi
 
-  if [[ $FIRST_TRY -ne 0 ]]; then
-    echo "Waiting for a successful connection to '$HOST'..."
-    FIRST_TRY=0
-  fi
+  # if [[ $FIRST_TRY -ne 0 ]]; then
+  #   echo "Waiting for a successful connection to '$HOST'..." >&2
+  #   FIRST_TRY=0
+  # fi
 
   sleep 1
 done
-
-exit "$ERRNO"
