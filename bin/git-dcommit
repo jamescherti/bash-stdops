@@ -99,11 +99,11 @@ git_ask_commit_message() {
   echo "Git repository: $GIT_REPO"
   while true; do
     if [[ $num_commits -gt 0 ]]; then
-      echo "Press enter to commit with message above to " \
-        "$(git rev-parse --abbrev-ref HEAD) " \
+      echo "Press enter to commit with message above to" \
+        "$(git rev-parse --abbrev-ref HEAD)" \
         "(author: ${git_author})"
     else
-      echo "Press enter to commit with message above to " \
+      echo "Press enter to commit with message above to" \
         "(author: ${git_author})"
     fi
     read -e -r answer
