@@ -176,6 +176,19 @@ Here is an example of how you can combine `rgfiles-run` and `sre` to replace `Te
 rgfiles-run /path/to/git-repository/ sre Text1 Text2 {}
 ```
 
+### Script: git-sre
+
+Execute `sre` at the root directory of a Git repository.
+
+(The `sre` script replaces occurrences of a specified string or regular expression pattern with support for exact string matching, regular expressions, and case-insensitive matching.)
+
+Example usage:
+```
+git sre TextBefore TextAfter /path/to/git/repo
+```
+
+(sre also supports regular expressions.)
+
 ### rgfiles-sre
 
 Recursively replace strings in all files listed by the `rgfiles` command using `sre`.

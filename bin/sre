@@ -2,7 +2,8 @@
 #
 # Requirements:
 #   - sed
-#   - rgfiles-run (included in the bash-stdops project)
+#   - rgfiles (included in the bash-stdops project)
+#   - qparallel (included in the bash-stdops project)
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
@@ -28,7 +29,6 @@
 #
 # License:
 # --------
-#
 # Copyright (C) 2012-2024 James Cherti
 #
 # Distributed under terms of the GNU General Public License version 3.
@@ -57,7 +57,7 @@ show_usage() {
   echo
   echo "Usage: $0 [-ierdh] <string-before> <string-after> [file]" >&2
   echo
-  echo "  -i    Ignore case when comparing files"
+  echo "  -i    Ignore case"
   echo "  -e    Use regular expressions instead of exact strings."
   echo "  -r    Use extended regular expressions."
   echo "  -d    Show the sed command"
@@ -71,6 +71,7 @@ init() {
   FILE=""
   ERRNO=0
   IS_FILE=0
+  IS_DIR=0
   IS_STDIN=0
   USE_REGEX=0
   USE_REGEX_EXTENDED=0
@@ -115,11 +116,18 @@ init() {
 
   if [[ $# -gt 2 ]]; then
     FILE="$3"
-    if ! [[ -f $FILE ]]; then
+    if ! [[ -e $FILE ]]; then
       echo "Error: No such file or directory: $FILE" >&2
       exit 1
-    else
+    fi
+
+    if [[ -d "$FILE" ]]; then
+      IS_DIR=1
+    elif [[ -f "$FILE" ]]; then
       IS_FILE=1
+    else
+      echo "Error: Unsupported file type: $FILE" >&2
+      exit 1
     fi
   else
     IS_STDIN=1
@@ -197,6 +205,11 @@ main() {
   init "$@"
   if [[ $IS_STDIN -ne 0 ]]; then
     sed_str_replace
+  elif [[ $IS_DIR -ne 0 ]]; then
+    local args
+    args=("$@")
+    unset "args[-1]"
+    rgfind "$FILE" | qparallel "$0" "${args[@]}" "{}"
   elif [[ $IS_FILE -ne 0 ]]; then
     sed_str_replace "$FILE"
   fi

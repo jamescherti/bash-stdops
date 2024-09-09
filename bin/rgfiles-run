@@ -22,7 +22,6 @@
 #
 # License:
 # --------
-#
 # Copyright (C) 2012-2024 James Cherti
 #
 # Distributed under terms of the GNU General Public License version 3.
@@ -41,6 +40,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
+if [[ $RGFILES_RUN_CONFIRM = "" ]]; then
+  RGFILES_RUN_CONFIRM="1"
+fi
 set -euf -o pipefail
 
 if [[ $# -lt 2 ]]; then
@@ -52,9 +54,6 @@ if [[ $# -lt 2 ]]; then
   exit 1
 fi
 
-JOBS="$(nproc)"
-
-# Functions
 display_quoted_args() {
   local first=1
   local arg
@@ -95,16 +94,17 @@ fi
 RGFILES_CMD=(rgfiles "$DIR")
 PARALLEL_CMD=(qparallel "$@")
 
-# display_quoted_args "[DEBUG]" "${RGFILES_CMD[@]}" "|" "${PARALLEL_CMD[@]}"
-echo -n "[COMMAND] "
-display_quoted_args "$@"
-echo
-
-echo
-read -r -p "Execute against all the files in '$DIR'? [y,n] " ANSWER
-if [[ "$ANSWER" != "y" ]]; then
-  echo "Interrupted." >&2
-  exit 1
+if [[ $RGFILES_RUN_CONFIRM -ne 0 ]]; then
+  # display_quoted_args "[DEBUG]" "${RGFILES_CMD[@]}" "|" "${PARALLEL_CMD[@]}"
+  echo -n "[COMMAND] "
+  display_quoted_args "$@"
+  echo
+  echo
+  read -r -p "Execute against all the files in '$DIR'? [y,n] " ANSWER
+  if [[ "$ANSWER" != "y" ]]; then
+    echo "Interrupted." >&2
+    exit 1
+  fi
 fi
 
 "${RGFILES_CMD[@]}" | "${PARALLEL_CMD[@]}"
