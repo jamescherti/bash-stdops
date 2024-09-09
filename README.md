@@ -223,6 +223,24 @@ path-is /Path/TO/FILE binary
 path-is /Path/TO/FILE text
 ```
 
+## Script category: git
+
+### git-squash
+
+A script to squash new Git commits between the current branch and a specified branch.
+
+```
+Usage:
+  ./script_name.sh <other-git-branch>
+```
+
+Features:
+- Compares the current branch with the specified branch.
+- Displays a summary of new commits to be squashed.
+- Prompts for confirmation if there are more than 4 commits.
+- Automatically squashes all new commits into one, retaining the message of
+  the first commit.
+
 ## Script category: Misc
 
 ### Script: largs

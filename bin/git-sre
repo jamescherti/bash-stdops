@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
 # Requirements:
+#   - git
 #   - sre (included in the bash-stdops project)
 #
 # Author: James Cherti
