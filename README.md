@@ -35,7 +35,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
         - [git-dcommit](#git-dcommit)
         - [git-squash](#git-squash)
         - [Script category: ssh](#script-category-ssh)
-        - [Script: ssh-wait](#script-ssh-wait)
+        - [Script: sshwait](#script-sshwait)
         - [Script category: Misc](#script-category-misc)
         - [Script: largs](#script-largs)
         - [Scripts: cbcopy, cbpaste](#scripts-cbcopy-cbpaste)
@@ -266,16 +266,14 @@ Features:
 
 ### Script category: ssh
 
-### Script: ssh-wait
+### Script: sshwait
 
-Script to repeatedly attempt an SSH connection to a specified host.
+This script repeatedly attempts to check the availability of the SSH server on the host provided as the first argument. It exits with a 0 status upon successfully establishing a connection at least once. Note that it only verifies if the SSH server is reachable and does not provide a shell prompt or execute any commands on the remote host.
 
 Usage:
 ```
 ./script_name.sh <host>
 ```
-
-(The script loops until it successfully connects to the SSH host provided as the first argument.)
 
 ### Script category: Misc
 
