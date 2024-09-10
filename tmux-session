@@ -40,7 +40,7 @@
 set -euf -o pipefail
 
 TMUX_SESSION_LOOP=0
-TMUX_SESSION_NAME=""
+TMUX_SESSION_NAME="0"
 
 show_usage() {
   echo "Usage: $0 [-h]" >&2
