@@ -48,13 +48,21 @@ if [[ $# -lt 1 ]]; then
 fi
 
 change_filemod() {
-  echo "[$1] $2"
-  chmod "$1" "$2"
+  local file="$2"
+  echo "[$1] $file"
+  chmod "$1" "$file"
+}
+
+change_dirmod() {
+  local dir="$2"
+  [[ "${dir}" != */ ]] && dir="${dir}/"
+  echo "[$1] $dir"
+  chmod "$1" "$dir"
 }
 
 for TARGET in "$@"; do
   if [[ -d "$TARGET" ]]; then
-    change_filemod 755 "$TARGET"
+    change_dirmod 755 "$TARGET"
   elif [[ -f "$TARGET" ]]; then
     if head -n 1 "$TARGET" | grep -q '^#!'; then
       change_filemod 755 "$TARGET"
