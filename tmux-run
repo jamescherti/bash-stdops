@@ -74,7 +74,7 @@ get_tmux_session() {
 }
 
 run_in_tmux_window() {
-  local tmux_opts=()
+  local tmux_cmd=(tmux new-window)
   local tmux_session
   tmux_session=$(get_tmux_session)
 
@@ -85,10 +85,10 @@ run_in_tmux_window() {
       exit 1
     fi
 
-    tmux_opts+=(-t "$tmux_session")
+    tmux_cmd+=(-t "$tmux_session")
   fi
 
-  if ! tmux new-window "${tmux_opts[@]}" "$@"; then
+  if ! "${tmux_cmd[@]}" "$@"; then
     printf "Failed to open a new Tmux window with the command: %s\n" \
       "$*" >&2
     exit 1
