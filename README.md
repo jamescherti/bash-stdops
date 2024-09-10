@@ -71,7 +71,9 @@ export PATH=$PATH:~/.local/bin
 - sed
 - nproc
 
-## Install requirements on Debian/Ubuntu based systems
+## Install requirements
+
+### Install requirements on Debian/Ubuntu based systems
 
 ```
 sudo apt install coreutils parallel ripgrep sed git openssh-client
@@ -79,19 +81,19 @@ sudo apt install coreutils parallel ripgrep sed git openssh-client
 
 (coreutils installs nproc)
 
-## Install requirements on RedHat based systems
+### Install requirements on RedHat based systems
 
 ```
 sudo dnf install coreutils parallel ripgrep sed git openssh-clients
 ```
 
-## Install requirements on Gentoo based systems
+### Install requirements on Gentoo based systems
 
 ```
 sudo emerge sys-apps/coreutils sys-process/parallel sys-apps/ripgrep sys-apps/sed dev-vcs/git net-misc/openssh
 ```
 
-## Install requirements on Arch Linux based systems
+### Install requirements on Arch Linux based systems
 
 ```
 sudo pacman -S coreutils parallel ripgrep sed git openssh
