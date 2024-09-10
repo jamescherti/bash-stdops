@@ -74,7 +74,7 @@ export PATH=$PATH:~/.local/bin
 ## Install requirements on Debian/Ubuntu based systems
 
 ```
-sudo apt install coreutils parallel ripgrep sed
+sudo apt install coreutils parallel ripgrep sed git openssh-client
 ```
 
 (coreutils installs nproc)
@@ -82,19 +82,19 @@ sudo apt install coreutils parallel ripgrep sed
 ## Install requirements on RedHat based systems
 
 ```
-sudo dnf install coreutils parallel ripgrep sed
+sudo dnf install coreutils parallel ripgrep sed git openssh-clients
 ```
 
 ## Install requirements on Gentoo based systems
 
 ```
-sudo emerge sys-apps/coreutils  sys-process/parallel sys-apps/ripgrep sys-apps/sed
+sudo emerge sys-apps/coreutils sys-process/parallel sys-apps/ripgrep sys-apps/sed dev-vcs/git net-misc/openssh
 ```
 
 ## Install requirements on Arch Linux based systems
 
 ```
-sudo pacman -S coreutils parallel ripgrep sed
+sudo pacman -S coreutils parallel ripgrep sed git openssh
 ```
 
 ## Script category: tmux
