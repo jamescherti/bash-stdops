@@ -108,7 +108,7 @@ git_ask_commit_message() {
     fi
     read -e -r answer
 
-    if [[ ${#answer} -ne 0 ]] && [[ ${#answer} -le 1 ]]; then
+    if [[ ${#answer} -ne 0 ]] && [[ ${#answer} -lt 1 ]]; then
       echo "Error: the commit message is too short." >&2
       echo "" >&2
     else
