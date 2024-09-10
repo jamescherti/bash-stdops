@@ -288,8 +288,8 @@ This script is an alternative to xargs.
 
 ### Scripts: cbcopy, cbpaste
 
-- `cbcopy`: This script copies content to the clipboard.
-- `cbpaste`: Reads the contents of the system clipboard and writes it to standard output (stdout).
+- `cbcopy`: This script copies the content of stdin to the clipboard.
+- `cbpaste`: This script reads the contents of the system clipboard and writes it to stdout.
 
 ## License
 

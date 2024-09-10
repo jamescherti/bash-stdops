@@ -7,8 +7,9 @@
 #
 # Description:
 # ------------
-# This script copies content to the clipboard. It intelligently chooses the
-# appropriate method for the current environment:
+# This script copies the contents of standard input to the clipboard.
+#
+# It intelligently chooses the appropriate method for the current environment:
 # - If running on macOS with pbcopy available, it uses pbcopy.
 # - If running in an X11 environment with xclip available, it uses xclip.
 # - If no GUI environment is detected (no $DISPLAY variable), it saves the
