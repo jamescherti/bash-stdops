@@ -12,11 +12,11 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
     - [Install bash-stdops scripts](#install-bash-stdops-scripts)
         - [System-wide installation](#system-wide-installation)
         - [Alternative installation: Install in your home directory](#alternative-installation-install-in-your-home-directory)
-    - [Install requirements](#install-requirements)
-        - [Install requirements on Debian/Ubuntu based systems](#install-requirements-on-debianubuntu-based-systems)
-        - [Install requirements on RedHat based systems](#install-requirements-on-redhat-based-systems)
-        - [Install requirements on Gentoo based systems](#install-requirements-on-gentoo-based-systems)
-        - [Install requirements on Arch Linux based systems](#install-requirements-on-arch-linux-based-systems)
+    - [Install dependencies](#install-dependencies)
+        - [Install dependencies on Debian/Ubuntu based systems](#install-dependencies-on-debianubuntu-based-systems)
+        - [Install dependencies on RedHat/CentOS/Fedora based systems](#install-dependencies-on-redhatcentosfedora-based-systems)
+        - [Install dependencies on Gentoo based systems](#install-dependencies-on-gentoo-based-systems)
+        - [Install dependencies on Arch Linux based systems](#install-dependencies-on-arch-linux-based-systems)
     - [Scripts](#scripts)
         - [Script category: tmux](#script-category-tmux)
         - [Script: tmux-cbpaste](#script-tmux-cbpaste)
@@ -68,32 +68,72 @@ Ensure that `~/.local/bin` is included in your `$PATH` by adding the following l
 export PATH=$PATH:~/.local/bin
 ```
 
-## Install requirements
+## Install dependencies
 
-### Install requirements on Debian/Ubuntu based systems
+Instructions for installing dependencies are provided below. Note that not all of these dependencies are mandatory for every script.
 
-```
-sudo apt install coreutils parallel ripgrep sed git openssh-client
-```
-
-(coreutils installs nproc)
-
-### Install requirements on RedHat based systems
+### Install dependencies on Debian/Ubuntu based systems
 
 ```
+# Requirements
+sudo apt-get install coreutils parallel ripgrep sed
+
+# Git
+sudo apt-get install git
+
+# SSH
+sudo apt-get install openssh-client
+
+# Clipboard
+sudo apt-get install xclip
+```
+
+### Install dependencies on RedHat/CentOS/Fedora based systems
+
+```
+# Requirements
 sudo dnf install coreutils parallel ripgrep sed git openssh-clients
+
+# Git
+sudo dnf install git
+
+# SSH
+sudo dnf install openssh-clients
+
+# Clipboard
+sudo dnf install xclip
 ```
 
-### Install requirements on Gentoo based systems
+### Install dependencies on Gentoo based systems
 
 ```
-sudo emerge sys-apps/coreutils sys-process/parallel sys-apps/ripgrep sys-apps/sed dev-vcs/git net-misc/openssh
+# Requirements
+sudo emerge sys-apps/coreutils sys-process/parallel sys-apps/ripgrep sys-apps/sed
+
+# Git
+sudo emerge dev-vcs/git
+
+# SSH
+sudo emerge net-misc/openssh
+
+# Clipboard
+sudo emerge x11-misc/xclip
 ```
 
-### Install requirements on Arch Linux based systems
+### Install dependencies on Arch Linux based systems
 
 ```
-sudo pacman -S coreutils parallel ripgrep sed git openssh
+# Requirements
+sudo pacman -S coreutils parallel ripgrep sed
+
+# Git
+sudo pacman -S git
+
+# SSH
+sudo pacman -S openssh
+
+# Clipboard
+sudo pacman -S xclip
 ```
 
 ## Scripts
