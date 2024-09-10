@@ -40,7 +40,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
 
 <!-- markdown-toc end -->
 
-## Installation
+## Install bash-stdops scripts
 
 ### System-wide installation
 
@@ -63,13 +63,6 @@ Ensure that `~/.local/bin` is included in your `$PATH` by adding the following l
 ```
 export PATH=$PATH:~/.local/bin
 ```
-
-## Requirements
-
-- rg
-- parallel
-- sed
-- nproc
 
 ## Install requirements
 
