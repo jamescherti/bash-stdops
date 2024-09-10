@@ -95,7 +95,9 @@ sudo emerge sys-apps/coreutils sys-process/parallel sys-apps/ripgrep sys-apps/se
 sudo pacman -S coreutils parallel ripgrep sed git openssh
 ```
 
-## Script category: tmux
+## Scripts
+
+### Script category: tmux
 
 ### Script: tmux-cbpaste
 
@@ -130,7 +132,7 @@ The `tmux-session` script attempts to attach to an existing `tmux` session. If t
 
 If no session name is provided, it defaults to creating or attaching to a session named "0".
 
-## Script category: files, paths, and strings
+### Script category: files, paths, and strings
 
 ### Script: rgfiles
 
@@ -227,7 +229,7 @@ path-is /Path/TO/FILE binary
 path-is /Path/TO/FILE text
 ```
 
-## Script category: git
+### Script category: git
 
 ### git-dcommit
 
@@ -261,7 +263,7 @@ Features:
   the first commit.
 
 
-## Script category: ssh
+### Script category: ssh
 
 ### Script: ssh-wait
 
@@ -274,7 +276,7 @@ Usage:
 
 (The script loops until it successfully connects to the SSH host provided as the first argument.)
 
-## Script category: Misc
+### Script category: Misc
 
 ### Script: largs
 
