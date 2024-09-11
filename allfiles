@@ -51,7 +51,7 @@ if ! [[ -d "$DIR" ]]; then
   exit 1
 fi
 
-LIST_METHODS=(rg fd git find)
+LIST_METHODS=(fd git find)
 
 METHOD_EXECUTED=""
 for METHOD in "${LIST_METHODS[@]}"; do
@@ -66,7 +66,8 @@ for METHOD in "${LIST_METHODS[@]}"; do
     break
   elif [[ $METHOD = "fd" ]] && type -P fd &>/dev/null; then
     METHOD_EXECUTED="fd"
-    RG_CMD=(fd --type f --hidden --color=never . "$DIR" --no-ignore)
+    RG_CMD=(fd --type f --hidden --color=never --exclude .git --exclude .svn
+      . "$DIR" --no-ignore)
     "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
     break
   elif [[ $METHOD = "git" ]] && type -P git &>/dev/null \
