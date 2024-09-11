@@ -51,31 +51,56 @@ if ! [[ -d "$DIR" ]]; then
   exit 1
 fi
 
-LIST_METHODS=(fd git find)
+IGNORE_BINARY=1 # Setting this to non zero all other methods other than ripgrep
+LIST_METHODS=(rg fd find)
 
 METHOD_EXECUTED=""
 for METHOD in "${LIST_METHODS[@]}"; do
+  # Method: rg
   if [[ $METHOD = "rg" ]] && type -P rg &>/dev/null; then
     METHOD_EXECUTED="rg"
+    # Removed:
+    # --no-ignore-dot no-ignore-exclude no-ignore-global no-ignore-parent
     RG_CMD=(rg --hidden --no-messages --color=never --no-heading --files
-      --no-ignore)
+      --no-ignore-vcs
+      --no-binary)
     RG_CMD+=(--glob '!.git')
     RG_CMD+=(--glob '!.svn')
     RG_CMD+=("--" "$DIR")
     "${RG_CMD[@]}"
     break
-  elif [[ $METHOD = "fd" ]] && type -P fd &>/dev/null; then
+  fi
+
+  # Method: fd
+  if [[ $METHOD = "fd" ]] && type -P fd &>/dev/null; then
     METHOD_EXECUTED="fd"
-    RG_CMD=(fd --type f --hidden --color=never --exclude .git --exclude .svn
-      . "$DIR" --no-ignore)
-    "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
+    RG_CMD=(fd --type f --no-ignore-vcs --hidden --color=never)
+    RG_CMD+=(--exclude .svn)
+    RG_CMD+=(--exclude .git)
+    RG_CMD+=(".") # Regex path match
+    RG_CMD+=("$DIR")
+    if [[ $IGNORE_BINARY -ne 0 ]]; then
+      "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
+    else
+      "${RG_CMD[@]}"
+    fi
     break
-  elif [[ $METHOD = "git" ]] && type -P git &>/dev/null \
-    && git -C . rev-parse --is-inside-work-tree; then
+  fi
+
+  # Method: git
+  if [[ $METHOD = "git" ]] && type -P git &>/dev/null \
+    && git -C "$DIR" rev-parse --is-inside-work-tree; then
     METHOD_EXECUTED="git"
-    git ls-files "$DIR" | qparallel path-is -sp '{}' text
+    if [[ $IGNORE_BINARY -ne 0 ]]; then
+      git ls-files "$DIR" | qparallel path-is -sp '{}' text
+    else
+      git ls-files "$DIR"
+    fi
     break
-  elif [[ $METHOD = "find" ]] && type -P find &>/dev/null; then
+  fi
+
+  # Method: find
+  if [[ $METHOD = "find" ]] && type -P find &>/dev/null; then
     METHOD_EXECUTED="find"
     RG_CMD=(find)
     RG_CMD+=("$DIR")
@@ -86,7 +111,11 @@ for METHOD in "${LIST_METHODS[@]}"; do
     RG_CMD+=(-not -iwholename '*/.git/*')
     RG_CMD+=(-prune)
     RG_CMD+=(-print)
-    "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
+    if [[ $IGNORE_BINARY -ne 0 ]]; then
+      "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
+    else
+      "${RG_CMD[@]}"
+    fi
     break
   fi
 done
