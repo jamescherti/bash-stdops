@@ -35,9 +35,10 @@
 set -euf -o pipefail
 
 if [[ $# -ne 1 ]]; then
-  echo "Recursively search the specified directory and print the list of paths."
-  echo "(By default, it ignores: '.git' directories, files that match "
-  echo "'.gitignore' rules, and binary files.)"
+  echo "Recursively search the specified directory and print the list of file "
+  echo "paths."
+  echo "(By default, it ignores '.git' directories, files matching "
+  echo "'.gitignore' rules. When rg is used, it also ignores binary files.)"
   echo
   echo "Usage: $0 <dir>" >&2
   echo
@@ -46,9 +47,25 @@ fi
 
 DIR="$1"
 if ! [[ -d "$DIR" ]]; then
-  echo "Error: The directory does not exist: $DIR" >&2
+  echo "Error: The specified directory does not exist: $DIR" >&2
   exit 1
 fi
 
-exec rg --hidden --no-messages --color=never --glob '!.git' \
-  --files -- "$DIR"
+if type -P rg &>/dev/null; then
+  RG_CMD=(rg --hidden --no-messages --color=never --no-heading --files)
+  RG_CMD+=(--glob '!.git')
+  RG_CMD+=(--glob '!.svn')
+  RG_CMD+=("--" "$DIR")
+  exec "${RG_CMD[@]}"
+elif type -P fd &>/dev/null; then
+  # TODO: add filter for binary files
+  RG_CMD=(fd --hidden --color=never)
+  exec "${RG_CMD[@]}"
+elif type -P grep &>/dev/null; then
+  # TODO: add filter for binary files
+  RG_CMD=(grep --color=auto --exclude-dir=.git --exclude-dir=.svn)
+  exec "${RG_CMD[@]}"
+else
+  echo "Error: One of the following commands is required: rg, fd, or grep" >&2
+  exit 1
+fi

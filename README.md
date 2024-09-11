@@ -23,11 +23,10 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
         - [Script: tmux-run](#script-tmux-run)
         - [Script: tmux-session](#script-tmux-session)
         - [Script category: files, paths, and strings](#script-category-files-paths-and-strings)
-        - [Script: rgfiles](#script-rgfiles)
-        - [Script: rgfiles-run](#script-rgfiles-run)
+        - [Script: allfiles](#script-allfiles)
+        - [Script: allfiles-run](#script-allfiles-run)
         - [Script: sre](#script-sre)
         - [Script: git-sre](#script-git-sre)
-        - [rgfiles-sre](#rgfiles-sre)
         - [Scripts: path-tr, path-uppercase, path-lowercase](#scripts-path-tr-path-uppercase-path-lowercase)
         - [Script: autoperm](#script-autoperm)
         - [Script: path-is](#script-path-is)
@@ -175,22 +174,22 @@ If no session name is provided, it defaults to creating or attaching to a sessio
 
 ### Script category: files, paths, and strings
 
-### Script: rgfiles
+### Script: allfiles
 
-The `rgfiles` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores: ".git" directories, files that match ".gitignore" rules, and binary files.
+The `allfiles` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores: ".git" directories, files that match ".gitignore" rules, and binary files.
 
-### Script: rgfiles-run
+### Script: allfiles-run
 
 Recursively execute a command on all files listed by the `rg --files` command. For example, to recursively `cat` all text files in `/etc`, use the following command:
 ```
-rgfiles-run /etc cat {}
+allfiles-run /etc cat {}
 ```
 
 (`{}` is replaced with the path to each file.)
 
-Here is an example of how you can combine `rgfiles-run` and `sed` to replace "Text1" with "Text2" in a Git repository:
+Here is an example of how you can combine `allfiles-run` and `sed` to replace "Text1" with "Text2" in a Git repository:
 ```
-rgfiles-run /path/to/git-repository/ sed -i -e "s/Text1/Text2/g" {}
+allfiles-run /path/to/git-repository/ sed -i -e "s/Text1/Text2/g" {}
 ```
 
 ### Script: sre
@@ -218,9 +217,9 @@ Usage: sre [-ierdh] <string-before> <string-after>
   -h    Show this help message and exit
 ```
 
-Here is an example of how you can combine `rgfiles-run` and `sre` to replace `Text1` with `Text2` in a Git repository:
+Here is an example of how you can combine `allfiles-run` and `sre` to replace `Text1` with `Text2` in a Git repository:
 ```
-rgfiles-run /path/to/git-repository/ sre Text1 Text2 {}
+allfiles-run /path/to/git-repository/ sre Text1 Text2 {}
 ```
 
 ### Script: git-sre
@@ -235,10 +234,6 @@ git sre TextBefore TextAfter /path/to/git/repo
 ```
 
 (sre also supports regular expressions.)
-
-### rgfiles-sre
-
-Recursively replace strings in all files listed by the `rgfiles` command using `sre`.
 
 ### Scripts: path-tr, path-uppercase, path-lowercase
 

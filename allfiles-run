@@ -2,7 +2,7 @@
 #
 # Requirements:
 #   - parallel: https://www.gnu.org/software/parallel/
-#   - rgfiles: included in the bash-stdops project
+#   - allfiles: included in the bash-stdops project
 #   - nproc: https://savannah.gnu.org/git/?group=coreutils
 #   - sed
 #
@@ -15,7 +15,7 @@
 #
 # For example, to recursively `cat` all text files in `/etc`, use the following command:
 # ```
-# rgfiles-run /etc cat {}
+# allfiles-run /etc cat {}
 # ```
 #
 # (`{}` is replaced with the path to each file.)
@@ -91,7 +91,7 @@ fi
 # RUN
 #
 
-RGFILES_CMD=(rgfiles "$DIR")
+RGFILES_CMD=(allfiles "$DIR")
 PARALLEL_CMD=(qparallel "$@")
 
 if [[ $RGFILES_RUN_CONFIRM -ne 0 ]]; then
