@@ -36,6 +36,46 @@
 
 set -euf -o pipefail
 
+show_usage() {
+  {
+    echo "Check whether a given file path points to a " \
+      "binary file or a text file."
+    echo ""
+    echo "Usage: $0 [-h] <path/to/existing/file> <binary|text>"
+    echo
+    echo "-h    Show this help message and exit"
+    echo "-s    Always exit with a status of 0"
+    echo "-p    Print the path when it correspond to the specified type"
+  } >&2
+}
+
+NEVER_FAIL=0
+PRINT_PATH=0
+while getopts ":hsp" opt; do
+  case ${opt} in
+  p)
+    PRINT_PATH=1
+    ;;
+  s)
+    NEVER_FAIL=1
+    ;;
+  h)
+    show_usage
+    exit 1
+    ;;
+  \?)
+    echo "Invalid option: -$OPTARG" >&2
+    exit 1
+    ;;
+  :)
+    echo "Invalid option: -$OPTARG requires an argument" >&2
+    exit 1
+    ;;
+  esac
+done
+
+shift $((OPTIND - 1))
+
 _is_binary() {
   # Grep options:
   # -------------
@@ -49,18 +89,20 @@ _is_binary() {
 }
 
 if [[ $# -lt 2 ]]; then
-  echo "Check whether a given file path points to a " \
-    "binary file or a text file." >&2
-  echo "" >&2
-  echo "Usage: $0 <path/to/existing/file> <binary|text>" >&2
+  show_usage
   exit 1
 fi
 
 PATH_EXISTING_FILE="$1"
 shift
 
-if ! [[ -f "$PATH_EXISTING_FILE" ]]; then
+if ! [[ -e "$PATH_EXISTING_FILE" ]]; then
   echo "Error: No such file or directory: $PATH_EXISTING_FILE" >&2
+  exit 1
+fi
+
+if ! [[ -f "$PATH_EXISTING_FILE" ]]; then
+  echo "Error: The following path is not a file: $PATH_EXISTING_FILE" >&2
   exit 1
 fi
 
@@ -71,9 +113,17 @@ for REQUEST in "$@"; do
     continue
   fi
 
-  printf "Error: The following path is not '%s': %s\n" \
-    "$REQUEST" "$PATH_EXISTING_FILE"
-  exit 1
+  if [[ $NEVER_FAIL -ne 0 ]]; then
+    exit 0
+  else
+    printf "Error: The following path is not '%s': %s\n" \
+      "$REQUEST" "$PATH_EXISTING_FILE"
+    exit 1
+  fi
 done
 
-printf "%s\n" "$PATH_EXISTING_FILE"
+if [[ $PRINT_PATH -ne 0 ]]; then
+  printf "%s\n" "$PATH_EXISTING_FILE"
+fi
+
+exit 0
