@@ -209,7 +209,7 @@ main() {
     local args
     args=("$@")
     unset "args[-1]"
-    rgfind "$FILE" | qparallel "$0" "${args[@]}" "{}"
+    rgfiles "$FILE" | qparallel "$0" "${args[@]}" "{}"
   elif [[ $IS_FILE -ne 0 ]]; then
     sed_str_replace "$FILE"
   fi
