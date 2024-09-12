@@ -41,9 +41,8 @@
 
 set -euf -o pipefail
 
-if type -P cbpaste &>/dev/null; then
-  CBPASTE_BIN=cbpaste
-else
+CBPASTE_BIN=cbpaste
+if ! type -P "$CBPASTE_BIN" &>/dev/null; then
   SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
   CBPASTE_BIN="$SCRIPT_DIR/cbpaste"
 fi
