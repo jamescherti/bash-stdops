@@ -46,15 +46,14 @@ export CBPASTE_STRIP_NEWLINE=1
 
 if [[ $("$CBPASTE_BIN" | wc -l) -le 1 ]]; then
   tmux run \
-    "'$CBPASTE_BIN' | tmux load-buffer - ; tmux paste-buffer"
+    "'$CBPASTE_BIN' | tmux load-buffer - ; tmux paste-buffer" || true
 else
   if tmux list-commands | grep -q '^display-popup ' &>/dev/null; then
     tmux display-popup -T \
-      "Clipboard" "'$CBPASTE_BIN'" \; confirm-before \
-      -p 'Paste? [y,n]' \
+      "Clipboard" "'$CBPASTE_BIN'" ';' 'confirm-before' '-p' 'Paste? [y,n]' \
       "run '$CBPASTE_BIN | tmux load-buffer - ; tmux paste-buffer'" || true
   else
     tmux confirm-before -p "'$(cbpaste)' PASTE? [y,n]" \
-      "run '$CBPASTE_BIN | tmux load-buffer - ; tmux paste-buffer'"
+      "run '$CBPASTE_BIN | tmux load-buffer - ; tmux paste-buffer'" || true
   fi
 fi
