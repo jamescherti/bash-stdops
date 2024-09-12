@@ -43,17 +43,10 @@ if [ "$#" -ne 1 ]; then
 fi
 
 HOST="$1"
-FIRST_TRY=1
 while true; do
   if ssh -q -o BatchMode=yes "$HOST" true; then
-    # echo "Successful connection to '$HOST'."
     exit 0
   fi
-
-  # if [[ $FIRST_TRY -ne 0 ]]; then
-  #   echo "Waiting for a successful connection to '$HOST'..." >&2
-  #   FIRST_TRY=0
-  # fi
 
   sleep 1
 done
