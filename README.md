@@ -36,9 +36,10 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
         - [Script category: ssh](#script-category-ssh)
             - [Script: sshwait](#script-sshwait)
         - [Script category: Misc](#script-category-misc)
-            - [Script: largs](#script-largs)
             - [Scripts: cbcopy, cbpaste](#scripts-cbcopy-cbpaste)
             - [Script: outonerror](#script-outonerror)
+            - [Script: largs](#script-largs)
+            - [Script: xargs-loop](#script-xargs-loop)
     - [License](#license)
     - [Links](#links)
 
@@ -313,15 +314,6 @@ Usage:
 
 ### Script category: Misc
 
-#### Script: largs
-
-This script reads from standard input and executes a command for each line, replacing `{}` with the content read from stdin. It expects `{}` to be passed as one of the arguments and will fail if `{}` is not provided.
-
-This script is an alternative to xargs.
-``` bash
-{ echo "file1"; echo "file2"; } | largs ls {}
-```
-
 #### Scripts: cbcopy, cbpaste
 
 - `cbcopy`: This script copies the content of stdin to the clipboard.
@@ -332,6 +324,28 @@ This script is an alternative to xargs.
 The `outonerror` script redirects the command's output to stderr only if the command fails (non-zero exit code). No output is shown when the command succeeds.
 
 Here is an example of how to use this script: [How to make cron notify the user about a failed command by redirecting its output to stderr only when it fails (non-zero exit code)](https://www.jamescherti.com/cron-email-output-failed-commands-only/).
+
+#### Script: largs
+
+This script reads from standard input and executes a command for each line, replacing `{}` with the content read from stdin. It expects `{}` to be passed as one of the arguments and will fail if `{}` is not provided.
+
+This script is an alternative to xargs.
+``` bash
+{ echo "file1"; echo "file2"; } | largs ls {}
+```
+
+#### Script: xargs-loop
+
+The `xargs-loop` script processes lines from standard input, executing a specified command for each line and replacing `{}` in the command with the current line of input. This provides flexibility by using `{}` as a placeholder, similar to `xargs -I {}`, but with the ability to handle each line individually. Unlike `xargs`, which has mutually exclusive `-L 1` and `-I {}` options, `xargs-loop` combines the benefits of both by enabling placeholder substitution and line-by-line processing.
+
+Usage:
+```
+cat input_file | xargs-loop command '{}'
+```
+
+Options:
+- The script reads lines from stdin and replaces '{}' with each line in the command.
+- The script exits with status 1 if the command does not include '{}' or if any command execution fails.
 
 ## License
 

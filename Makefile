@@ -32,6 +32,7 @@ install:
 	install -m 755 ./tmux-run "$(PREFIX)/bin/"
 	install -m 755 ./tmux-session "$(PREFIX)/bin/"
 	install -m 755 ./largs "$(PREFIX)/bin/"
+	install -m 755 ./xargs-loop "$(PREFIX)/bin/"
 
 uninstall:
 	rm "$(PREFIX)/bin/outonerror"
@@ -53,4 +54,5 @@ uninstall:
 	rm "$(PREFIX)/bin/tmux-cbpaste"
 	rm "$(PREFIX)/bin/tmux-run"
 	rm "$(PREFIX)/bin/tmux-session"
+	rm "$(PREFIX)/bin/xargs-loop"
 	rm "$(PREFIX)/bin/largs"
