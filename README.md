@@ -331,6 +331,8 @@ This script is an alternative to xargs.
 
 The `outonerror` script redirects the command's output to stderr only if the command fails (non-zero exit code). No output is shown when the command succeeds.
 
+Here is an example of how you can use this script: [How to make cron notify the user about a failed command by redirecting its output to stderr only when it fails (non-zero exit code)](https://www.jamescherti.com/cron-email-output-failed-commands-only/).
+
 ## License
 
 Copyright (C) 2012-2024 [James Cherti](https://www.jamescherti.com)
