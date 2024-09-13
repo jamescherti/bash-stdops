@@ -19,25 +19,26 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
         - [Install dependencies on Arch Linux based systems](#install-dependencies-on-arch-linux-based-systems)
     - [Scripts](#scripts)
         - [Script category: tmux](#script-category-tmux)
-        - [Script: tmux-cbpaste](#script-tmux-cbpaste)
-        - [Script: tmux-run](#script-tmux-run)
-        - [Script: tmux-session](#script-tmux-session)
+            - [Script: tmux-cbpaste](#script-tmux-cbpaste)
+            - [Script: tmux-run](#script-tmux-run)
+            - [Script: tmux-session](#script-tmux-session)
         - [Script category: files, paths, and strings](#script-category-files-paths-and-strings)
-        - [Script: allfiles](#script-allfiles)
-        - [Script: allfiles-run](#script-allfiles-run)
-        - [Script: sre](#script-sre)
-        - [Script: git-sre](#script-git-sre)
-        - [Scripts: path-tr, path-uppercase, path-lowercase](#scripts-path-tr-path-uppercase-path-lowercase)
-        - [Script: autoperm](#script-autoperm)
-        - [Script: path-is](#script-path-is)
+            - [Script: allfiles](#script-allfiles)
+            - [Script: allfiles-run](#script-allfiles-run)
+            - [Script: sre](#script-sre)
+            - [Script: git-sre](#script-git-sre)
+            - [Scripts: path-tr, path-uppercase, path-lowercase](#scripts-path-tr-path-uppercase-path-lowercase)
+            - [Script: autoperm](#script-autoperm)
+            - [Script: path-is](#script-path-is)
         - [Script category: git](#script-category-git)
-        - [git-dcommit](#git-dcommit)
-        - [git-squash](#git-squash)
+            - [git-dcommit](#git-dcommit)
+            - [git-squash](#git-squash)
         - [Script category: ssh](#script-category-ssh)
-        - [Script: sshwait](#script-sshwait)
+            - [Script: sshwait](#script-sshwait)
         - [Script category: Misc](#script-category-misc)
-        - [Script: largs](#script-largs)
-        - [Scripts: cbcopy, cbpaste](#scripts-cbcopy-cbpaste)
+            - [Script: largs](#script-largs)
+            - [Scripts: cbcopy, cbpaste](#scripts-cbcopy-cbpaste)
+            - [Script: outonerror](#script-outonerror)
     - [License](#license)
     - [Links](#links)
 
@@ -139,11 +140,11 @@ sudo pacman -S xclip
 
 ### Script category: tmux
 
-### Script: tmux-cbpaste
+#### Script: tmux-cbpaste
 
 The `tmux-cbpaste`: script enables pasting clipboard content into the current `tmux` window. It ensures safety by requiring user confirmation before pasting, preventing accidental insertion of data.
 
-### Script: tmux-run
+#### Script: tmux-run
 
 This script executes a command in a new `tmux` window, which functions similarly to a tab in other applications.
 
@@ -166,7 +167,7 @@ Example 2:
 tmux-run bash -c htop
 ```
 
-### Script: tmux-session
+#### Script: tmux-session
 
 The `tmux-session` script attempts to attach to an existing `tmux` session. If the session does not exist, it creates a new session with that name.
 
@@ -174,11 +175,11 @@ If no session name is provided, it defaults to creating or attaching to a sessio
 
 ### Script category: files, paths, and strings
 
-### Script: allfiles
+#### Script: allfiles
 
 The `allfiles` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores: ".git" directories, files that match ".gitignore" rules, and binary files.
 
-### Script: allfiles-run
+#### Script: allfiles-run
 
 Recursively execute a command on all files listed by the `rg --files` command. For example, to recursively `cat` all text files in `/etc`, use the following command:
 ```
@@ -192,7 +193,7 @@ Here is an example of how you can combine `allfiles-run` and `sed` to replace "T
 allfiles-run /path/to/git-repository/ sed -i -e "s/Text1/Text2/g" {}
 ```
 
-### Script: sre
+#### Script: sre
 
 The `sre` script replaces occurrences of a specified string or regular expression pattern with support for exact string matching, regular expressions, and case-insensitive matching. Unlike `sed`, which uses a single argument for replacements, this script allows specifying the text-to-find and text-to-replace as two distinct arguments.
 
@@ -222,7 +223,7 @@ Here is an example of how you can combine `allfiles-run` and `sre` to replace `T
 allfiles-run /path/to/git-repository/ sre Text1 Text2 {}
 ```
 
-### Script: git-sre
+#### Script: git-sre
 
 Execute `sre` at the root directory of a Git repository.
 
@@ -235,7 +236,7 @@ git sre TextBefore TextAfter /path/to/git/repo
 
 (sre also supports regular expressions.)
 
-### Scripts: path-tr, path-uppercase, path-lowercase
+#### Scripts: path-tr, path-uppercase, path-lowercase
 
 - `path-tr`: This script processes a given file path, extracts the directory and filename, converts the filename using the specified `tr` options (e.g., to lowercase), and prints the modified full path. Example usage: `path-tr /Path/TO/FILE '[:upper:]' '[:lower:]'` This will convert the filename to lowercase, producing: `/Path/TO/file`.
 
@@ -243,7 +244,7 @@ git sre TextBefore TextAfter /path/to/git/repo
 
 - `path-lowercase`: This script processes a given file path, extracts the directory and filename, converts the filename to lowercase. Example usage: `path-lowercase /Path/TO/FILE`. This will convert the filename to lowercase, producing: `/Path/TO/file`.
 
-### Script: autoperm
+#### Script: autoperm
 
 This script sets permissions for files or directories:
 - If it's a directory: 755
@@ -255,7 +256,7 @@ Usage:
 autoperm /path/to/file-or-directory
 ```
 
-### Script: path-is
+#### Script: path-is
 
 Print the Path to stdout and exit with the code 0 if it is a binary or text file.
 
@@ -267,7 +268,7 @@ path-is /Path/TO/FILE text
 
 ### Script category: git
 
-### git-dcommit
+#### git-dcommit
 
 Script to automate common Git commit tasks:
 - Automatically add untracked files (prompted),
@@ -282,7 +283,7 @@ Usage:
 
 Run this script from within a Git repository to automate adding, reviewing, and committing changes.
 
-### git-squash
+#### git-squash
 
 A script to squash new Git commits between the current branch and a specified branch.
 
@@ -301,7 +302,7 @@ Features:
 
 ### Script category: ssh
 
-### Script: sshwait
+#### Script: sshwait
 
 This script repeatedly attempts to check the availability of the SSH server on the host provided as the first argument. It exits with a 0 status upon successfully establishing a connection at least once. Note that it only verifies if the SSH server is reachable and does not provide a shell prompt or execute any commands on the remote host.
 
@@ -312,7 +313,7 @@ Usage:
 
 ### Script category: Misc
 
-### Script: largs
+#### Script: largs
 
 This script reads from standard input and executes a command for each line, replacing `{}` with the content read from stdin. It expects `{}` to be passed as one of the arguments and will fail if `{}` is not provided.
 
@@ -321,10 +322,14 @@ This script is an alternative to xargs.
 { echo "file1"; echo "file2"; } | largs ls {}
 ```
 
-### Scripts: cbcopy, cbpaste
+#### Scripts: cbcopy, cbpaste
 
 - `cbcopy`: This script copies the content of stdin to the clipboard.
 - `cbpaste`: This script reads the contents of the system clipboard and writes it to stdout.
+
+#### Script: outonerror
+
+The `outonerror` script redirects the command's output to stderr only if the command fails (non-zero exit code). No output is shown when the command succeeds.
 
 ## License
 

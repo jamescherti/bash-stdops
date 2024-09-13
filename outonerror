@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Redirect the command's output to stderr only if the command fails (non-zero
+# exit code). No output is shown when the command succeeds.
+#
+# License:
+# --------
+# Copyright (C) 2012-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+if [[ "$#" -eq 0 ]]; then
+  echo "Usage: $0 <command> [args...]" >&2
+  exit 1
+fi
+
+cleanup() {
+  if [[ "$OUTPUT_TMP" != "" ]] && [[ -f "$OUTPUT_TMP" ]]; then
+    rm -f "$OUTPUT_TMP"
+  fi
+
+  OUTPUT_TMP=""
+}
+
+trap 'cleanup' INT TERM EXIT
+OUTPUT_TMP=$(mktemp --suffix=.outonerror)
+
+ERRNO=0
+"$@" >"$OUTPUT_TMP" 2>&1 || ERRNO="$?"
+if [[ "$ERRNO" -ne 0 ]]; then
+  cat "$OUTPUT_TMP" >&2
+  echo "$0: '$*' exited with status $ERRNO" >&2
+fi
+
+cleanup
+exit "$ERRNO"
