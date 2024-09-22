@@ -40,18 +40,22 @@ show_usage() {
     echo "Usage: $0 [options] <dir>" >&2
     echo
     echo "Options:"
-    echo "  -h, --help    Show this help message and exit"
-    echo "  --type f      Show only files (default)"
-    echo "  --type d      Show only directories"
+    echo "  -h, --help             Show this help message and exit"
+    echo "  -t, --no-binary        Exclude binary files (slow)"
+    echo "  --type f               Show only files (default)"
+    echo "  --type d               Show only directories"
   } >&2
 }
 
 DIR=""
 TYPE_FLAG=f
-IGNORE_BINARY=0      # Setting this to non zero all other methods other than ripgrep
+IGNORE_BINARY=0
 LIST_METHODS=(rg fd) # 'find' removed
 while [[ $# -gt 0 ]]; do
   case "$1" in
+  -t | --no-binary)
+    IGNORE_BINARY=1
+    ;;
   -h | --help)
     show_usage
     exit 1
