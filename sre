@@ -209,7 +209,7 @@ main() {
     local args
     args=("$@")
     unset "args[-1]"
-    walk "$FILE" | qparallel "$0" "${args[@]}" "{}"
+    walk --type text "$FILE" | qparallel "$0" "${args[@]}" "{}"
   elif [[ $IS_FILE -ne 0 ]]; then
     sed_str_replace "$FILE"
   fi

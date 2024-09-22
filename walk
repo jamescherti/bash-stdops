@@ -60,7 +60,6 @@ show_usage() {
 
 DIR=""
 TYPE_FLAG="all"
-IGNORE_BINARY=0
 LIST_METHODS=(rg fd) # 'find' removed
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -189,7 +188,7 @@ if [[ $METHOD_EXECUTED = "" ]]; then
   # else
   #   echo "[INFO] Successfully executed: $METHOD_EXECUTED" >&2
 else
-  if [[ $TYPE_FLAG = text ]] && [[ $IGNORE_BINARY -ne 0 ]]; then
+  if [[ $TYPE_FLAG = text ]]; then
     "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
   else
     "${RG_CMD[@]}"
