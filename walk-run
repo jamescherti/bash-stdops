@@ -2,7 +2,7 @@
 #
 # Requirements:
 #   - parallel: https://www.gnu.org/software/parallel/
-#   - walkdir: included in the bash-stdops project
+#   - walk: included in the bash-stdops project
 #   - nproc: https://savannah.gnu.org/git/?group=coreutils
 #   - sed
 #
@@ -15,7 +15,7 @@
 #
 # For example, to recursively `cat` all text files in `/etc`, use the following command:
 # ```
-# walkdir-run /etc cat {}
+# walk-run /etc cat {}
 # ```
 #
 # (`{}` is replaced with the path to each file.)
@@ -91,7 +91,7 @@ fi
 # RUN
 #
 
-RGFILES_CMD=(walkdir "$DIR")
+RGFILES_CMD=(walk "$DIR")
 PARALLEL_CMD=(qparallel "$@")
 
 if [[ $RGFILES_RUN_CONFIRM -ne 0 ]]; then

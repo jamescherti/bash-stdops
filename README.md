@@ -23,8 +23,8 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
             - [Script: tmux-run](#script-tmux-run)
             - [Script: tmux-session](#script-tmux-session)
         - [Script category: files, paths, and strings](#script-category-files-paths-and-strings)
-            - [Script: walkdir](#script-walkdir)
-            - [Script: walkdir-run](#script-walkdir-run)
+            - [Script: walk](#script-walk)
+            - [Script: walk-run](#script-walk-run)
             - [Script: sre](#script-sre)
             - [Script: git-sre](#script-git-sre)
             - [Scripts: path-tr, path-uppercase, path-lowercase](#scripts-path-tr-path-uppercase-path-lowercase)
@@ -176,22 +176,22 @@ If no session name is provided, it defaults to creating or attaching to a sessio
 
 ### Script category: files, paths, and strings
 
-#### Script: walkdir
+#### Script: walk
 
-The `walkdir` bash script recursively search the specified directory and print the list of file or directory paths to standard output.
+The `walk` bash script recursively search the specified directory and print the list of file or directory paths to standard output.
 
-#### Script: walkdir-run
+#### Script: walk-run
 
 Recursively execute a command on all files listed by the `rg --files` command. For example, to recursively `cat` all text files in `/etc`, use the following command:
 ```
-walkdir-run /etc cat {}
+walk-run /etc cat {}
 ```
 
 (`{}` is replaced with the path to each file.)
 
-Here is an example of how you can combine `walkdir-run` and `sed` to replace "Text1" with "Text2" in a Git repository:
+Here is an example of how you can combine `walk-run` and `sed` to replace "Text1" with "Text2" in a Git repository:
 ```
-walkdir-run /path/to/git-repository/ sed -i -e "s/Text1/Text2/g" {}
+walk-run /path/to/git-repository/ sed -i -e "s/Text1/Text2/g" {}
 ```
 
 #### Script: sre
@@ -219,9 +219,9 @@ Usage: sre [-ierdh] <string-before> <string-after>
   -h    Show this help message and exit
 ```
 
-Here is an example of how you can combine `walkdir-run` and `sre` to replace `Text1` with `Text2` in a Git repository:
+Here is an example of how you can combine `walk-run` and `sre` to replace `Text1` with `Text2` in a Git repository:
 ```
-walkdir-run /path/to/git-repository/ sre Text1 Text2 {}
+walk-run /path/to/git-repository/ sre Text1 Text2 {}
 ```
 
 #### Script: git-sre
