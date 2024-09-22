@@ -178,7 +178,7 @@ If no session name is provided, it defaults to creating or attaching to a sessio
 
 #### Script: allfiles
 
-The `allfiles` bash script recursively search the specified directory and print the list of file paths to standard output. By default, the it ignores: ".git" directories, files that match ".gitignore" rules, and binary files.
+The `allfiles` bash script recursively search the specified directory and print the list of file or directory paths to standard output.
 
 #### Script: allfiles-run
 

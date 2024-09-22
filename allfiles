@@ -6,11 +6,8 @@
 #
 # Description:
 # ------------
-# Recursively search the specified directory and print the list of file paths to
-# standard output. By default, it ignores:
-#   - `.git` directories,
-#   - files that match `.gitignore` rules,
-#   - and binary files.
+# Recursively search the specified directory and print the list of file or
+# directory paths to standard output.
 #
 # License:
 # --------
@@ -34,52 +31,99 @@
 
 set -euf -o pipefail
 
-if [[ $# -ne 1 ]]; then
-  echo "Recursively search the specified directory and print the list of file "
-  echo "paths."
-  echo "(By default, it ignores '.git' and '.svn' directories, files matching "
-  echo "'.gitignore' rules, and binary files.)"
-  echo
-  echo "Usage: $0 <dir>" >&2
-  echo
+show_usage() {
+  {
+
+    echo "Recursively search the specified directory and print the list of "
+    echo "files or directories."
+    echo
+    echo "Usage: $0 [options] <dir>" >&2
+    echo
+    echo "Options:"
+    echo "  -h, --help    Show this help message and exit"
+    echo "  --type f      Show only files (default)"
+    echo "  --type d      Show only directories"
+  } >&2
+}
+
+DIR=""
+TYPE_FLAG=f
+IGNORE_BINARY=0      # Setting this to non zero all other methods other than ripgrep
+LIST_METHODS=(rg fd) # 'find' removed
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -h | --help)
+    show_usage
+    exit 1
+    ;;
+  --type)
+    shift
+    case "$1" in
+    f | d)
+      TYPE_FLAG="$1"
+      ;;
+    *)
+      echo "Invalid type: $1 (must be f or d)" >&2
+      exit 1
+      ;;
+    esac
+    ;;
+  *)
+    if [[ $DIR != "" ]]; then
+      echo "Invalid option: $1" >&2
+      exit 1
+    fi
+
+    DIR="$1"
+    ;;
+  esac
+
+  shift
+done
+
+if [[ $DIR = "" ]]; then
+  show_usage
   exit 1
 fi
 
-DIR="$1"
 if ! [[ -d "$DIR" ]]; then
   echo "Error: The specified directory does not exist: $DIR" >&2
   exit 1
 fi
 
-IGNORE_BINARY=1 # Setting this to non zero all other methods other than ripgrep
-LIST_METHODS=(rg fd find)
-
 METHOD_EXECUTED=""
 for METHOD in "${LIST_METHODS[@]}"; do
   # Method: rg
-  if [[ $METHOD = "rg" ]] && type -P rg &>/dev/null; then
+  # rg is faster for finding files
+  if [[ $TYPE_FLAG = f ]] && [[ $METHOD = "rg" ]] \
+    && type -P rg &>/dev/null; then
     METHOD_EXECUTED="rg"
     # Removed:
     # --no-ignore-dot no-ignore-exclude no-ignore-global no-ignore-parent
-    RG_CMD=(rg --hidden --no-messages --color=never --no-heading --files
-      --no-ignore-vcs
-      --no-binary)
+    # --no-ignore-vcs
+    # --no-binary
+    RG_CMD=(rg --hidden --no-messages --color=never --no-heading --files)
     RG_CMD+=(--glob '!.git')
     RG_CMD+=(--glob '!.svn')
     RG_CMD+=("--" "$DIR")
-    "${RG_CMD[@]}"
+    if [[ $IGNORE_BINARY -ne 0 ]]; then
+      "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
+    else
+      "${RG_CMD[@]}"
+    fi
     break
   fi
 
   # Method: fd
   if [[ $METHOD = "fd" ]] && type -P fd &>/dev/null; then
     METHOD_EXECUTED="fd"
-    RG_CMD=(fd --type f --no-ignore-vcs --hidden --color=never)
-    RG_CMD+=(--exclude .svn)
-    RG_CMD+=(--exclude .git)
+    # --no-ignore-vcs
+    RG_CMD=(fd --type "$TYPE_FLAG" --hidden --color=never)
+    RG_CMD+=(--exclude '.svn')
+    RG_CMD+=(--exclude '.git')
     RG_CMD+=(".") # Regex path match
     RG_CMD+=("$DIR")
-    if [[ $IGNORE_BINARY -ne 0 ]]; then
+    if [[ $TYPE_FLAG != d ]] && [[ $IGNORE_BINARY -ne 0 ]]; then
       "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
     else
       "${RG_CMD[@]}"
@@ -88,36 +132,36 @@ for METHOD in "${LIST_METHODS[@]}"; do
   fi
 
   # Method: git
-  if [[ $METHOD = "git" ]] && type -P git &>/dev/null \
-    && git -C "$DIR" rev-parse --is-inside-work-tree; then
-    METHOD_EXECUTED="git"
-    if [[ $IGNORE_BINARY -ne 0 ]]; then
-      git ls-files "$DIR" | qparallel path-is -sp '{}' text
-    else
-      git ls-files "$DIR"
-    fi
-    break
-  fi
+  # if [[ $METHOD = "git" ]] && type -P git &>/dev/null \
+  #   && git -C "$DIR" rev-parse --is-inside-work-tree; then
+  #   METHOD_EXECUTED="git"
+  #   if [[ $IGNORE_BINARY -ne 0 ]]; then
+  #     git ls-files "$DIR" | qparallel path-is -sp '{}' text
+  #   else
+  #     git ls-files "$DIR"
+  #   fi
+  #   break
+  # fi
 
   # Method: find
-  if [[ $METHOD = "find" ]] && type -P find &>/dev/null; then
-    METHOD_EXECUTED="find"
-    RG_CMD=(find)
-    RG_CMD+=("$DIR")
-    RG_CMD+=(-type f)
-    RG_CMD+=(-a)
-    RG_CMD+=(-not -iwholename '*/.svn/*')
-    RG_CMD+=("-a")
-    RG_CMD+=(-not -iwholename '*/.git/*')
-    RG_CMD+=(-prune)
-    RG_CMD+=(-print)
-    if [[ $IGNORE_BINARY -ne 0 ]]; then
-      "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
-    else
-      "${RG_CMD[@]}"
-    fi
-    break
-  fi
+  # if [[ $METHOD = "find" ]] && type -P find &>/dev/null; then
+  #   METHOD_EXECUTED="find"
+  #   RG_CMD=(find)
+  #   RG_CMD+=("$DIR")
+  #   RG_CMD+=(-type f)
+  #   RG_CMD+=(-a)
+  #   RG_CMD+=(-not -iwholename '*/.svn/*')
+  #   RG_CMD+=("-a")
+  #   RG_CMD+=(-not -iwholename '*/.git/*')
+  #   RG_CMD+=(-prune)
+  #   RG_CMD+=(-print)
+  #   if [[ $IGNORE_BINARY -ne 0 ]]; then
+  #     "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
+  #   else
+  #     "${RG_CMD[@]}"
+  #   fi
+  #   break
+  # fi
 done
 
 if [[ $METHOD_EXECUTED = "" ]]; then
