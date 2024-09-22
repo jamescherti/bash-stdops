@@ -2,7 +2,7 @@
 #
 # Requirements:
 #   - sed
-#   - allfiles (included in the bash-stdops project)
+#   - walkdir (included in the bash-stdops project)
 #   - qparallel (included in the bash-stdops project)
 #
 # Author: James Cherti
@@ -209,7 +209,7 @@ main() {
     local args
     args=("$@")
     unset "args[-1]"
-    allfiles "$FILE" | qparallel "$0" "${args[@]}" "{}"
+    walkdir "$FILE" | qparallel "$0" "${args[@]}" "{}"
   elif [[ $IS_FILE -ne 0 ]]; then
     sed_str_replace "$FILE"
   fi

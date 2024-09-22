@@ -40,22 +40,30 @@ show_usage() {
     echo "Usage: $0 [options] <dir>" >&2
     echo
     echo "Options:"
-    echo "  -h, --help             Show this help message and exit"
-    echo "  -t, --no-binary        Exclude binary files (slow)"
-    echo "  --type f               Show only files (default)"
-    echo "  --type d               Show only directories"
+    echo "  -h, --help         Show this help message and exit"
+    echo
+    echo "  --type <type>"
+    echo "      --type directory   Show only directories"
+    echo "      --type d"
+    echo
+    echo "      --type file        Show only files"
+    echo "      --type f"
+    echo
+    echo "      --type text        Show only text files (exclude binary files)"
+    echo "      --type t"
+    echo
+    echo "      --type symlink     Show only symbolic links"
+    echo "      --type l"
+    echo
   } >&2
 }
 
 DIR=""
-TYPE_FLAG=f
+TYPE_FLAG="all"
 IGNORE_BINARY=0
 LIST_METHODS=(rg fd) # 'find' removed
 while [[ $# -gt 0 ]]; do
   case "$1" in
-  -t | --no-binary)
-    IGNORE_BINARY=1
-    ;;
   -h | --help)
     show_usage
     exit 1
@@ -63,8 +71,14 @@ while [[ $# -gt 0 ]]; do
   --type)
     shift
     case "$1" in
-    f | d)
-      TYPE_FLAG="$1"
+    f | file)
+      TYPE_FLAG="file"
+      ;;
+    d | directory)
+      TYPE_FLAG="directory"
+      ;;
+    t | text)
+      TYPE_FLAG="text"
       ;;
     *)
       echo "Invalid type: $1 (must be f or d)" >&2
@@ -99,39 +113,40 @@ METHOD_EXECUTED=""
 for METHOD in "${LIST_METHODS[@]}"; do
   # Method: rg
   # rg is faster for finding files
-  if [[ $TYPE_FLAG = f ]] && [[ $METHOD = "rg" ]] \
-    && type -P rg &>/dev/null; then
-    METHOD_EXECUTED="rg"
-    # Removed:
-    # --no-ignore-dot no-ignore-exclude no-ignore-global no-ignore-parent
-    # --no-ignore-vcs
-    # --no-binary
-    RG_CMD=(rg --hidden --no-messages --color=never --no-heading --files)
-    RG_CMD+=(--glob '!.git')
-    RG_CMD+=(--glob '!.svn')
-    RG_CMD+=("--" "$DIR")
-    if [[ $IGNORE_BINARY -ne 0 ]]; then
-      "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
-    else
-      "${RG_CMD[@]}"
+  if [[ $TYPE_FLAG != all ]] && [[ $TYPE_FLAG != directory ]]; then
+    if [[ $METHOD = "rg" ]] && type -P rg &>/dev/null; then
+      METHOD_EXECUTED="rg"
+      # Removed:
+      # --no-ignore-dot no-ignore-exclude no-ignore-global no-ignore-parent
+      # --no-ignore-vcs
+      # --no-binary
+      RG_CMD=(rg --hidden --no-messages --color=never --no-heading --files)
+      RG_CMD+=(--glob '!.git')
+      RG_CMD+=(--glob '!.svn')
+      RG_CMD+=("--" "$DIR")
+      break
     fi
-    break
   fi
 
   # Method: fd
   if [[ $METHOD = "fd" ]] && type -P fd &>/dev/null; then
     METHOD_EXECUTED="fd"
     # --no-ignore-vcs
-    RG_CMD=(fd --type "$TYPE_FLAG" --hidden --color=never)
+    RG_CMD=(fd --hidden --color=never)
+
+    if [[ $TYPE_FLAG = text ]] || [[ $TYPE_FLAG = file ]]; then
+      RG_CMD+=(--type "file")
+    elif [[ $TYPE_FLAG = directory ]]; then
+      RG_CMD+=(--type "directory")
+    elif [[ $TYPE_FLAG != all ]]; then
+      echo "Unsupported fd --type: $TYPE_FLAG" >&2
+      exit 1
+    fi
+
     RG_CMD+=(--exclude '.svn')
     RG_CMD+=(--exclude '.git')
     RG_CMD+=(".") # Regex path match
     RG_CMD+=("$DIR")
-    if [[ $TYPE_FLAG != d ]] && [[ $IGNORE_BINARY -ne 0 ]]; then
-      "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
-    else
-      "${RG_CMD[@]}"
-    fi
     break
   fi
 
@@ -171,6 +186,12 @@ done
 if [[ $METHOD_EXECUTED = "" ]]; then
   echo "Error: One of the following commands is required: rg, fd, or find" >&2
   exit 1
-# else
-#   echo "[INFO] Successfully executed: $METHOD_EXECUTED" >&2
+  # else
+  #   echo "[INFO] Successfully executed: $METHOD_EXECUTED" >&2
+else
+  if [[ $TYPE_FLAG = text ]] && [[ $IGNORE_BINARY -ne 0 ]]; then
+    "${RG_CMD[@]}" | qparallel path-is -sp '{}' text
+  else
+    "${RG_CMD[@]}"
+  fi
 fi
