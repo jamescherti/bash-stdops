@@ -237,6 +237,11 @@ sed_str_replace() {
     local full_path
     full_path=$(readlink -m "$FILE")
 
+    if ! [[ -f "$full_path" ]]; then
+      echo "Error: File not found: $full_path" >&2
+      exit 1
+    fi
+
     local basename
     basename=$(basename "$full_path")
 
@@ -248,6 +253,11 @@ sed_str_replace() {
 
     local new_fullpath
     new_fullpath=$(readlink -m "$dirname/$new_basename")
+
+    if [[ -f "$new_fullpath" ]]; then
+      echo "Error: File already exists: $new_fullpath" >&2
+      exit 1
+    fi
 
     if [[ $full_path != "$new_fullpath" ]]; then
       if [[ $DEBUG -ne 0 ]]; then
