@@ -222,10 +222,15 @@ sed_str_replace() {
     local new_basename
     new_basename=$(echo "$basename" | sed "${sed_rename_options[@]}")
 
+    local new_fullpath=$(readlink -e "$new_fullpath")
+
     if [[ $DEBUG -ne 0 ]]; then
-      echo "[RENAME] $FILE -> $dirname/$new_basename"
+      echo "[RENAME] $full_path -> $dirname/$new_basename"
     fi
-    mv "$FILE" "$dirname/$new_basename"
+
+    if [[ $full_path != "$new_fullpath" ]]; then
+      mv "$full_path" "$new_fullpath"
+    fi
   fi
 }
 
