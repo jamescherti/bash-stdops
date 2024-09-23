@@ -254,12 +254,13 @@ sed_str_replace() {
     local new_fullpath
     new_fullpath=$(readlink -m "$dirname/$new_basename")
 
-    if [[ -f "$new_fullpath" ]]; then
-      echo "Error: File already exists: $new_fullpath" >&2
-      exit 1
-    fi
-
     if [[ $full_path != "$new_fullpath" ]]; then
+      if [[ -f "$new_fullpath" ]]; then
+        echo "Error: Cannot move '$full_path' to '$new_fullpath' because the " \
+          "destination file already exists." >&2
+        exit 1
+      fi
+
       if [[ $DEBUG -ne 0 ]]; then
         echo "[RENAME] $full_path -> $new_fullpath"
       fi
