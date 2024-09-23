@@ -49,6 +49,30 @@
 
 set -eu -o pipefail
 
+# shellcheck disable=SC2317
+traceback() {
+  local lasterr="$?"
+  set +o xtrace
+  local code="-1"
+  local bash_command=${BASH_COMMAND}
+  echo "Error in ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "('$bash_command' exited with status $lasterr)" >&2
+  if [ ${#FUNCNAME[@]} -gt 2 ]; then
+    # Print out the stack trace described by $function_stack
+    echo "Traceback of ${BASH_SOURCE[1]} (most recent call last):" >&2
+    for ((i = 0; i < ${#FUNCNAME[@]} - 1; i++)); do
+      local funcname="${FUNCNAME[$i]}"
+      [ "$i" -eq "0" ] && funcname=$bash_command
+      echo -e "  ${BASH_SOURCE[$i + 1]}:${BASH_LINENO[$i]}\\t$funcname" >&2
+    done
+  fi
+  echo "Exiting with status ${code}" >&2
+  exit "${code}"
+}
+
+trap "traceback" "ERR"
+set -o errtrace
+
 show_usage() {
   echo "This script replaces occurrences of a specified string or regular "
   echo "expression pattern with support for exact string matching, regular "
@@ -211,7 +235,7 @@ sed_str_replace() {
   # Rename
   if [[ $RENAME -ne 0 ]]; then
     local full_path
-    full_path=$(readlink -e "$FILE")
+    full_path=$(readlink -m "$FILE")
 
     local basename
     basename=$(basename "$full_path")
@@ -222,13 +246,14 @@ sed_str_replace() {
     local new_basename
     new_basename=$(echo "$basename" | sed "${sed_rename_options[@]}")
 
-    local new_fullpath=$(readlink -e "$new_fullpath")
-
-    if [[ $DEBUG -ne 0 ]]; then
-      echo "[RENAME] $full_path -> $dirname/$new_basename"
-    fi
+    local new_fullpath
+    new_fullpath=$(readlink -m "$dirname/$new_basename")
 
     if [[ $full_path != "$new_fullpath" ]]; then
+      if [[ $DEBUG -ne 0 ]]; then
+        echo "[RENAME] $full_path -> $new_fullpath"
+      fi
+
       mv "$full_path" "$new_fullpath"
     fi
   fi
