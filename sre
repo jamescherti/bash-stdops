@@ -59,9 +59,10 @@ show_usage() {
   echo
   echo "  -i    Ignore case"
   echo "  -e    Use regular expressions instead of exact strings."
-  echo "  -r    Use extended regular expressions."
+  echo "  -E    Use extended regular expressions."
   echo "  -d    Show the sed command"
   echo "  -h    Show this help message and exit"
+  echo "  -r    Also rename the file name using the pattern"
   exit 1
 }
 
@@ -75,13 +76,17 @@ init() {
   IS_STDIN=0
   USE_REGEX=0
   USE_REGEX_EXTENDED=0
+  RENAME=0
 
   # Process command line options
-  while getopts ":erdih" opt; do
+  while getopts ":Eerdih" opt; do
     case ${opt} in
-    r)
+    E)
       USE_REGEX=1
       USE_REGEX_EXTENDED=1
+      ;;
+    r)
+      RENAME=1
       ;;
     e)
       USE_REGEX=1
@@ -139,6 +144,7 @@ sed_str_replace() {
   # and sed together might lead to issues with special characters, especially
   # with characters that echo might handle differently.
   local sed_options=()
+  local sed_rename_options=()
   if [[ $# -gt 0 ]]; then
     sed_options+=("-i")
   fi
@@ -188,9 +194,11 @@ sed_str_replace() {
 
   if [[ $USE_REGEX_EXTENDED -ne 0 ]]; then
     sed_options+=(-r)
+    sed_rename_options+=(-r)
   fi
 
   sed_options+=(-e "s/${text_before}/${text_after}/g${sed_ignore_case}")
+  sed_rename_options+=(-e "s/${text_before}/${text_after}/g${sed_ignore_case}")
 
   if [[ $# -gt 0 ]]; then
     sed_options+=("$FILE")
@@ -199,6 +207,26 @@ sed_str_replace() {
     echo sed "${sed_options[@]}"
   fi
   sed "${sed_options[@]}"
+
+  # Rename
+  if [[ $RENAME -ne 0 ]]; then
+    local full_path
+    full_path=$(readlink -e "$FILE")
+
+    local basename
+    basename=$(basename "$full_path")
+
+    local dirname
+    dirname=$(dirname "$full_path")
+
+    local new_basename
+    new_basename=$(echo "$basename" | sed "${sed_rename_options[@]}")
+
+    if [[ $DEBUG -ne 0 ]]; then
+      echo "[RENAME] $FILE -> $dirname/$new_basename"
+    fi
+    mv "$FILE" "$dirname/$new_basename"
+  fi
 }
 
 main() {
