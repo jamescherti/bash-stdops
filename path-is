@@ -96,10 +96,10 @@ fi
 PATH_EXISTING_FILE="$1"
 shift
 
-if ! [[ -e "$PATH_EXISTING_FILE" ]]; then
-  echo "Error: No such file or directory: $PATH_EXISTING_FILE" >&2
-  exit 1
-fi
+# if ! [[ -e "$PATH_EXISTING_FILE" ]]; then
+#   echo "Error: No such file or directory: $PATH_EXISTING_FILE" >&2
+#   exit 1
+# fi
 
 if ! [[ -f "$PATH_EXISTING_FILE" ]]; then
   echo "Error: The following path is not a file: $PATH_EXISTING_FILE" >&2
