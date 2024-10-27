@@ -41,27 +41,14 @@
 set -euf -o pipefail
 
 # Exclude asc files
-bash_traceback() {
-  local lasterr="$?"
-  set +o xtrace
-  local code="-1"
-  local bash_command=${BASH_COMMAND}
-  echo "Error in ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
-    "('$bash_command' exited with status $lasterr)" >&2
-  if [ ${#FUNCNAME[@]} -gt 2 ]; then
-    echo "Traceback of ${BASH_SOURCE[1]} (most recent call last):" >&2
-    for ((i = 0; i < ${#FUNCNAME[@]} - 1; i++)); do
-      local funcname="${FUNCNAME[$i]}"
-      [ "$i" -eq "0" ] && funcname=$bash_command
-      echo -e "  ${BASH_SOURCE[$i + 1]}:${BASH_LINENO[$i]}\\t$funcname" >&2
-    done
-  fi
-  echo "Exiting with status ${code}" >&2
-  exit "${code}"
+error_handler() {
+  local errno="$?"
+  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
 }
 
-trap "bash_traceback" "ERR"
-set -o errtrace
+trap "error_handler" ERR
 
 git_add() {
   if [[ "$(git ls-files --others --exclude-standard | wc -l)" -gt 0 ]]; then
