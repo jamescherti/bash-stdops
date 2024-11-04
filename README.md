@@ -49,7 +49,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
 
 ### System-wide installation
 
-To install the `bash-stdops` scripts system-wide, use the following command:
+To install `bash-stdops` scripts system-wide, use the following command:
 ```bash
 sudo make install
 ```
