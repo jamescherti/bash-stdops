@@ -158,6 +158,7 @@ git_ci() {
 
 main() {
   trap "error_handler" ERR
+  set -o errtrace
   if ! GIT_REPO=$(git rev-parse --show-toplevel); then
     exit 1
   fi
