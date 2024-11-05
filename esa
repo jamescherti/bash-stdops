@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
 # Requirements:
+#   - killall
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
@@ -54,6 +55,8 @@ error_handler() {
     "(${BASH_COMMAND} exited with status $errno)" >&2
   exit "${errno}"
 }
+trap "error_handler" ERR
+set -o errtrace
 
 secure-pidfile() {
   if [[ -f "$ESA_SSH_AGENT_PIDFILE" ]]; then
@@ -77,9 +80,11 @@ kill-ssh-agent() {
 reload-ssh-agent() {
   local errno=0
   kill-ssh-agent
-  ssh-agent "${ESA_SSH_AGENT_ARGS[@]}" \
-    | grep -E '(SSH_AUTH_SOCK|SSH_AGENT_PID)' >"${ESA_SSH_AGENT_PIDFILE}" \
-    || errno="$?"
+  (
+    echo "# esa"
+    ssh-agent "${ESA_SSH_AGENT_ARGS[@]}" \
+      | grep -E '(SSH_AUTH_SOCK|SSH_AGENT_PID)'
+  ) >"${ESA_SSH_AGENT_PIDFILE}" || errno="$?"
   secure-pidfile
   if [[ $errno -ne 0 ]]; then
     return 1
@@ -151,27 +156,25 @@ expect "passphrase"
 send "\$env(E_SSH_PASSWORD)\r"
 expect eof
 EOF
-      echo
     fi
   done
 }
 
 main() {
-  trap "error_handler" ERR
-  set -o errtrace
-
   if [[ $# -eq 0 ]]; then
-    echo "Usage: $0 <start|add|exec>" >&2
-    echo
-    echo "start: Starts the ssh agent"
-    echo "stop: Stops the ssh agent"
-    echo "add: Adds private keys requiring a password with ssh-add"
-    echo "exec: Executes a program using this agent"
-    echo "env: Displays the ssh-agent environment variables"
+    {
+      echo "Usage: $0 <start|add|exec>"
+      echo
+      echo "start: Starts the ssh agent"
+      echo "stop: Stops the ssh agent"
+      echo "add: Adds private keys requiring a password with ssh-add"
+      echo "exec: Executes a program using this agent"
+      echo "env: Displays the ssh-agent environment variables"
+    } >&2
     exit 1
   fi
 
-  for item in killall chmod; do
+  for item in killall chmod grep; do
     if ! type -P "$item" >/dev/null 2>&1; then
       echo "$0: no '$item' in ($PATH)" >&2
       return 1
@@ -181,7 +184,6 @@ main() {
   case "$1" in
   start)
     esa-start
-    echo
     echo "Started."
     ;;
 
@@ -199,8 +201,7 @@ main() {
   exec)
     esa-start
     esa-ssh-add
-    shift
-    "$@"
+    shift && exec "$@"
     ;;
 
   env)
