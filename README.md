@@ -316,6 +316,7 @@ start: Starts the ssh agent
 start: Stop the ssh agent
 add: Adds private keys requiring a password with ssh-add
 exec: Executes a program using this agent
+env: Displays the ssh-agent environment variables
 ```
 
 #### Script: sshwait

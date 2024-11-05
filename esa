@@ -167,6 +167,7 @@ main() {
     echo "stop: Stops the ssh agent"
     echo "add: Adds private keys requiring a password with ssh-add"
     echo "exec: Executes a program using this agent"
+    echo "env: Displays the ssh-agent environment variables"
     exit 1
   fi
 
@@ -202,7 +203,7 @@ main() {
     "$@"
     ;;
 
-  vars)
+  env)
     if [[ -f "$ESA_SSH_AGENT_PIDFILE" ]]; then
       cat "$ESA_SSH_AGENT_PIDFILE"
     else
