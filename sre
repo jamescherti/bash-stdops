@@ -76,6 +76,7 @@ show_usage() {
 
 init() {
   trap "error_handler" ERR
+  set -o errtrace
 
   IGNORE_CASE=0
   DEBUG=0
