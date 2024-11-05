@@ -12,6 +12,7 @@ all:
 
 install:
 	install -d "$(PREFIX)/bin"
+	install -m 755 ./esa "$(PREFIX)/bin/"
 	install -m 755 ./outonerror "$(PREFIX)/bin/"
 	install -m 755 ./autoperm "$(PREFIX)/bin/"
 	install -m 755 ./path-lowercase "$(PREFIX)/bin/"
@@ -35,6 +36,7 @@ install:
 	install -m 755 ./xargs-loop "$(PREFIX)/bin/"
 
 uninstall:
+	rm "$(PREFIX)/bin/esa"
 	rm "$(PREFIX)/bin/outonerror"
 	rm "$(PREFIX)/bin/autoperm"
 	rm "$(PREFIX)/bin/path-lowercase"

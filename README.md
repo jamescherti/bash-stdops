@@ -34,6 +34,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
             - [git-dcommit](#git-dcommit)
             - [git-squash](#git-squash)
         - [Script category: ssh](#script-category-ssh)
+            - [Script: esa](#script-esa)
             - [Script: sshwait](#script-sshwait)
         - [Script category: Misc](#script-category-misc)
             - [Scripts: cbcopy, cbpaste](#scripts-cbcopy-cbpaste)
@@ -302,6 +303,20 @@ Features:
 
 
 ### Script category: ssh
+
+#### Script: esa
+
+Esa (Easy SSH Agent) simplifies starting ssh-agent, adding keys with ssh-add, and executing commands using the agent.
+
+Usage:
+```
+Usage: esa <start|stop|ssh-add|exec>
+
+start: Starts the ssh agent
+start: Stop the ssh agent
+add: Adds private keys requiring a password with ssh-add
+exec: Executes a program using this agent
+```
 
 #### Script: sshwait
 

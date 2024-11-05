@@ -1,0 +1,220 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Esa (Easy SSH Agent) simplifies starting ssh-agent, adding keys with ssh-add,
+# and executing commands using the agent.
+#
+# License:
+# --------
+# Copyright (C) 2012-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -eu -o pipefail
+
+ESA_SSH_AGENT_PIDFILE="$HOME/.esa-ssh-agent.pid"
+ESA_SSH_AGENT_TIMEOUT=${ESA_SSH_AGENT_TIMEOUT:-}
+SSH_DIR="$HOME/.ssh" # Used to find private keys
+
+set -euf -o pipefail
+
+# Default values
+if [[ "$ESA_SSH_AGENT_TIMEOUT" = "" ]]; then
+  ESA_SSH_AGENT_TIMEOUT=$((3600 * 12))
+fi
+
+# Dynamic variables
+# -t = the identities lifetime in seconds (default is forever)
+ESA_SSH_AGENT_ARGS=(-t "$ESA_SSH_AGENT_TIMEOUT")
+
+# shellcheck disable=SC2317
+error_handler() {
+  local errno="$?"
+  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
+}
+
+secure-pidfile() {
+  if [[ -f "$ESA_SSH_AGENT_PIDFILE" ]]; then
+    chmod 600 "${ESA_SSH_AGENT_PIDFILE}"
+  fi
+}
+
+load-ssh-agent-pidfile() {
+  secure-pidfile
+  if [[ -f "${ESA_SSH_AGENT_PIDFILE}" ]] \
+    && grep -q SSH_AUTH_SOCK "$ESA_SSH_AGENT_PIDFILE"; then
+    # shellcheck disable=SC1090
+    source "${ESA_SSH_AGENT_PIDFILE}" || return 1
+  fi
+}
+
+kill-ssh-agent() {
+  killall --user "$(id -u)" -u "$USER" ssh-agent >/dev/null 2>&1 || true
+}
+
+reload-ssh-agent() {
+  local errno=0
+  kill-ssh-agent
+  ssh-agent "${ESA_SSH_AGENT_ARGS[@]}" \
+    | grep -E '(SSH_AUTH_SOCK|SSH_AGENT_PID)' >"${ESA_SSH_AGENT_PIDFILE}" \
+    || errno="$?"
+  secure-pidfile
+  if [[ $errno -ne 0 ]]; then
+    return 1
+  fi
+}
+
+esa-start() {
+  local item
+  local errno=0
+
+  load-ssh-agent-pidfile
+
+  ssh-add -l >/dev/null 2>&1 || errno="$?"
+  if [ "$errno" -eq "2" ]; then
+    # errno=2 when ssh-add is unable to contact the authentication agent
+    reload-ssh-agent
+    load-ssh-agent-pidfile
+  elif [ "$errno" -ne "0" ] && [ "$errno" -ne "1" ]; then
+    echo "Error: 'ssh-add -l' returned $errno." >&2
+    return 1
+  fi
+
+  # Output
+  # echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+  # echo "SSH_AGENT_PID=$SSH_AGENT_PID"
+}
+
+esa-stop() {
+  kill-ssh-agent
+  >"$ESA_SSH_AGENT_PIDFILE"
+  secure-pidfile
+}
+
+esa-ssh-add() {
+  for item in ssh-add expect; do
+    if ! type -P "$item" >/dev/null 2>&1; then
+      echo "$0: no '$item' in ($PATH)" >&2
+      return 1
+    fi
+  done
+
+  if ! [[ -d "$SSH_DIR" ]]; then
+    echo "Error: The directory does not exist: $SSH_DIR" >&2
+    exit 1
+  fi
+
+  readarray -t LIST_SSH_KEY_FILES \
+    < <(grep -lR "PRIVATE KEY" "$SSH_DIR" 2>/dev/null) || return 1
+  if [[ ${#LIST_SSH_KEY_FILES[@]} -eq 0 ]]; then
+    return 0
+  fi
+
+  SSH_PASSWORD=""
+  for PRIVATE_KEY_FILE in "${LIST_SSH_KEY_FILES[@]}"; do
+    FINGERPRINT=$(ssh-keygen -lf "$PRIVATE_KEY_FILE" | awk '{print $2}')
+
+    if ! ssh-add -l 2>/dev/null | grep -q "$FINGERPRINT"; then
+      if [[ $SSH_PASSWORD = "" ]]; then
+        read -r -p "SSH key password for $PRIVATE_KEY_FILE: " -s SSH_PASSWORD
+      fi
+
+      # 2>&1
+      E_PRIVATE_KEY_FILE="$PRIVATE_KEY_FILE" \
+        E_SSH_PASSWORD="$SSH_PASSWORD" \
+        LC_ALL=C expect >/dev/null <<EOF
+set timeout 2
+spawn ssh-add "\$env(E_PRIVATE_KEY_FILE)"
+expect "passphrase"
+send "\$env(E_SSH_PASSWORD)\r"
+expect eof
+EOF
+      echo
+    fi
+  done
+}
+
+main() {
+  trap "error_handler" ERR
+  set -o errtrace
+
+  if [[ $# -eq 0 ]]; then
+    echo "Usage: $0 <start|add|exec>" >&2
+    echo
+    echo "start: Starts the ssh agent"
+    echo "stop: Stops the ssh agent"
+    echo "add: Adds private keys requiring a password with ssh-add"
+    echo "exec: Executes a program using this agent"
+    exit 1
+  fi
+
+  for item in killall chmod; do
+    if ! type -P "$item" >/dev/null 2>&1; then
+      echo "$0: no '$item' in ($PATH)" >&2
+      return 1
+    fi
+  done
+
+  case "$1" in
+  start)
+    esa-start
+    echo
+    echo "Started."
+    ;;
+
+  stop)
+    esa-stop
+    echo "Stopped."
+    ;;
+
+  ssh-add)
+    esa-start
+    esa-ssh-add
+    echo "Success."
+    ;;
+
+  exec)
+    esa-start
+    esa-ssh-add
+    shift
+    "$@"
+    ;;
+
+  vars)
+    if [[ -f "$ESA_SSH_AGENT_PIDFILE" ]]; then
+      cat "$ESA_SSH_AGENT_PIDFILE"
+    else
+      echo "Error: No such file or directory: $ESA_SSH_AGENT_PIDFILE" >&2
+      exit 1
+    fi
+    ;;
+  *)
+    echo "Error: Unsupported command: $1" >&2
+    exit 1
+    ;;
+  esac
+}
+
+main "$@"
