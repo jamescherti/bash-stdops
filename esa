@@ -202,7 +202,14 @@ main() {
       echo "Error: You need to specify the command to execute" >&2
       exit 1
     fi
+
+    if ! type -P "$1" &>/dev/null; then
+      echo "Error: Command not found: $1" >&2
+      exit 1
+    fi
+
     exec "$@"
+    exit 1
     ;;
 
   env)
