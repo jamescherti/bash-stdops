@@ -31,18 +31,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-set -eu -o pipefail
-
-ESA_SSH_AGENT_PIDFILE="$HOME/.esa-ssh-agent.pid"
 ESA_SSH_AGENT_TIMEOUT=${ESA_SSH_AGENT_TIMEOUT:-}
-SSH_DIR="$HOME/.ssh" # Used to find private keys
-
 set -euf -o pipefail
 
-# Default values
-if [[ "$ESA_SSH_AGENT_TIMEOUT" = "" ]]; then
-  ESA_SSH_AGENT_TIMEOUT=$((3600 * 12))
-fi
+# Global variables
+ESA_SSH_AGENT_PIDFILE="$HOME/.esa-ssh-agent.pid"
+SSH_DIR="$HOME/.ssh"
+[[ "$ESA_SSH_AGENT_TIMEOUT" = "" ]] && ESA_SSH_AGENT_TIMEOUT=$((3600 * 12))
 
 # Dynamic variables
 # -t = the identities lifetime in seconds (default is forever)
@@ -77,7 +72,7 @@ kill-ssh-agent() {
   killall --user "$(id -u)" -u "$USER" ssh-agent >/dev/null 2>&1 || true
 }
 
-reload-ssh-agent() {
+load-ssh-agent() {
   local errno=0
   kill-ssh-agent
   (
@@ -100,7 +95,8 @@ esa-start() {
   ssh-add -l >/dev/null 2>&1 || errno="$?"
   if [ "$errno" -eq "2" ]; then
     # errno=2 when ssh-add is unable to contact the authentication agent
-    reload-ssh-agent
+    kill-ssh-agent
+    load-ssh-agent
     load-ssh-agent-pidfile
   elif [ "$errno" -ne "0" ] && [ "$errno" -ne "1" ]; then
     echo "Error: 'ssh-add -l' returned $errno." >&2
