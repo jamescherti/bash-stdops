@@ -197,6 +197,10 @@ main() {
   exec)
     esa-start
     esa-ssh-add
+    if [[ $# -eq 0 ]]; then
+      echo "Error: You need to specify the command to execute" >&2
+      exit 1
+    fi
     shift && exec "$@"
     ;;
 
