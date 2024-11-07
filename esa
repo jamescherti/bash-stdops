@@ -140,6 +140,7 @@ esa-ssh-add() {
     if ! ssh-add -l 2>/dev/null | grep -q "$FINGERPRINT"; then
       if [[ $SSH_PASSWORD = "" ]]; then
         read -r -p "SSH key password for $PRIVATE_KEY_FILE: " -s SSH_PASSWORD
+        echo
       fi
 
       # 2>&1
