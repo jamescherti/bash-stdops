@@ -209,8 +209,8 @@ main() {
       exit 1
     fi
 
-    exec "$@"
-    exit 1
+    "$@" || exit 1
+    exit 0
     ;;
 
   env)
