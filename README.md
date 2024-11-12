@@ -36,6 +36,8 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
         - [Script category: ssh](#script-category-ssh)
             - [Script: esa](#script-esa)
             - [Script: sshwait](#script-sshwait)
+        - [X11/Wayland scripts](#x11wayland-scripts)
+            - [xocrshot](#xocrshot)
         - [Script category: Misc](#script-category-misc)
             - [Scripts: cbcopy, cbpaste](#scripts-cbcopy-cbpaste)
             - [Script: outonerror](#script-outonerror)
@@ -326,6 +328,27 @@ This script repeatedly attempts to check the availability of the SSH server on t
 Usage:
 ```
 ./script_name.sh <host>
+```
+
+### X11/Wayland scripts
+
+#### xocrshot
+
+The xocrshot script captures a screenshot using 'scrot', performs optical character recognition (OCR) using 'tesseract' command, and:
+- Displays the extracted text in the terminal
+- Copies it to the clipboard.
+
+Features:
+- Captures a screenshot using the 'scrot' command,
+- Performs OCR on the screenshot using Tesseract,
+- Displays the extracted text in the terminal,
+- Copies the extracted text to the clipboard using 'xclip',
+- Provides error handling and cleanup of temporary files,
+- Supports notifications using 'notify-send' (if available).
+
+Usage:
+``` bash
+xocrshot
 ```
 
 ### Script category: Misc

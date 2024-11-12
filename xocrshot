@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Requirements:
+# -------------
+#   - scrot
+#   - xclip
+#   - tesseract
+#
+# Optional requirements:
+#   - notify-send
+#
+# Description:
+# ------------
+# The xocrshot script captures a screenshot using 'scrot', performs optical
+# character recognition (OCR) using 'tesseract' command, and:
+# - Displays the extracted text in the terminal
+# - Copies it to the clipboard.
+#
+# Features:
+# - Captures a screenshot using the 'scrot' command,
+# - Performs OCR on the screenshot using Tesseract,
+# - Displays the extracted text in the terminal,
+# - Copies the extracted text to the clipboard using 'xclip',
+# - Provides error handling and cleanup of temporary files,
+# - Supports notifications using 'notify-send' (if available).
+#
+# Usage:
+# Run the script from the command line:
+#   xocrshot
+#
+# License:
+# --------
+# Copyright (C) 2012-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+TESSERACT_ARGS=()
+
+# shellcheck disable=SC2317
+error_handler() {
+  local errno="$?"
+  printf "%s" "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
+}
+
+notify() {
+  local text="$1"
+  printf "[INFO] %s" "$text" >&2
+  if type -P notify-send &>/dev/null; then
+    notify-send "$text" &>/dev/null
+  fi
+}
+
+TEMP_DIR=""
+ATEXIT_DONE=0
+atexit() {
+  local errno="$?"
+  if [[ "$ATEXIT_DONE" -eq 0 ]]; then
+    ATEXIT_DONE=1
+  fi
+  if [[ $TEMP_DIR != "" ]]; then
+    rm -fr "$TEMP_DIR"
+    TEMP_DIR=""
+  fi
+  exit "$errno"
+}
+
+trap 'atexit' INT TERM EXIT
+take_screenshot() {
+  TEMP_DIR=$(mktemp -d -t xocrshot-XXXXXX)
+  local temp_file="$TEMP_DIR/screenshot.png"
+
+  local errno=0
+  scrot -z -s "$temp_file" &>/dev/null || errno="$?"
+
+  if [ "$errno" -eq 2 ]; then
+    notify "Screenshot canceled by the user"
+  elif [ "$errno" -ne 0 ]; then
+    notify "Error: The screenshot was not taken" \
+      "(error with the 'scrot' command)." >&2
+  elif [[ $errno -eq 0 ]]; then
+    local text
+    text=$(tesseract "$temp_file" stdout "${TESSERACT_ARGS[@]}" 2>/dev/null)
+    printf "%s" "$text"
+  fi
+
+  rm -rf "$TEMP_DIR"
+  TEMP_DIR=""
+
+  [[ $errno -ne 0 ]] && exit "$errno"
+  return "$errno"
+}
+
+show_result_and_copy_to_clipboard() {
+  local text="$1"
+  notify "${text}"
+  if ! printf "%s" "$text" | xclip -selection clipboard; then
+    notify "xclip error: Unable to copy the text to the clipboard" >&2
+  fi
+}
+
+check_requirements() {
+  for cmd in scrot xclip tesseract; do
+    if ! type -P "$cmd" &>/dev/null; then
+      notify "Error: the command '$cmd' was not found."
+      exit 1
+    fi
+  done
+
+  if ! type -P notify-send &>/dev/null; then
+    echo "Warning: the command 'notify-send' was not found." >&2
+  fi
+}
+
+main() {
+  trap "error_handler" ERR
+  set -o errtrace
+  check_requirements
+
+  local text
+  text="$(take_screenshot)"
+
+  show_result_and_copy_to_clipboard "$text"
+}
+
+main "$@"
