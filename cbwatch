@@ -58,8 +58,6 @@ watch_clipboard() {
 }
 
 main() {
-  # Main function to watch both primary and clipboard selections
-  # watch_clipboard "primary" &
   watch_clipboard "clipboard" &
   wait
 }
