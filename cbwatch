@@ -57,9 +57,4 @@ watch_clipboard() {
   done
 }
 
-main() {
-  watch_clipboard "clipboard" &
-  wait
-}
-
-main
+watch_clipboard "clipboard"
