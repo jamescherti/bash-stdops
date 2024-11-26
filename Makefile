@@ -12,6 +12,7 @@ all:
 
 install:
 	install -d "$(PREFIX)/bin"
+	install -m 755 ./cbwatch "$(PREFIX)/bin/"
 	install -m 755 ./xocrshot "$(PREFIX)/bin/"
 	install -m 755 ./esa "$(PREFIX)/bin/"
 	install -m 755 ./outonerror "$(PREFIX)/bin/"
@@ -37,6 +38,7 @@ install:
 	install -m 755 ./xargs-loop "$(PREFIX)/bin/"
 
 uninstall:
+	rm "$(PREFIX)/bin/cbwatch"
 	rm "$(PREFIX)/bin/xocrshot"
 	rm "$(PREFIX)/bin/esa"
 	rm "$(PREFIX)/bin/outonerror"
