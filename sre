@@ -215,7 +215,7 @@ sed_str_replace() {
     sed_options+=("$FILE")
   fi
   if [[ $DEBUG -ne 0 ]]; then
-    echo sed "${sed_options[@]}"
+    printf "sed %s" "${sed_options[@]}"
   fi
   sed "${sed_options[@]}"
 
@@ -236,7 +236,7 @@ sed_str_replace() {
     dirname=$(dirname "$full_path")
 
     local new_basename
-    new_basename=$(echo "$basename" | sed "${sed_rename_options[@]}")
+    new_basename=$(printf "%s" "$basename" | sed "${sed_rename_options[@]}")
 
     local new_fullpath
     new_fullpath=$(readlink -m "$dirname/$new_basename")
