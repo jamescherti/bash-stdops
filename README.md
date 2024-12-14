@@ -6,7 +6,7 @@ The `bash-stdops` project is a collection of helpful Bash scripts, written by [J
 The author uses these scripts in conjunction with text editors like Emacs and Vim to automate tasks, including managing Tmux sessions, replacing text across a Git repository, securely copying and pasting from the clipboard by prompting the user before executing commands in Tmux, fix permissions, among other operations.
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-**Table of Contents**
+## Table of Contents
 
 - [bash-stdops - A collection of Bash helper scripts that facilitate operations](#bash-stdops---a-collection-of-bash-helper-scripts-that-facilitate-operations)
   - [Install bash-stdops scripts](#install-bash-stdops-scripts)
@@ -41,6 +41,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
     - [Script category: Misc](#script-category-misc)
       - [Scripts: cbcopy, cbpaste](#scripts-cbcopy-cbpaste)
       - [Script: outonerror](#script-outonerror)
+      - [Script: over](#script-over)
       - [Script: largs](#script-largs)
       - [Script: xargs-loop](#script-xargs-loop)
   - [License](#license)
@@ -364,6 +365,10 @@ xocrshot
 The `outonerror` script redirects the command's output to stderr only if the command fails (non-zero exit code). No output is shown when the command succeeds.
 
 Here is an example of how to use this script: [How to make cron notify the user about a failed command by redirecting its output to stderr only when it fails (non-zero exit code)](https://www.jamescherti.com/cron-email-output-failed-commands-only/).
+
+#### Script: over
+
+This program simply displays a notification. It can be used in the terminal while another command is running. Once the command finishes executing, a notification is displayed, informing the user that the process has completed.
 
 #### Script: largs
 
