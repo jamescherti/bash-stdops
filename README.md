@@ -39,6 +39,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
     - [X11/Wayland scripts](#x11wayland-scripts)
       - [xocrshot](#xocrshot)
     - [Script category: Misc](#script-category-misc)
+      - [Script: haide](#script-haide)
       - [Scripts: cbcopy, cbpaste](#scripts-cbcopy-cbpaste)
       - [Script: outonerror](#script-outonerror)
       - [Script: over](#script-over)
@@ -353,6 +354,10 @@ xocrshot
 ```
 
 ### Script category: Misc
+
+#### Script: haide
+
+The haide script utilizes AIDE (Advanced Intrusion Detection Environment) to monitor the file integrity of the user's home directory, ensuring no files are modified, added, or deleted without the user's knowledge. Key functions handle database setup, integrity checks, and user-approved updates. The script filters non-critical changes, ensuring meaningful alerts while maintaining a secure and reliable monitoring process.
 
 #### Scripts: cbcopy, cbpaste
 

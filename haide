@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+#
+# Requirements: aide (https://github.com/aide/aide)
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# This Bash script utilizes AIDE (Advanced Intrusion Detection Environment) to
+# monitor the file integrity of the user's home directory, ensuring no files are
+# modified, added, or deleted without the user's knowledge. Key functions handle
+# database setup, integrity checks, and user-approved updates. The script
+# filters non-critical changes, ensuring meaningful alerts while maintaining a
+# secure and reliable monitoring process.
+#
+# License:
+# --------
+# Copyright (C) 2012-2024 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+BASE="$HOME/.haide"
+AIDE_DB_NEW="$BASE/aide.db.new"
+AIDE_DB="$BASE/aide.db"
+AIDE_CONF="$BASE/aide.conf"
+AIDE_WORKERS=$(nproc)
+
+# log_level values:
+# error  - Logs only errors that may affect AIDE's operation.
+# info   - Logs general informational messages, warnings, and errors (default).
+LOG_LEVEL=error
+
+# shellcheck disable=SC2317
+error_handler() {
+  local errno="$?"
+  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
+}
+
+trap "error_handler" ERR
+set -o errtrace
+
+run_aide() {
+  # Run AIDE and return its exit code
+  local errno=0
+  echo "[RUN] aide" "$@"
+  aide "--workers=${AIDE_WORKERS}" "--config=${AIDE_CONF}" "$@" ||
+    return "$?"
+}
+
+run_aide_only_fail_on_error() {
+  # Run AIDE and return the exit code of 1 only in case of a real error.
+  # Ignore errors related to new files, removed files, and changed files.
+  local errno=0
+
+  echo "[RUN] aide" "$@"
+  aide "--workers=${AIDE_WORKERS}" "--config=${AIDE_CONF}" "$@" || errno="$?"
+
+  # Exit code:
+  # 1 (new files reported?)
+  # 2 (removed files reported?)
+  # 4 (changed files reported?)
+  # Since those three cases can occur together, the respective error codes are
+  # added. For example, if there are new files and removed files re‐ ported,
+  # the exit status will be 1 + 2 = 3. Additionally, the following exit codes
+  # are defined for generic error conditions: 14 Writing error, 15 Invalid
+  # argument error, etc.
+  if [[ $errno -eq 3 ]] || [[ $errno -gt 4 ]]; then
+    return 1
+  fi
+}
+
+commit_aide_db() {
+  install -m 644 "$AIDE_DB_NEW" "$AIDE_DB" || return 1
+}
+
+init_aide_db() {
+  mkdir -p "$BASE"
+
+  {
+    echo "database_in=file:$AIDE_DB"
+    echo "database_out=file:$AIDE_DB_NEW"
+    echo "gzip_dbout=yes"
+    echo "log_level=$LOG_LEVEL"
+
+    # To avoid logging certain details (such as MD5 hashes), you can set
+    # report_level to a more basic level:
+    echo "report_level=added_removed_attributes"
+
+    echo "report_url=stdout"
+    echo "Home=i+n+u+g+s+b+sha256+rmd160"
+    echo
+    echo "$HOME/ Home"
+    echo
+    echo "!$HOME/\\..*$"
+  } >"$AIDE_CONF"
+
+  if ! [[ -f "$AIDE_DB_NEW" ]]; then
+    run_aide --init || return 1
+    commit_aide_db
+  fi
+}
+
+update_aide_db() {
+  run_aide_only_fail_on_error --update || return 1
+}
+
+main() {
+  init_aide_db
+
+  ERRNO=0
+  if [[ -f "$AIDE_DB" ]]; then
+    # Restore the previous one
+    install -m 644 "$AIDE_DB" "$AIDE_DB_NEW" || return 1
+  fi
+
+  # Update shows a summary, like --check
+  (run_aide --update |
+    sed '/^Detailed information about changes:/,$d') ||
+    ERRNO="$?"
+
+  if [[ $ERRNO -ne 0 ]]; then
+    read -r -p "Do you accept the changes? [y,n] " ANSWER
+    if [[ "$ANSWER" != "y" ]]; then
+      exit 1
+    fi
+
+    commit_aide_db
+    echo "[SUCCESS] Successfully updated: ${AIDE_DB}"
+  else
+    echo "Nothing to do."
+  fi
+}
+
+main "$@"
