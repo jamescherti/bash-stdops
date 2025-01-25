@@ -56,7 +56,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
 
 To install `bash-stdops` scripts system-wide, use the following command:
 ```bash
-sudo make install
+sudo ./install.sh
 ```
 
 ### Alternative installation: Install in your home directory
@@ -66,7 +66,7 @@ If you prefer to install the scripts locally in your home directory, you can use
 Use the following command to install the scripts into the `~/.local/bin` directory:
 
 ```bash
-PREFIX=~/.local make install
+PREFIX=~/.local ./install.sh install
 ```
 
 Ensure that `~/.local/bin` is included in your `$PATH` by adding the following line to your `~/.bashrc`:
