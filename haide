@@ -111,6 +111,7 @@ init_aide_db() {
     echo "$HOME/ Home"
     echo
     echo "!$HOME/\\..*$"
+    echo "!$HOME/src/"
   } >"$AIDE_CONF"
 
   if ! [[ -f "$AIDE_DB_NEW" ]]; then
