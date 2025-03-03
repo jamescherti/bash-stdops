@@ -118,7 +118,6 @@ init_aide_db() {
     echo
     echo "$HOME/ Home"
     echo
-    echo "!$HOME/\\..*$"
     if [[ -f ~/.haide.conf ]]; then
       cat ~/.haide.conf
     fi
