@@ -14,6 +14,14 @@
 # filters non-critical changes, ensuring meaningful alerts while maintaining a
 # secure and reliable monitoring process.
 #
+# Customization
+# -------------
+# When the ~/.haide.conf file exists, its contents are appended to the main AIDE
+# configuration that haide uses. You can add custom rules to ~/.haide.conf; for
+# example, the following ~/.haide.conf content excludes the '/home/user/src/'
+# directory:
+#     !/home/user/src/
+#
 # License:
 # --------
 # Copyright (C) 2012-2025 James Cherti
@@ -111,7 +119,9 @@ init_aide_db() {
     echo "$HOME/ Home"
     echo
     echo "!$HOME/\\..*$"
-    echo "!$HOME/src/"
+    if [[ -f ~/.haide.conf ]]; then
+      cat ~/.haide.conf
+    fi
   } >"$AIDE_CONF"
 
   if ! [[ -f "$AIDE_DB_NEW" ]]; then
