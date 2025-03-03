@@ -16,10 +16,10 @@
 #
 # Customization
 # -------------
-# When the ~/.haide.conf file exists, its contents are appended to the main AIDE
-# configuration that haide uses. You can add custom rules to ~/.haide.conf; for
-# example, the following ~/.haide.conf content excludes the '/home/user/src/'
-# directory:
+# When the ~/.haide/post-aide.conf file exists, its contents are appended to the
+# main AIDE configuration that haide uses. You can add custom rules to
+# ~/.haide/post-aide.conf; for example, the following ~/.haide/post-aide.conf
+# content excludes the '/home/user/src/' directory:
 #     !/home/user/src/
 #
 # License:
@@ -104,6 +104,10 @@ init_aide_db() {
   mkdir -p "$BASE"
 
   {
+    if [[ -f ~/.haide/pre-aide.conf ]]; then
+      cat ~/.haide/pre-aide.conf
+    fi
+
     echo "database_in=file:$AIDE_DB"
     echo "database_out=file:$AIDE_DB_NEW"
     echo "gzip_dbout=yes"
@@ -118,8 +122,8 @@ init_aide_db() {
     echo
     echo "$HOME/ Home"
     echo
-    if [[ -f ~/.haide.conf ]]; then
-      cat ~/.haide.conf
+    if [[ -f ~/.haide/post-aide.conf ]]; then
+      cat ~/.haide/post-aide.conf
     fi
   } >"$AIDE_CONF"
 
