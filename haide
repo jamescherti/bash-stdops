@@ -120,10 +120,11 @@ init_aide_db() {
     echo "report_url=stdout"
     echo "Home=i+n+u+g+s+b+sha256+rmd160"
     echo
-    echo "$HOME/ Home"
-    echo
-    if [[ -f ~/.haide/post-aide.conf ]]; then
-      cat ~/.haide/post-aide.conf
+    if [[ -f ~/.haide/post-aide-conf.sh ]]; then
+      /usr/bin/env bash ~/.haide/post-aide-conf.sh
+    else
+      echo "$HOME/ Home"
+      echo
     fi
   } >"$AIDE_CONF"
 
