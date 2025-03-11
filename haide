@@ -139,6 +139,15 @@ update_aide_db() {
 }
 
 main() {
+  TEMPORARY_DIR=$(dirname $(mktemp -u))
+  LOCK_FILE="$TEMPORARY_DIR/haide.lock"
+  if [[ -f "$LOCK_FILE" ]]; then
+    echo "Error: Another instance of '$0' is running." >&2
+    exit 1
+  else
+    touch "$LOCK_FILE"
+  fi
+
   init_aide_db
 
   ERRNO=0
