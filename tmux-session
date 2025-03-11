@@ -72,7 +72,7 @@ shift $((OPTIND - 1))
 
 open-tmux-session() {
   if ! tmux -2 attach-session -t "$TMUX_SESSION_NAME"; then
-    tmux -2 new -s "$TMUX_SESSION_NAME"
+    tmux -2 new -s "$TMUX_SESSION_NAME" || return 1
   fi
 }
 
@@ -83,9 +83,9 @@ main() {
 
   if [[ $TMUX_SESSION_LOOP -ne 0 ]]; then
     while true; do
-      open-tmux-session
+      open-tmux-session || break
       echo "Restarting the Tmux session '$TMUX_SESSION_NAME'..."
-      sleep 1
+      # sleep 0.3
     done
   else
     open-tmux-session
