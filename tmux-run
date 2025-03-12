@@ -49,6 +49,14 @@ set -euo pipefail
 
 SCRIPT_NAME=$(basename "$0")
 
+# shellcheck disable=SC2317
+error_handler() {
+  local errno="$?"
+  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
+}
+
 parse_args() {
   if [[ $# -lt 1 ]]; then
     echo "Execute a command in a new Tmux window."
@@ -66,27 +74,25 @@ parse_args() {
 }
 
 get_tmux_session() {
-  if [[ $TMUX_RUN_SESSION_NAME != "" ]]; then
-    if tmux has-session -t "$TMUX_RUN_SESSION_NAME" 2>/dev/null; then
-      printf "%s\n" "$TMUX_RUN_SESSION_NAME"
-    fi
+  if [[ $TMUX_RUN_SESSION_NAME = "" ]]; then
+    printf "0\n"
+    return 0
+  elif tmux has-session -t "$TMUX_RUN_SESSION_NAME" >/dev/null 2>&1; then
+    printf "%s\n" "$TMUX_RUN_SESSION_NAME"
+    return 0
+  else
+    printf "%s: tmux session '%s' not found\n" \
+      "$SCRIPT_NAME" "$TMUX_RUN_SESSION_NAME" >&2
+    exit 1
   fi
 }
 
 run_in_tmux_window() {
-  local tmux_cmd=(tmux new-window)
   local tmux_session
   tmux_session=$(get_tmux_session)
 
-  if [[ $tmux_session = "" ]]; then
-    if [[ $TMUX_RUN_SESSION_NAME != "" ]]; then
-      printf "%s: tmux session '%s' not found\n" \
-        "$SCRIPT_NAME" "$TMUX_RUN_SESSION_NAME" >&2
-      exit 1
-    fi
-
-    tmux_cmd+=(-t "$tmux_session")
-  fi
+  local tmux_cmd=(tmux new-window)
+  tmux_cmd+=(-t "$tmux_session")
 
   if ! "${tmux_cmd[@]}" "$@"; then
     printf "Failed to open a new Tmux window with the command: %s\n" \
@@ -95,5 +101,11 @@ run_in_tmux_window() {
   fi
 }
 
-parse_args "$@"
-run_in_tmux_window "$@"
+main() {
+  trap "error_handler" ERR
+  set -o errtrace
+  parse_args "$@" | tee ~/cmd
+  run_in_tmux_window "$@"
+}
+
+main "$@"
