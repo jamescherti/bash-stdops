@@ -138,11 +138,26 @@ update_aide_db() {
   run_aide_only_fail_on_error --update || return 1
 }
 
+atexit() {
+  local errno="$?"
+  if [[ "$ATEXIT_DONE" -eq 0 ]]; then
+    if [[ -f "$LOCK_FILE" ]]; then
+      rm -f "$LOCK_FILE"
+    fi
+    ATEXIT_DONE=1
+  fi
+  exit "$errno"
+}
+
 main() {
   TEMPORARY_DIR=$(dirname $(mktemp -u))
   LOCK_FILE="$TEMPORARY_DIR/haide.lock"
+  ATEXIT_DONE=0
+  trap 'atexit' INT TERM EXIT
+
   if [[ -f "$LOCK_FILE" ]]; then
-    echo "Error: Another instance of '$0' is running." >&2
+    echo "Error: Another instance of '$0' is running." \
+      "(Lockfile: $LOCK_FILE)" >&2
     exit 1
   else
     touch "$LOCK_FILE"
