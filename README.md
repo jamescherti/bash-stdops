@@ -410,3 +410,4 @@ You should have received a copy of the GNU General Public License along with thi
 ## Links
 
 - [bash-stdops @GitHub](https://github.com/jamescherti/bash-stdops)
+- [Article: bash-stdops – A collection of Bash helper scripts that facilitate operations](https://www.jamescherti.com/bash-stdops-collection-of-bash-scripts/)
