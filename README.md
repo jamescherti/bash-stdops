@@ -44,7 +44,6 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
       - [Script: outonerror](#script-outonerror)
       - [Script: over](#script-over)
       - [Script: largs](#script-largs)
-      - [Script: xargs-loop](#script-xargs-loop)
   - [License](#license)
   - [Links](#links)
 
@@ -383,19 +382,6 @@ This script is an alternative to xargs.
 ``` bash
 { echo "file1"; echo "file2"; } | largs ls {}
 ```
-
-#### Script: xargs-loop
-
-The `xargs-loop` script processes lines from standard input, executing a specified command for each line and replacing `{}` in the command with the current line of input. This provides flexibility by using `{}` as a placeholder, similar to `xargs -I {}`, but with the ability to handle each line individually. Unlike `xargs`, which has mutually exclusive `-L 1` and `-I {}` options, `xargs-loop` combines the benefits of both by enabling placeholder substitution and line-by-line processing.
-
-Usage:
-```
-cat input_file | xargs-loop command '{}'
-```
-
-Options:
-- The script reads lines from stdin and replaces '{}' with each line in the command.
-- The script exits with status 1 if the command does not include '{}' or if any command execution fails.
 
 ## License
 
