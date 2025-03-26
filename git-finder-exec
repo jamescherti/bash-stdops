@@ -45,6 +45,14 @@ ONLY_SHOW_WHEN_THERE_IS_OUTPUT=1
 CMD_TIMEOUT=0
 # CMD_TIMEOUT=$((60 * 60 * 30))
 
+# shellcheck disable=SC2317
+error_handler() {
+  local errno="$?"
+  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
+}
+
 run_command() {
   local repo_path="$1"
   shift
@@ -57,20 +65,25 @@ run_command() {
     echo "$repo_path: ${cmd[*]}"
   fi
 
+  cd "$repo_path"
+
   local errno=0
   output=$(timeout "$CMD_TIMEOUT" "${cmd[@]}" 2>&1) || errno="$?"
 
   if [[ -n "$output" || "$ONLY_SHOW_WHEN_THERE_IS_OUTPUT" -ne 0 ]]; then
     # shellcheck disable=SC2001
-    echo "$output" | sed 's/^/    /'
+    echo "$output" | sed 's/^/  /'
   fi
 
   if [[ $errno -ne 0 ]]; then
-    echo "    (Error: Exited with status $errno)"
+    echo "  (Error: Exited with status $errno)"
   fi
 }
 
 main() {
+  trap "error_handler" ERR
+  set -o errtrace
+
   local command=("$@")
 
   if [[ "$#" -eq 0 ]]; then
@@ -81,9 +94,12 @@ main() {
   local list_repo_path
   mapfile -t list_repo_path < <(git-finder "$(pwd)")
 
+  local errno=0
   for repo_path in "${list_repo_path[@]}"; do
-    run_command "$repo_path" "${command[@]}"
+    run_command "$repo_path" "${command[@]}" || errno=1
   done
+
+  exit "$errno"
 }
 
 main "$@"
