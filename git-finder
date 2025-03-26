@@ -2,23 +2,20 @@
 #
 # Requirements:
 #   - git
-#   - sre
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
 #
 # Description:
 # ------------
-# Execute sre at the root directory of a Git repository.
+# This script recursively locates all Git repositories starting from a specified
+# directory or the current directory if none is provided.
 #
-# The sre script replaces occurrences of a specified string or regular
-# expression pattern with support for exact string matching, regular
-# expressions, and case-insensitive matching.
+# It first checks for fd to perform faster searches; if unavailable, it
+# defaults to find.
 #
-# Example usage:
-#   git sre TextBefore TextAfter /path/to/git/repo
-#
-# (sre also supports regular expressions)
+# The script outputs the paths of all discovered Git repositories to standard
+# output.
 #
 # License:
 # --------
@@ -40,8 +37,30 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-set -eu -o pipefail
+set -euo pipefail
 
-GIT_TOP_LEVEL=$(git rev-parse --show-toplevel)
-cd "$GIT_TOP_LEVEL"
-exec sre "$@"
+main() {
+  local base_dir
+  if [[ $# -gt 0 ]]; then
+    base_dir="$1"
+  else
+    base_dir="."
+  fi
+
+  local dot_git_dirs
+  if command -v fd &>/dev/null; then
+    mapfile -t dot_git_dirs < <(fd --type d --hidden --no-ignore-vcs \
+      --no-ignore-parent '^\.git$' "$base_dir")
+  else
+    mapfile -t dot_git_dirs < <(find "$base_dir" -type d -name .git)
+  fi
+
+  local item
+  local repo_dir
+  for item in "${dot_git_dirs[@]}"; do
+    repo_dir=$(dirname "$item")
+    echo "$repo_dir"
+  done
+}
+
+main "$@"

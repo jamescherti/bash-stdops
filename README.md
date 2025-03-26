@@ -33,6 +33,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
     - [Script category: git](#script-category-git)
       - [git-dcommit](#git-dcommit)
       - [git-squash](#git-squash)
+      - [git-finder](#git-finder)
     - [Script category: ssh](#script-category-ssh)
       - [Script: esa](#script-esa)
       - [Script: sshwait](#script-sshwait)
@@ -304,6 +305,14 @@ Features:
 - Automatically squashes all new commits into one, retaining the message of
   the first commit.
 
+
+#### git-finder
+
+This script recursively locates all Git repositories starting from a specified directory or the current directory if none is provided.
+
+It first checks for `fd` to perform faster searches; if unavailable, it defaults to `find`.
+
+The script outputs the paths of all discovered Git repositories to standard output.
 
 ### Script category: ssh
 
