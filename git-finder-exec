@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - git
+#   - git-finder (This script is part of bash-stdops project)
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# The git-finder-exec recursively finds all Git repositories starting from the
+# current directory using the git-finder script.
+#
+# It then executes the command provided as an argument in the directory of each
+# Git repository.
+#
+# Example usage:
+#   git-finder-exec pwd
+#
+# License:
+# --------
+# Copyright (C) 2012-2025 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euo pipefail
+
+# Global variables
+ONLY_SHOW_WHEN_THERE_IS_OUTPUT=1
+CMD_TIMEOUT=0
+# CMD_TIMEOUT=$((60 * 60 * 30))
+
+run_command() {
+  local repo_path="$1"
+  shift
+
+  local cmd=("$@")
+
+  if [[ -t 1 ]] && tput colors &>/dev/null; then
+    echo -e "\e[33m$repo_path\e[0m: ${cmd[*]}"
+  else
+    echo "$repo_path: ${cmd[*]}"
+  fi
+
+  local errno=0
+  output=$(timeout "$CMD_TIMEOUT" "${cmd[@]}" 2>&1) || errno="$?"
+
+  if [[ -n "$output" || "$ONLY_SHOW_WHEN_THERE_IS_OUTPUT" -ne 0 ]]; then
+    # shellcheck disable=SC2001
+    echo "$output" | sed 's/^/    /'
+  fi
+
+  if [[ $errno -ne 0 ]]; then
+    echo "    (Error: Exited with status $errno)"
+  fi
+}
+
+main() {
+  local command=("$@")
+
+  if [[ "$#" -eq 0 ]]; then
+    echo "Usage: $0 <command> [args...]" >&2
+    exit 1
+  fi
+
+  local list_repo_path
+  mapfile -t list_repo_path < <(git-finder "$(pwd)")
+
+  for repo_path in "${list_repo_path[@]}"; do
+    run_command "$repo_path" "${command[@]}"
+  done
+}
+
+main "$@"

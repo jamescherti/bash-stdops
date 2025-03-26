@@ -34,6 +34,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
       - [git-dcommit](#git-dcommit)
       - [git-squash](#git-squash)
       - [git-finder](#git-finder)
+      - [git-finder-exec](#git-finder-exec)
     - [Script category: ssh](#script-category-ssh)
       - [Script: esa](#script-esa)
       - [Script: sshwait](#script-sshwait)
@@ -313,6 +314,17 @@ This script recursively locates all Git repositories starting from a specified d
 It first checks for `fd` to perform faster searches; if unavailable, it defaults to `find`.
 
 The script outputs the paths of all discovered Git repositories to standard output.
+
+#### git-finder-exec
+
+The git-finder-exec recursively finds all Git repositories starting from the current directory using the git-finder script.
+
+It then executes the command provided as an argument in the directory of each Git repository.
+
+Example usage:
+```
+git-finder-exec pwd
+```
 
 ### Script category: ssh
 
