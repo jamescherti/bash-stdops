@@ -42,8 +42,6 @@ set -euo pipefail
 
 # Global variables
 ONLY_SHOW_WHEN_THERE_IS_OUTPUT=1
-CMD_TIMEOUT=0
-# CMD_TIMEOUT=$((60 * 60 * 30))
 
 # shellcheck disable=SC2317
 error_handler() {
@@ -53,29 +51,41 @@ error_handler() {
   exit "${errno}"
 }
 
-run_command() {
+title() {
   local repo_path="$1"
   shift
 
   local cmd=("$@")
 
   if [[ -t 1 ]] && tput colors &>/dev/null; then
-    echo -e "\e[33m$repo_path\e[0m: ${cmd[*]}"
+    echo -e "\e[33m${repo_path}\e[0m: ${cmd[*]}"
   else
-    echo "$repo_path: ${cmd[*]}"
+    echo "${repo_path}: ${cmd[*]}"
   fi
+}
 
-  cd "$repo_path"
+run_command() {
+  local repo_path="$1"
+  shift
+
+  local cmd=("$@")
 
   local errno=0
-  output=$(timeout "$CMD_TIMEOUT" "${cmd[@]}" 2>&1) || errno="$?"
-
-  if [[ -n "$output" || "$ONLY_SHOW_WHEN_THERE_IS_OUTPUT" -ne 0 ]]; then
+  local title_displayed=0
+  output=$("${cmd[@]}" | sed 's/[[:space:]]*$//' 2>&1) || errno="$?"
+  if [[ "$ONLY_SHOW_WHEN_THERE_IS_OUTPUT" -eq 0 ]] || [[ $output != "" ]]; then
+    title "$repo_path" "${cmd[@]}"
+    title_displayed=1
     # shellcheck disable=SC2001
     echo "$output" | sed 's/^/  /'
   fi
 
   if [[ $errno -ne 0 ]]; then
+    if [[ $title_displayed -eq 0 ]]; then
+      title "$repo_path" "${cmd[@]}"
+      title_displayed=1
+    fi
+
     echo "  (Error: Exited with status $errno)"
     return 1
   fi
@@ -93,11 +103,15 @@ main() {
   fi
 
   local list_repo_path
-  mapfile -t list_repo_path < <(git-finder "$(pwd)")
+  mapfile -t list_repo_path < <(git-finder ".")
 
   local errno=0
   for repo_path in "${list_repo_path[@]}"; do
+    pushd . &>/dev/null
+    cd "$repo_path"
+
     run_command "$repo_path" "${command[@]}" || errno=1
+    popd &>/dev/null
   done
 
   if [[ $errno -ne 0 ]]; then
