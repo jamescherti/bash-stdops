@@ -77,6 +77,7 @@ run_command() {
 
   if [[ $errno -ne 0 ]]; then
     echo "  (Error: Exited with status $errno)"
+    return 1
   fi
 }
 
@@ -99,6 +100,10 @@ main() {
     run_command "$repo_path" "${command[@]}" || errno=1
   done
 
+  if [[ $errno -ne 0 ]]; then
+    echo
+    echo "Failed."
+  fi
   exit "$errno"
 }
 
