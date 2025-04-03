@@ -58,8 +58,17 @@ main() {
   local item
   local repo_dir
   for item in "${dot_git_dirs[@]}"; do
+    pushd . &>/dev/null
     repo_dir=$(dirname "$item")
-    echo "$repo_dir"
+
+    # Avoid displaying Git repositories inside other Git repositories.
+    cd "$repo_dir"
+    cd ..
+    if ! git rev-parse --show-toplevel &>/dev/null; then
+      # Only display when the parent is not a Git repository
+      echo "$repo_dir"
+    fi
+    popd &>/dev/null
   done
 }
 
