@@ -41,7 +41,7 @@
 set -euo pipefail
 
 # Global variables
-ONLY_SHOW_WHEN_THERE_IS_OUTPUT=1
+# ONLY_SHOW_WHEN_THERE_IS_OUTPUT=1
 
 # shellcheck disable=SC2317
 error_handler() {
@@ -71,25 +71,36 @@ run_command() {
   local cmd=("$@")
 
   local errno=0
-  local title_displayed=0
-  output=$("${cmd[@]}" | sed 's/[[:space:]]*$//' 2>&1) || errno="$?"
-  if [[ "$ONLY_SHOW_WHEN_THERE_IS_OUTPUT" -eq 0 ]] || [[ $output != "" ]]; then
-    title "$repo_path" "${cmd[@]}"
-    title_displayed=1
-    # shellcheck disable=SC2001
-    echo "$output" | sed 's/^/  /'
-  fi
-
-  if [[ $errno -ne 0 ]]; then
-    if [[ $title_displayed -eq 0 ]]; then
-      title "$repo_path" "${cmd[@]}"
-      title_displayed=1
-    fi
-
-    echo "  (Error: Exited with status $errno)"
-    return 1
-  fi
+  title "$repo_path" "${cmd[@]}"
+  "${cmd[@]}" || return "$?"
 }
+
+# run_command_redir_output() {
+#   local repo_path="$1"
+#   shift
+#
+#   local cmd=("$@")
+#
+#   local errno=0
+#   local title_displayed=0
+#   output=$("${cmd[@]}" | sed 's/[[:space:]]*$//' 2>&1) || errno="$?"
+#   if [[ "$ONLY_SHOW_WHEN_THERE_IS_OUTPUT" -eq 0 ]] || [[ $output != "" ]]; then
+#     title "$repo_path" "${cmd[@]}"
+#     title_displayed=1
+#     # shellcheck disable=SC2001
+#     echo "$output" | sed 's/^/  /'
+#   fi
+#
+#   if [[ $errno -ne 0 ]]; then
+#     if [[ $title_displayed -eq 0 ]]; then
+#       title "$repo_path" "${cmd[@]}"
+#       title_displayed=1
+#     fi
+#
+#     echo "  (Error: Exited with status $errno)"
+#     return 1
+#   fi
+# }
 
 main() {
   trap "error_handler" ERR
