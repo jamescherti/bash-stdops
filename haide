@@ -70,8 +70,8 @@ run_aide() {
   # Run AIDE and return its exit code
   local errno=0
   echo "[RUN] aide" "$@"
-  aide "--workers=${AIDE_WORKERS}" "--config=${AIDE_CONF}" "$@" ||
-    return "$?"
+  aide "--workers=${AIDE_WORKERS}" "--config=${AIDE_CONF}" "$@" \
+    || return "$?"
 }
 
 run_aide_only_fail_on_error() {
@@ -172,12 +172,12 @@ main() {
   fi
 
   # Update shows a summary, like --check
-  (run_aide --update |
-    sed '/^Detailed information about changes:/,$d') ||
-    ERRNO="$?"
+  (run_aide --update \
+    | sed '/^Detailed information about changes:/,$d') \
+    || ERRNO="$?"
 
   if [[ $ERRNO -ne 0 ]]; then
-    read -r -p "Do you accept the changes? [y,n] " ANSWER
+    read -t 86400 -r -p "Do you accept the changes? [y,n] " ANSWER
     if [[ "$ANSWER" != "y" ]]; then
       exit 1
     fi
