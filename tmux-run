@@ -104,7 +104,7 @@ run_in_tmux_window() {
 main() {
   trap "error_handler" ERR
   set -o errtrace
-  parse_args "$@" | tee ~/cmd
+  parse_args "$@"
   run_in_tmux_window "$@"
 }
 
