@@ -110,7 +110,7 @@ esa-start() {
 
 esa-stop() {
   kill-ssh-agent
-  >"$ESA_SSH_AGENT_PIDFILE"
+  echo >"$ESA_SSH_AGENT_PIDFILE"
   secure-pidfile
 }
 
@@ -194,9 +194,11 @@ main() {
     echo "Success."
     ;;
 
-  exec)
+  exec | ssh-add-exec)
     esa-start
-    esa-ssh-add
+    if [[ $1 = "ssh-add-exec" ]]; then
+      esa-ssh-add
+    fi
     shift
     if [[ $# -eq 0 ]]; then
       echo "Error: You need to specify the command to execute" >&2
