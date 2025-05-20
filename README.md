@@ -67,7 +67,7 @@ If you prefer to install the scripts locally in your home directory, you can use
 Use the following command to install the scripts into the `~/.local/bin` directory:
 
 ```bash
-PREFIX=~/.local ./install.sh install
+PREFIX=~/.local ./install.sh
 ```
 
 Ensure that `~/.local/bin` is included in your `$PATH` by adding the following line to your `~/.bashrc`:
