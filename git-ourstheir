@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# Requirements:
+#   - git
+#
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
 #

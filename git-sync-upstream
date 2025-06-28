@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - git
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# This script synchronizes the current Git branch with its upstream counterpart
+# and force-pushes the result to the 'origin' remote. It is intended for
+# workflows where a local branch is kept in sync with an upstream source of
+# truth, and the mirror on 'origin' must match upstream exactly.
+#
+# The script performs the following actions:
+#   1. Verifies that both 'origin' and 'upstream' remotes are defined.
+#   2. Performs a rebase of the current branch onto its upstream equivalent.
+#   3. Displays the diff between the rebased branch and the remote 'origin'.
+#   4. Prompts for confirmation unless run in batch mode.
+#   5. Merges upstream changes with --ff-only and force-pushes to 'origin'.
+#
+# Intended for use in CI workflows or manual synchronization where upstream is
+# authoritative.
+#
+# Usage:
+#   git-sync-upstream [-h] [-b]
+#     -h    Show help message and exit
+#     -b    Run in batch mode (no interactive prompts)
+#
+# License:
+# --------
+# Copyright (C) 2012-2025 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euo pipefail
+
+# shellcheck disable=SC2317
+error_handler() {
+  local errno="$?"
+  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
+}
+
+show_usage() {
+  echo "Usage: $0 [-h] [-b]" >&2
+  echo
+  echo "  -h    Show this help message and exit"
+  echo "  -b    Run in batch mode (skip interactive confirmations)"
+}
+
+main() {
+  trap "error_handler" ERR
+  set -o errtrace
+
+  BATCH_MODE=0
+
+  while getopts ":hb" opt; do
+    case "$opt" in
+    h)
+      show_usage
+      exit 0
+      ;;
+    b)
+      BATCH_MODE=1
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument" >&2
+      exit 1
+      ;;
+    esac
+  done
+
+  shift $((OPTIND - 1))
+
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "Error: Not in a Git repository." >&2
+    exit 1
+  fi
+
+  for remote in origin upstream; do
+    if ! git remote | grep -q "^${remote}$"; then
+      echo "Error: Remote '$remote' is not defined." >&2
+      exit 1
+    fi
+  done
+
+  CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
+  REMOTE_ORIGIN=$(git config --get remote.origin.url || true)
+  echo "[SYNC MIRROR] $REMOTE_ORIGIN (Branch: $CURRENT_BRANCH)"
+
+  if [[ $BATCH_MODE -eq 0 ]]; then
+    read -r -p "Synchronize the '${CURRENT_BRANCH}' branch? [y,n] " ANSWER
+    [[ "$ANSWER" != "y" ]] && exit 1
+  fi
+
+  git pull -q --rebase upstream "$CURRENT_BRANCH"
+  git diff "$CURRENT_BRANCH" "origin/$CURRENT_BRANCH"
+
+  if [[ $BATCH_MODE -eq 0 ]]; then
+    read -r -p "Proceed? [y,n] " ANSWER
+    [[ "$ANSWER" != "y" ]] && {
+      echo "Aborted." >&2
+      exit 1
+    }
+  fi
+
+  git merge "upstream/$CURRENT_BRANCH" --ff-only --quiet
+  git push origin "$CURRENT_BRANCH" --force
+}
+
+main "$@"

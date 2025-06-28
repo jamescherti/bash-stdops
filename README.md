@@ -35,7 +35,8 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
       - [git-squash](#git-squash)
       - [git-finder](#git-finder)
       - [git-finder-exec](#git-finder-exec)
-    - [git-ourstheir](#git-ourstheir)
+      - [git-ourstheir](#git-ourstheir)
+      - [git-sync-upstream](#git-sync-upstream)
     - [Script category: ssh](#script-category-ssh)
       - [Script: esa](#script-esa)
       - [Script: sshwait](#script-sshwait)
@@ -327,13 +328,33 @@ Example usage:
 git-finder-exec pwd
 ```
 
-### git-ourstheir
+#### git-ourstheir
 
 This script extracts the 'ours' and 'theirs' versions of a file involved in a Git merge conflict. It is intended to facilitate manual conflict resolution by saving both conflicting versions under distinct filenames ("ours-<FILENAME>" and "theirs-<FILENAME>"). This allows users to inspect and compare the conflicting changes independently of Git’s built-in merge tools.
 
 Usage:
 ```
 git-ourstheir <file-in-conflict>
+```
+
+#### git-sync-upstream
+
+This script synchronizes the current Git branch with its upstream counterpart and force-pushes the result to the 'origin' remote. It is intended for workflows where a local branch is kept in sync with an upstream source of truth, and the mirror on 'origin' must match upstream exactly.
+
+The script performs the following actions:
+1. Verifies that both 'origin' and 'upstream' remotes are defined.
+2. Performs a rebase of the current branch onto its upstream equivalent.
+3. Displays the diff between the rebased branch and the remote 'origin'.
+4. Prompts for confirmation unless run in batch mode.
+5. Merges upstream changes with --ff-only and force-pushes to 'origin'.
+
+Intended for use in CI workflows or manual synchronization where upstream is authoritative.
+
+ ```
+Usage:
+  git-sync-upstream [-h] [-b]
+  -h    Show help message and exit
+  -b    Run in batch mode (no interactive prompts)
 ```
 
 ### Script category: ssh
