@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# This script extracts the 'ours' and 'theirs' versions of a file involved in a
+# Git merge conflict. It is intended to facilitate manual conflict resolution by
+# saving both conflicting versions under distinct filenames ("ours-<FILENAME>"
+# and "theirs-<FILENAME>"). This allows users to inspect and compare the
+# conflicting changes independently of Git’s built-in merge tools.
+#
+# Usage:
+#   git-ourstheir <file-in-conflict>
+#
+# License:
+# --------
+# Copyright (C) 2012-2025 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euo pipefail
+
+TMPFILE=""
+atexit() {
+  local errno="$?"
+  if [[ -n "$TMPFILE" && -f "$TMPFILE" ]]; then
+    rm -f "$TMPFILE"
+    TMPFILE=""
+  fi
+  exit "$errno"
+}
+
+main() {
+  trap 'atexit' INT TERM EXIT
+
+  if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 <FILENAME>" >&2
+    exit 1
+  fi
+
+  local file="$1"
+  if [[ ! -f "$file" ]]; then
+    echo "Error: '$file' does not exist." >&2
+    exit 1
+  fi
+
+  local ours="ours-${file}"
+  local theirs="theirs-${file}"
+
+  for variant in "$ours" "$theirs"; do
+    if [[ -e "$variant" ]]; then
+      echo "Error: '$variant' already exists." >&2
+      exit 1
+    fi
+  done
+
+  if ! git diff --name-only --diff-filter=U -- "$file" | grep -q .; then
+    echo "Error: '$file' is not in conflict." >&2
+    exit 1
+  fi
+
+  TMPFILE="$(mktemp -t git-ourstheirs.XXXXXX)"
+  cp -- "$file" "$TMPFILE"
+
+  echo "Extracting '${theirs}'..."
+  git checkout --theirs -- "$file" >/dev/null
+  cp -- "$file" "$theirs"
+
+  echo "Extracting '${ours}'..."
+  git checkout --ours -- "$file" >/dev/null
+  cp -- "$file" "$ours"
+
+  cp -- "$TMPFILE" "$file"
+}
+
+main "$@"

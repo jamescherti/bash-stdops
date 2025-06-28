@@ -35,6 +35,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
       - [git-squash](#git-squash)
       - [git-finder](#git-finder)
       - [git-finder-exec](#git-finder-exec)
+    - [git-ourstheir](#git-ourstheir)
     - [Script category: ssh](#script-category-ssh)
       - [Script: esa](#script-esa)
       - [Script: sshwait](#script-sshwait)
@@ -324,6 +325,15 @@ It then executes the command provided as an argument in the directory of each Gi
 Example usage:
 ```
 git-finder-exec pwd
+```
+
+### git-ourstheir
+
+This script extracts the 'ours' and 'theirs' versions of a file involved in a Git merge conflict. It is intended to facilitate manual conflict resolution by saving both conflicting versions under distinct filenames ("ours-<FILENAME>" and "theirs-<FILENAME>"). This allows users to inspect and compare the conflicting changes independently of Git’s built-in merge tools.
+
+Usage:
+```
+git-ourstheir <file-in-conflict>
 ```
 
 ### Script category: ssh
