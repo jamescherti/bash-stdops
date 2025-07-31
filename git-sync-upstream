@@ -115,7 +115,7 @@ main() {
   fi
 
   git pull -q --rebase upstream "$CURRENT_BRANCH"
-  git diff "$CURRENT_BRANCH" "origin/$CURRENT_BRANCH" || true
+  git diff "origin/$CURRENT_BRANCH" "$CURRENT_BRANCH" || true
 
   if [[ $BATCH_MODE -eq 0 ]]; then
     read -r -p "Proceed? [y,n] " ANSWER
