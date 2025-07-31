@@ -72,7 +72,7 @@ kill-ssh-agent() {
   killall --user "$(id -u)" -u "$USER" ssh-agent >/dev/null 2>&1 || true
 }
 
-load-ssh-agent() {
+reload-ssh-agent() {
   local errno=0
   kill-ssh-agent
   (
@@ -84,6 +84,7 @@ load-ssh-agent() {
   if [[ $errno -ne 0 ]]; then
     return 1
   fi
+  load-ssh-agent-pidfile
 }
 
 esa-start() {
@@ -95,9 +96,7 @@ esa-start() {
   ssh-add -l >/dev/null 2>&1 || errno="$?"
   if [ "$errno" -eq "2" ]; then
     # errno=2 when ssh-add is unable to contact the authentication agent
-    kill-ssh-agent
-    load-ssh-agent
-    load-ssh-agent-pidfile
+    reload-ssh-agent
   elif [ "$errno" -ne "0" ] && [ "$errno" -ne "1" ]; then
     echo "Error: 'ssh-add -l' returned $errno." >&2
     return 1
