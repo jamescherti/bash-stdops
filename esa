@@ -46,7 +46,7 @@ ESA_SSH_AGENT_ARGS=(-t "$ESA_SSH_AGENT_TIMEOUT")
 # shellcheck disable=SC2317
 error_handler() {
   local errno="$?"
-  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+  msg "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
     "(${BASH_COMMAND} exited with status $errno)" >&2
   exit "${errno}"
 }
@@ -70,6 +70,12 @@ load-ssh-agent-pidfile() {
 
 kill-ssh-agent() {
   killall --user "$(id -u)" -u "$USER" ssh-agent >/dev/null 2>&1 || true
+}
+
+msg() {
+  local cmd
+  cmd=$(basename "$0")
+  printf "$cmd: %s\n" "$*"
 }
 
 reload-ssh-agent() {
@@ -98,7 +104,7 @@ esa-start() {
     # errno=2 when ssh-add is unable to contact the authentication agent
     reload-ssh-agent
   elif [ "$errno" -ne "0" ] && [ "$errno" -ne "1" ]; then
-    echo "Error: 'ssh-add -l' returned $errno." >&2
+    msg "Error: 'ssh-add -l' returned $errno." >&2
     return 1
   fi
 
@@ -116,13 +122,13 @@ esa-stop() {
 esa-ssh-add() {
   for item in ssh-add expect; do
     if ! type -P "$item" >/dev/null 2>&1; then
-      echo "$0: no '$item' in ($PATH)" >&2
+      msg "No '$item' in ($PATH)" >&2
       return 1
     fi
   done
 
   if ! [[ -d "$SSH_DIR" ]]; then
-    echo "Error: The directory does not exist: $SSH_DIR" >&2
+    msg "Error: The directory does not exist: $SSH_DIR" >&2
     exit 1
   fi
 
@@ -171,7 +177,7 @@ main() {
 
   for item in killall chmod grep; do
     if ! type -P "$item" >/dev/null 2>&1; then
-      echo "$0: no '$item' in ($PATH)" >&2
+      msg "no '$item' in ($PATH)" >&2
       return 1
     fi
   done
@@ -179,18 +185,18 @@ main() {
   case "$1" in
   start)
     esa-start
-    echo "Started."
+    msg "Started."
     ;;
 
   stop)
     esa-stop
-    echo "Stopped."
+    msg "Stopped."
     ;;
 
   ssh-add)
     esa-start
     esa-ssh-add
-    echo "Success."
+    msg "Success."
     ;;
 
   exec | ssh-add-exec)
@@ -200,12 +206,12 @@ main() {
     fi
     shift
     if [[ $# -eq 0 ]]; then
-      echo "Error: You need to specify the command to execute" >&2
+      msg "Error: You need to specify the command to execute" >&2
       exit 1
     fi
 
     if ! type -P "$1" &>/dev/null; then
-      echo "Error: Command not found: $1" >&2
+      msg "Error: Command not found: $1" >&2
       exit 1
     fi
 
@@ -217,12 +223,12 @@ main() {
     if [[ -f "$ESA_SSH_AGENT_PIDFILE" ]]; then
       cat "$ESA_SSH_AGENT_PIDFILE"
     else
-      echo "Error: No such file or directory: $ESA_SSH_AGENT_PIDFILE" >&2
+      msg "Error: No such file or directory: $ESA_SSH_AGENT_PIDFILE" >&2
       exit 1
     fi
     ;;
   *)
-    echo "Error: Unsupported command: $1" >&2
+    msg "Error: Unsupported command: $1" >&2
     exit 1
     ;;
   esac
