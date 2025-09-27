@@ -59,6 +59,9 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
 
 To install `bash-stdops` scripts system-wide, use the following command:
 ```bash
+git clone https://github.com/jamescherti/bash-stdops
+cd bash-stdops
+
 sudo ./install.sh
 ```
 
