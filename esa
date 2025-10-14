@@ -155,7 +155,7 @@ esa-ssh-add() {
   LIST_SSH_KEY_FILES=()
   while IFS= read -r file; do
     LIST_SSH_KEY_FILES+=("$file")
-  done < <(grep -lR --no-messages -- "BEGIN .*PRIVATE KEY" "$SSH_DIR")
+  done < <(grep -lR --no-messages -- "BEGIN .*PRIVATE KEY" "$SSH_DIR" || true)
 
   local ssh_password=""
   for PRIVATE_KEY_FILE in "${LIST_SSH_KEY_FILES[@]}"; do
