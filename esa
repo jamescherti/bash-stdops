@@ -2,6 +2,8 @@
 #
 # Requirements:
 #   - killall
+#   - openssh (ssh-agent and ssh-add)
+#   - expect
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
@@ -54,22 +56,36 @@ trap "error_handler" ERR
 set -o errtrace
 
 secure-pidfile() {
+  local dir
+  dir=$(dirname "$ESA_SSH_AGENT_PIDFILE")
+  mkdir -p "$dir"
+  touch "${ESA_SSH_AGENT_PIDFILE}"
   if [[ -f "$ESA_SSH_AGENT_PIDFILE" ]]; then
-    chmod 600 "${ESA_SSH_AGENT_PIDFILE}"
+    chmod 600 "$ESA_SSH_AGENT_PIDFILE"
   fi
 }
 
 load-ssh-agent-pidfile() {
   secure-pidfile
   if [[ -f "${ESA_SSH_AGENT_PIDFILE}" ]] \
-    && grep -q SSH_AUTH_SOCK "$ESA_SSH_AGENT_PIDFILE"; then
+    && grep -q SSH_AUTH_SOCK -- "$ESA_SSH_AGENT_PIDFILE"; then
     # shellcheck disable=SC1090
     source "${ESA_SSH_AGENT_PIDFILE}" || return 1
   fi
 }
 
+# TODO: Make this ensure the PID is an ssh-agent.
+# kill-ssh-agent() {
+#   if [[ -f "$ESA_SSH_AGENT_PIDFILE" ]]; then
+#     source "$ESA_SSH_AGENT_PIDFILE" >/dev/null 2>&1 || return
+#     if [[ -n "${SSH_AGENT_PID:-}" ]]; then
+#       kill "$SSH_AGENT_PID" >/dev/null 2>&1 || true
+#     fi
+#   fi
+# }
+
 kill-ssh-agent() {
-  killall --user "$(id -u)" -u "$USER" ssh-agent >/dev/null 2>&1 || true
+  killall -u "$USER" ssh-agent >/dev/null 2>&1 || true
 }
 
 msg() {
@@ -80,16 +96,20 @@ msg() {
 
 reload-ssh-agent() {
   local errno=0
+  # TODO: Is this necessary?
   kill-ssh-agent
+  secure-pidfile
+
   (
     echo "# esa"
     ssh-agent "${ESA_SSH_AGENT_ARGS[@]}" \
       | grep -E '(SSH_AUTH_SOCK|SSH_AGENT_PID)'
   ) >"${ESA_SSH_AGENT_PIDFILE}" || errno="$?"
-  secure-pidfile
+
   if [[ $errno -ne 0 ]]; then
     return 1
   fi
+
   load-ssh-agent-pidfile
 }
 
@@ -135,26 +155,27 @@ esa-ssh-add() {
   LIST_SSH_KEY_FILES=()
   while IFS= read -r file; do
     LIST_SSH_KEY_FILES+=("$file")
-  done < <(grep -lR --no-messages "BEGIN .*PRIVATE KEY" "$SSH_DIR" || true)
+  done < <(grep -lR --no-messages -- "BEGIN .*PRIVATE KEY" "$SSH_DIR")
 
-  SSH_PASSWORD=""
+  local ssh_password=""
   for PRIVATE_KEY_FILE in "${LIST_SSH_KEY_FILES[@]}"; do
     FINGERPRINT=$(ssh-keygen -lf "$PRIVATE_KEY_FILE" | awk '{print $2}')
 
-    if ! ssh-add -l 2>/dev/null | grep -q "$FINGERPRINT"; then
-      if [[ $SSH_PASSWORD = "" ]]; then
-        read -r -p "SSH key password for $PRIVATE_KEY_FILE: " -s SSH_PASSWORD
+    if ! ssh-add -l 2>/dev/null | awk '{print $2}' \
+      | grep -Fxq -- "$FINGERPRINT"; then
+      if [[ $ssh_password = "" ]]; then
+        read -r -p "SSH key password for $PRIVATE_KEY_FILE: " -s ssh_password
         echo
       fi
 
       # 2>&1
       E_PRIVATE_KEY_FILE="$PRIVATE_KEY_FILE" \
-        E_SSH_PASSWORD="$SSH_PASSWORD" \
+        E_ssh_password="$ssh_password" \
         LC_ALL=C expect >/dev/null <<EOF
-set timeout 2
+set timeout 10
 spawn ssh-add "\$env(E_PRIVATE_KEY_FILE)"
 expect "passphrase"
-send "\$env(E_SSH_PASSWORD)\r"
+send "\$env(E_ssh_password)\r"
 expect eof
 EOF
     fi
