@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - git
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# The git-checkout-default script automatically checks out the default branch of
+# the current Git repository, regardless of its name. It works in repositories
+# where the default branch may be main, master, or any custom branch.
+#
+# The script first verifies that the current directory is a Git repository,
+# determines the default branch from the remote origin, fetches the latest
+# changes, and then switches to that branch.
+#
+# This ensures the local repository is aligned with the remote default branch
+# without requiring manual specification of the branch name.
+#
+# License:
+# --------
+# Copyright (C) 2012-2025 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -e
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    echo "Error: Not a git repository." >&2
+    exit 1
+fi
+
+default_branch=$(git remote show origin | awk '/HEAD branch/ {print $NF}')
+
+if [ -z "$default_branch" ]; then
+    echo "Error: Could not determine default branch." >&2
+    exit 1
+fi
+
+git fetch origin
+git checkout "$default_branch"

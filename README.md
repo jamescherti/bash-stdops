@@ -31,6 +31,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
             - [Script: autoperm](#script-autoperm)
             - [Script: path-is](#script-path-is)
         - [Script category: git](#script-category-git)
+            - [git-checkout-default](#git-checkout-default)
             - [git-dcommit](#git-dcommit)
             - [git-squash](#git-squash)
             - [git-finder](#git-finder)
@@ -279,6 +280,14 @@ path-is /Path/TO/FILE text
 ```
 
 ### Script category: git
+
+#### git-checkout-default
+
+The git-checkout-default script automatically checks out the default branch of the current Git repository, regardless of its name. It works in repositories where the default branch may be main, master, or any custom branch.
+
+The script first verifies that the current directory is a Git repository, determines the default branch from the remote origin, fetches the latest changes, and then switches to that branch.
+
+This ensures the local repository is aligned with the remote default branch without requiring manual specification of the branch name.
 
 #### git-dcommit
 
