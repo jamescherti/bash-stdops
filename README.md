@@ -38,6 +38,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
             - [git-finder-exec](#git-finder-exec)
             - [git-ourstheir](#git-ourstheir)
             - [git-sync-upstream](#git-sync-upstream)
+            - [git-author](#git-author)
         - [Script category: ssh](#script-category-ssh)
             - [Script: esa](#script-esa)
             - [Script: sshwait](#script-sshwait)
@@ -368,6 +369,10 @@ Usage:
   -h    Show help message and exit
   -b    Run in batch mode (no interactive prompts)
 ```
+
+#### git-author
+
+The git-author script displays the Git user's name and email by retrieving `user.name` and `user.email` from Git configuration.
 
 ### Script category: ssh
 

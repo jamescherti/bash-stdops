@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - git
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# This script displays the Git user's name and email by retrieving user.name and
+# user.email from Git configuration.
+#
+# License:
+# --------
+# Copyright (C) 2012-2025 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+echo -n "Name:  "
+git config user.name
+
+echo -n "Email: "
+git config user.email
