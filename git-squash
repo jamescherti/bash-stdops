@@ -97,8 +97,9 @@ main() {
   fi
 
   local commit_message
-  commit_message=$(git log "--skip=$((num_new_commits - 1))" \
-    --max-count=1 --pretty=%B)
+  commit_message=$(git log --max-count=1 --pretty=%B)
+  # commit_message=$(git log "--skip=$((num_new_commits - 1))" \
+  #   --max-count=1 --pretty=%B)
 
   # Squash
   echo "Squashing commits:"
