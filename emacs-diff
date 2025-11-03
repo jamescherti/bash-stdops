@@ -48,30 +48,42 @@
 
 set -euo pipefail
 
-VERBOSE=false
+VERBOSE=0
 DIFF_TOOL="ediff" # ediff or vdiff
-
 FILES=()
+NO_OPTIONS=0
 while [[ $# -gt 0 ]]; do
-  case "$1" in
-  -v | --verbose)
-    VERBOSE=true
-    shift # move to next arg
-    ;;
-  -t | --tool)
-    DIFF_TOOL="$2"
-    shift 2 # move past flag and its value
-    ;;
-  -*)
-    echo "Unknown option: $1" >&2
-    exit 1
-    ;;
-  *)
-    # Not a flag, assume it's a file
-    FILES+=("$1")
-    shift
-    ;;
-  esac
+  if [[ $NO_OPTIONS -eq 0 ]]; then
+    case "$1" in
+    --)
+      NO_OPTIONS=1
+      shift
+      continue
+      ;;
+    -v | --verbose)
+      VERBOSE=1
+      shift
+      continue
+      ;;
+    -t | --tool)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --tool requires an argument" >&2
+        exit 1
+      fi
+      DIFF_TOOL="$2"
+      shift 2
+      continue
+      ;;
+    -*)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+    esac
+  fi
+
+  # All remaining arguments (or after --) are treated as files
+  FILES+=("$1")
+  shift
 done
 
 escape_quote_elisp_string() {
@@ -93,7 +105,7 @@ emacsclient_eval() {
     args+=("-e" "$expr")
   done
 
-  if $VERBOSE; then
+  if [[ $VERBOSE -ne 0 ]]; then
     printf '[CMD] %s\n' "${args[*]}"
   fi
 
@@ -143,7 +155,7 @@ main() {
   cmd="(progn (${func} $(escape_quote_elisp_string "$abs_file1")
                        $(escape_quote_elisp_string "$abs_file2")))"
 
-  emacsclient_eval --no-wait "$cmd"
+  emacsclient_eval --suppress-output --no-wait "$cmd"
 }
 
 main "$@"
