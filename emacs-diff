@@ -85,12 +85,9 @@ escape_quote_elisp_string() {
 }
 
 emacsclient_eval() {
-  local no_wait="$1"
-  shift
   local args=()
 
   args+=("emacsclient")
-  [[ "$no_wait" == true ]] && args+=("--no-wait")
 
   for expr in "$@"; do
     args+=("-e" "$expr")
@@ -146,7 +143,7 @@ main() {
   cmd="(progn (${func} $(escape_quote_elisp_string "$abs_file1")
                        $(escape_quote_elisp_string "$abs_file2")))"
 
-  emacsclient_eval true "$cmd"
+  emacsclient_eval --no-wait "$cmd"
 }
 
 main "$@"
