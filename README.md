@@ -41,6 +41,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
             - [git-author](#git-author)
         - [Script category: ssh](#script-category-ssh)
             - [Script: esa](#script-esa)
+            - [git-ls-files-dates](#git-ls-files-dates)
             - [Script: sshwait](#script-sshwait)
         - [X11/Wayland scripts](#x11wayland-scripts)
             - [xocrshot](#xocrshot)
@@ -390,6 +391,12 @@ add: Adds private keys requiring a password with ssh-add
 exec: Executes a program using this agent
 env: Displays the ssh-agent environment variables
 ```
+
+#### git-ls-files-dates
+
+The `git-ls-files-dates` script lists all tracked files in the current Git repository along with the date of their most recent commit.
+
+The output is sorted chronologically by commit date. Each line contains the last commit date in ISO format followed by the file path.
 
 #### Script: sshwait
 
