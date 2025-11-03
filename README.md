@@ -52,6 +52,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
             - [Scripts: cbcopy, cbpaste](#scripts-cbcopy-cbpaste)
             - [Script: outonerror](#script-outonerror)
             - [Script: over](#script-over)
+            - [Script: osid](#script-osid)
             - [Script: largs](#script-largs)
     - [License](#license)
     - [Links](#links)
@@ -479,6 +480,19 @@ Here is an example of how to use this script: [How to make cron notify the user 
 #### Script: over
 
 This program simply displays a notification. It can be used in the terminal while another command is running. Once the command finishes executing, a notification is displayed, informing the user that the process has completed.
+
+#### Script: osid
+
+Detects the current operating system and prints a short identifier.
+
+- On macOS, it prints "darwin".
+- On Linux, it prints the value of $ID from /etc/os-release.
+- If the OS cannot be determined, it prints "unknown".
+
+Usage:
+```
+osid
+```
 
 #### Script: largs
 

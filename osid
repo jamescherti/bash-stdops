@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Detects the current operating system and prints a short identifier.
+#
+# - On macOS, it prints "darwin".
+# - On Linux, it prints the value of $ID from /etc/os-release.
+# - If the OS cannot be determined, it prints "unknown".
+#
+# Usage:
+#   osid
+#
+# License:
+# --------
+# Copyright (C) 2012-2025 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euo pipefail
+
+if [[ "${OSTYE:-}" == darwin* ]]; then
+  echo "darwin"
+  exit 0
+fi
+
+if [[ -r /etc/os-release ]]; then
+  # shellcheck disable=SC1091
+  source /etc/os-release
+  if [[ -n "${ID:-}" ]]; then
+    echo "$ID"
+    exit 0
+  fi
+fi
+
+echo "unknown"
