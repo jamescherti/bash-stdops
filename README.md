@@ -45,6 +45,8 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
             - [Script: sshwait](#script-sshwait)
         - [X11/Wayland scripts](#x11wayland-scripts)
             - [xocrshot](#xocrshot)
+        - [Script category: Emacs](#script-category-emacs)
+            - [emacs-diff](#emacs-diff)
         - [Script category: Misc](#script-category-misc)
             - [Script: haide](#script-haide)
             - [Scripts: cbcopy, cbpaste](#scripts-cbcopy-cbpaste)
@@ -427,6 +429,34 @@ Usage:
 ``` bash
 xocrshot
 ```
+
+### Script category: Emacs
+
+#### emacs-diff
+
+Compare files in Emacs using emacsclient and ediff (by default).
+
+Usage:
+```
+emacs-diff [options] <file1> <file2>
+```
+
+Options:
+```
+-v, --verbose         Print the emacsclient commands being executed
+-t, --tool NAME       Select the diff tool: "ediff" (default) or "vdiff"
+```
+
+Example:
+```
+emacs-diff file1.txt file2.txt
+```
+
+(This will compare `file1.txt` with `file2.txt`)
+
+Notes:
+- Requires Emacs running as a server or `emacs --daemon` started.
+- Paths are automatically converted to absolute paths before comparison.
 
 ### Script category: Misc
 

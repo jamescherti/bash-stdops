@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - emacsclient
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Compare files in Emacs using emacsclient and ediff (by default).
+#
+# Usage:
+#   emacs-diff [options] <file1> <file2>
+#
+# Options:
+#   -v, --verbose         Print the emacsclient commands being executed
+#   -t, --tool NAME       Select the diff tool: "ediff" (default) or "vdiff"
+#
+# Example:
+#   emacs-diff file1.txt file2.txt
+#
+# (This will compare file1.txt with file2.txt)
+#
+# Notes:
+# - Requires Emacs running as a server or `emacs --daemon` started.
+# - Paths are automatically converted to absolute paths before comparison.
+#
+# License:
+# --------
+# Copyright (C) 2012-2025 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euo pipefail
+
+VERBOSE=false
+DIFF_TOOL="ediff" # ediff or vdiff
+
+FILES=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -v | --verbose)
+    VERBOSE=true
+    shift # move to next arg
+    ;;
+  -t | --tool)
+    DIFF_TOOL="$2"
+    shift 2 # move past flag and its value
+    ;;
+  -*)
+    echo "Unknown option: $1" >&2
+    exit 1
+    ;;
+  *)
+    # Not a flag, assume it's a file
+    FILES+=("$1")
+    shift
+    ;;
+  esac
+done
+
+escape_quote_elisp_string() {
+  local input="$1"
+  local escaped="${input//\\/\\\\}" # Escape backslashes
+  escaped="${escaped//\"/\\\"}"     # Escape double quotes
+  escaped="${escaped//$'\n'/\\n}"   # Escape newlines
+  escaped="${escaped//$'\t'/\\t}"   # Escape tabs
+  escaped="${escaped//$'\r'/\\r}"   # Escape carriage returns
+  printf '"%s"' "$escaped"
+}
+
+emacsclient_eval() {
+  local no_wait="$1"
+  shift
+  local args=()
+
+  args+=("emacsclient")
+  [[ "$no_wait" == true ]] && args+=("--no-wait")
+
+  for expr in "$@"; do
+    args+=("-e" "$expr")
+  done
+
+  if $VERBOSE; then
+    printf '[CMD] %s\n' "${args[*]}"
+  fi
+
+  "${args[@]}"
+}
+
+main() {
+  if [[ ${#FILES[@]} -lt 2 ]]; then
+    echo "Error: At least two files must be provided." >&2
+    echo "Usage: $0 [options] <file1> <file2> [file3 ...]"
+    exit 1
+  fi
+
+  local func=""
+  case "$DIFF_TOOL" in
+  ediff)
+    func="ediff"
+    ;;
+  vdiff)
+    func="vdiff"
+    ;;
+  *)
+    echo "Error: Unsupported diff tool: $DIFF_TOOL" >&2
+    exit 1
+    ;;
+  esac
+
+  local file1="${FILES[0]}"
+  local file2="${FILES[1]}"
+
+  [[ ! -e "$file1" ]] && {
+    echo "Error: no such file: $file1" >&2
+    exit 1
+  }
+
+  [[ ! -e "$file2" ]] && {
+    echo "Error: no such file: $file2" >&2
+    exit 1
+  }
+
+  local abs_file1
+  local abs_file2
+  abs_file1="$(realpath "$file1")"
+  abs_file2="$(realpath "$file2")"
+
+  local cmd
+  cmd="(progn (${func} $(escape_quote_elisp_string "$abs_file1")
+                       $(escape_quote_elisp_string "$abs_file2")))"
+
+  emacsclient_eval true "$cmd"
+}
+
+main "$@"
