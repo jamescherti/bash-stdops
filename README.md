@@ -455,7 +455,7 @@ emacs-diff file1.txt file2.txt
 (This will compare `file1.txt` with `file2.txt`)
 
 Notes:
-- Requires Emacs running as a server or `emacs --daemon` started.
+- Requires Emacs to be running as a server via the `(server-start)` function or as an Emacs daemon.
 - Paths are automatically converted to absolute paths before comparison.
 
 ### Script category: Misc
