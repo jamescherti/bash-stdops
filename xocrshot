@@ -5,7 +5,7 @@
 #
 # Requirements:
 # -------------
-#   - scrot
+#   - scrot (X11) or flameshot (Wayland)
 #   - xclip
 #   - tesseract
 #
@@ -65,7 +65,7 @@ error_handler() {
 
 notify() {
   local text="$1"
-  printf "[INFO] %s" "$text" >&2
+  printf "[INFO] %s\n" "$text" >&2
   if type -P notify-send &>/dev/null; then
     notify-send "$text" &>/dev/null
   fi
@@ -91,17 +91,37 @@ take_screenshot() {
   local temp_file="$TEMP_DIR/screenshot.png"
 
   local errno=0
-  scrot -z -s "$temp_file" &>/dev/null || errno="$?"
+
+  if [[ "$XDG_SESSION_TYPE" = "wayland" ]]; then
+    # GNOME
+    screenshot_command=flameshot
+    if ! type -P "$screenshot_command" &>/dev/null; then
+      notify "Error: the command '$screenshot_command' was not found."
+      exit 1
+    fi
+
+    flameshot gui -p "$temp_file" || errno="$?"
+  else
+    # X11
+    screenshot_command=scrot
+
+    if ! type -P "scrot" &>/dev/null; then
+      notify "Error: the command 'scrot' was not found."
+      exit 1
+    fi
+
+    scrot -z -s "$temp_file" &>/dev/null || errno="$?"
+  fi
 
   if [ "$errno" -eq 2 ]; then
     notify "Screenshot canceled by the user"
   elif [ "$errno" -ne 0 ]; then
     notify "Error: The screenshot was not taken" \
-      "(error with the 'scrot' command)." >&2
+      "(error with the '$screenshot_command' command)." >&2
   elif [[ $errno -eq 0 ]]; then
     local text
     text=$(tesseract "$temp_file" stdout "${TESSERACT_ARGS[@]}" 2>/dev/null)
-    printf "%s" "$text"
+    TEXT_RESULT="$text"
   fi
 
   rm -rf "$TEMP_DIR"
@@ -120,7 +140,7 @@ show_result_and_copy_to_clipboard() {
 }
 
 check_requirements() {
-  for cmd in scrot xclip tesseract; do
+  for cmd in xclip tesseract; do
     if ! type -P "$cmd" &>/dev/null; then
       notify "Error: the command '$cmd' was not found."
       exit 1
@@ -137,10 +157,10 @@ main() {
   set -o errtrace
   check_requirements
 
-  local text
-  text="$(take_screenshot)"
-
-  show_result_and_copy_to_clipboard "$text"
+  TEXT_RESULT=""
+  if take_screenshot; then
+    show_result_and_copy_to_clipboard "$TEXT_RESULT"
+  fi
 }
 
 main "$@"
