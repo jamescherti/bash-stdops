@@ -57,7 +57,7 @@ if [ -z "$default_branch" ]; then
     exit 1
 fi
 
-if git-is-clean; then
+if ! git-is-clean; then
     exit 1
 fi
 
