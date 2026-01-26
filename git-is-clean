@@ -34,9 +34,6 @@
 set -u
 set -e
 
-# shellcheck disable=SC2034
-export GIT_CONFIG_NOSYSTEM=1
-
 # Identify any changes in the working tree, index, or untracked files
 OUTPUT=$(git status --porcelain) || true
 if [[ -n "$OUTPUT" ]]; then
