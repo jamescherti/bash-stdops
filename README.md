@@ -42,7 +42,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
     - [Script category: ssh](#script-category-ssh)
       - [Script: esa](#script-esa)
       - [git-ls-files-dates](#git-ls-files-dates)
-      - [git-is-dirty](#git-is-dirty)
+      - [git-is-clean](#git-is-clean)
       - [Script: sshwait](#script-sshwait)
     - [X11/Wayland scripts](#x11wayland-scripts)
       - [xocrshot](#xocrshot)
@@ -402,7 +402,7 @@ The `git-ls-files-dates` script lists all tracked files in the current Git repos
 
 The output is sorted chronologically by commit date. Each line contains the last commit date in ISO format followed by the file path.
 
-#### git-is-dirty
+#### git-is-clean
 
 Ensure the Git working tree is pristine. Terminate with an error if any uncommitted, deleted, or untracked files are present in the repository.
 
