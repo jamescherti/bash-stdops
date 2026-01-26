@@ -53,5 +53,9 @@ if [ -z "$default_branch" ]; then
     exit 1
 fi
 
+if ! git is-dirty; then
+    exit 1
+fi
+
 git fetch origin
 git checkout "$default_branch"

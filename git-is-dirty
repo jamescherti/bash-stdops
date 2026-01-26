@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - git
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Ensure the Git working tree is pristine. Terminate with an error if any
+# uncommitted, deleted, or untracked files are present in the repository.
+#
+# License:
+# --------
+# Copyright (C) 2012-2026 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -u
+set -e
+
+# shellcheck disable=SC2034
+GIT_CONFIG_NOSYSTEM=1
+
+# Identify any changes in the working tree, index, or untracked files
+if [[ -n $(git status --porcelain) ]]; then
+  echo "Error: Uncommitted modifications, deletions, or " \
+    "untracked files detected." >&2
+  exit 1
+fi
