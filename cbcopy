@@ -41,7 +41,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-[[ $DISPLAY = "" ]] && export DISPLAY=""
 set -euf -o pipefail
 
 cbcopy_xclip() {
@@ -63,8 +62,17 @@ main() {
     exec pbcopy
   fi
 
+  # Source bash-stdops library
+  local script_dir
+  script_dir="$(dirname "${BASH_SOURCE[0]}")"
+  # shellcheck disable=SC1091
+  source "$script_dir/.bash-stdops.inc.sh"
+
+  # Copy
   local errno=0
-  if [[ $DISPLAY = "" ]]; then
+  if type -P wl-copy &>/dev/null && is_wayland; then
+    wl-copy || errno=1
+  elif [[ "${DISPLAY:-}" = "" ]]; then
     cbcopy_file || errno=1
   else
     cbcopy_xclip 2>/dev/null || errno=1

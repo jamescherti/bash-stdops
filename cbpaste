@@ -46,8 +46,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-[[ $DISPLAY = "" ]] && export DISPLAY=""
-[[ $CBPASTE_STRIP_NEWLINE = "" ]] && export CBPASTE_STRIP_NEWLINE=""
 set -euf -o pipefail
 
 paste_from_xclip() {
@@ -62,7 +60,7 @@ paste_from_file() {
 }
 
 remove_newline() {
-  if [[ $CBPASTE_STRIP_NEWLINE -eq 0 ]]; then
+  if [[ "${CBPASTE_STRIP_NEWLINE:-}" -eq 0 ]]; then
     cat
   else
     sed -z "s/\\n\+$//"
@@ -70,12 +68,22 @@ remove_newline() {
 }
 
 main() {
+  # macOS
   if type -P pbpaste &>/dev/null; then
     exec pbpaste
   fi
 
+  # Source bash-stdops library
+  local script_dir
+  script_dir="$(dirname "${BASH_SOURCE[0]}")"
+  # shellcheck disable=SC1091
+  source "$script_dir/.bash-stdops.inc.sh"
+
+  # Paste
   local errno=0
-  if [[ $DISPLAY = "" ]]; then
+  if type -P wl-paste &>/dev/null && is_wayland; then
+    wl-paste --no-newline || errno=1
+  elif [[ "${DISPLAY:-}" = "" ]]; then
     paste_from_file | remove_newline || errno=1
   else
     paste_from_xclip | remove_newline 2>/dev/null || errno=1
