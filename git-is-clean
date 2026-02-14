@@ -35,7 +35,7 @@ set -u
 set -e
 
 # Identify any changes in the working tree, index, or untracked files
-OUTPUT=$(git status --porcelain) || true
+OUTPUT=$(git status --porcelain --untracked-files=no) || true
 if [[ -n "$OUTPUT" ]]; then
   echo "Error: Uncommitted modifications, deletions, or " \
     "untracked files detected." >&2
