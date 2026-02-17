@@ -79,7 +79,7 @@ if ! git-is-clean; then
     exit 1
 fi
 
-current_branch=$(git symbolic-ref --short HEAD)
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "HEAD")
 
 if [ "$current_branch" = "$default_branch" ]; then
     # echo "Already on default branch: $default_branch"
