@@ -52,6 +52,15 @@ default_branch=$(
         | sed 's@^origin/@@' || true
 )
 
+# Fallback: update the local HEAD reference from the remote and try again
+if [ -z "$default_branch" ]; then
+    git remote set-head origin --auto >/dev/null 2>&1 || true
+    default_branch=$(
+        git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null \
+            | sed 's@^origin/@@' || true
+    )
+fi
+
 if [ -z "$default_branch" ]; then
     echo "Error: Could not determine default branch." >&2
     exit 1
