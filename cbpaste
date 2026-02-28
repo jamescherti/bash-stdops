@@ -81,7 +81,9 @@ main() {
 
   # Paste
   local errno=0
-  if type -P wl-paste &>/dev/null && is_wayland; then
+  if type -P xclip &>/dev/null && is_wayland; then
+    paste_from_xclip | remove_newline 2>/dev/null || errno=1
+  elif type -P wl-paste &>/dev/null && is_wayland; then
     wl-paste --no-newline || errno=1
   elif [[ "${DISPLAY:-}" = "" ]]; then
     paste_from_file | remove_newline || errno=1

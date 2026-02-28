@@ -70,7 +70,9 @@ main() {
 
   # Copy
   local errno=0
-  if type -P wl-copy &>/dev/null && is_wayland; then
+  if type -P xclip &>/dev/null && is_wayland; then
+    cbcopy_xclip 2>/dev/null || errno=1
+  elif type -P wl-copy &>/dev/null && is_wayland; then
     wl-copy || errno=1
   elif [[ "${DISPLAY:-}" = "" ]]; then
     cbcopy_file || errno=1
