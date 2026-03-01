@@ -34,10 +34,12 @@
 set -u
 set -e
 
+TARGET_DIR=$(realpath "${1:-.}")
+
 # Identify any changes in the working tree, index, or untracked files
-OUTPUT=$(git status --porcelain) || true
+OUTPUT=$(git -C "$TARGET_DIR" status --porcelain) || true
 if [[ -n "$OUTPUT" ]]; then
-  echo "Error: Uncommitted modifications, deletions, or " \
+  echo "Error: $TARGET_DIR: Uncommitted modifications, deletions, or " \
     "untracked files detected." >&2
   exit 1
 fi
