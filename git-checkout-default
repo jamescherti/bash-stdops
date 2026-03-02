@@ -37,54 +37,83 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
 
-set -euf -o pipefail
+set -Eeuo pipefail
 
-# Configuration
-REMOTE="origin"
+readonly REMOTE="${REMOTE:-origin}"
 
-if ! git rev-parse --git-dir >/dev/null 2>&1; then
-    echo "Error: Not a git repository." >&2
-    exit 1
-fi
-
-# specific function to get the default branch to avoid code duplication
-get_default_branch() {
-    git symbolic-ref --short "refs/remotes/$REMOTE/HEAD" 2>/dev/null \
-        | sed "s@^$REMOTE/@@" || true
+# shellcheck disable=SC2317
+error_handler() {
+  local errno="$?"
+  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
 }
 
-default_branch=$(get_default_branch)
+require_git_repository() {
+  git rev-parse --git-dir >/dev/null 2>&1 \
+    || {
+      echo "Error: Not a git repository." >&2
+      exit 1
+    }
+}
 
-# Fallback: update the local HEAD reference from the remote and try again
-if [ -z "$default_branch" ]; then
-    echo "Default branch not found. Attempting to update remote HEAD..." >&2
-    git remote set-head "$REMOTE" --auto >/dev/null 2>&1 || true
-    default_branch=$(get_default_branch)
-fi
+require_command() {
+  command -v "$1" >/dev/null 2>&1 \
+    || {
+      echo "Error: Required command '$1' not found in PATH." >&2
+      exit 1
+    }
+}
 
-if [ -z "$default_branch" ]; then
-    echo "Error: Could not determine default branch for remote '$REMOTE'." >&2
-    exit 1
-fi
+get_default_branch() {
+  git symbolic-ref --quiet --short "refs/remotes/${REMOTE}/HEAD" 2>/dev/null \
+    | sed "s@^${REMOTE}/@@"
+}
 
-# Check if the custom utility exists before running it
-if ! command -v git-is-clean >/dev/null 2>&1; then
-    echo "Error: 'git-is-clean' command not found in PATH." >&2
-    exit 1
-fi
+fallback_default_branch() {
+  local candidate
+  for candidate in main master; do
+    if git show-ref --verify --quiet "refs/remotes/${REMOTE}/${candidate}"; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
 
-if ! git-is-clean; then
-    exit 1
-fi
+get_current_branch() {
+  git symbolic-ref --quiet --short HEAD 2>/dev/null
+}
 
-current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "HEAD")
+main() {
+  require_git_repository
+  require_command git-is-clean
 
-if [ "$current_branch" = "$default_branch" ]; then
-    # echo "Already on default branch: $default_branch"
-    exit 0
-fi
+  local default_branch
+  if ! default_branch="$(get_default_branch)" || [ -z "$default_branch" ]; then
+    if default_branch="$(fallback_default_branch)"; then
+      echo "Warning: Default branch not detected from remote HEAD. Falling" \
+        "back to ${default_branch}."
+    else
+      echo "Error: Could not determine default branch" \
+        "for remote '${REMOTE}'." >&2
+      exit 1
+    fi
+  fi
 
-echo "git checkout $default_branch"
-git checkout "$default_branch"
+  git-is-clean || exit 1
+
+  local current_branch
+  current_branch="$(get_current_branch || echo HEAD)"
+
+  if [ "$current_branch" = "$default_branch" ]; then
+    echo "Already on default branch: ${default_branch}"
+    return 0
+  fi
+
+  echo "git checkout ${default_branch}"
+  git checkout --quiet "$default_branch"
+}
+
+main "$@"
