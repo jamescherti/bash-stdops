@@ -139,6 +139,7 @@ update_aide_db() {
 }
 
 atexit() {
+  trap - EXIT INT TERM
   local errno="$?"
   if [[ "$ATEXIT_DONE" -eq 0 ]]; then
     if [[ -f "$LOCK_FILE" ]]; then

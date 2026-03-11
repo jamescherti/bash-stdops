@@ -41,6 +41,7 @@ set -euo pipefail
 
 TMPFILE=""
 atexit() {
+  trap - EXIT INT TERM
   local errno="$?"
   if [[ -n "$TMPFILE" && -f "$TMPFILE" ]]; then
     rm -f "$TMPFILE"
