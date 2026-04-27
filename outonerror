@@ -36,6 +36,7 @@ if [[ "$#" -eq 0 ]]; then
 fi
 
 cleanup() {
+  trap - EXIT INT TERM HUP QUIT
   if [[ "$OUTPUT_TMP" != "" ]] && [[ -f "$OUTPUT_TMP" ]]; then
     rm -f "$OUTPUT_TMP"
   fi
@@ -43,7 +44,7 @@ cleanup() {
   OUTPUT_TMP=""
 }
 
-trap 'cleanup' INT TERM EXIT
+trap 'cleanup' EXIT INT TERM HUP QUIT
 OUTPUT_TMP=$(mktemp --suffix=.outonerror)
 
 ERRNO=0

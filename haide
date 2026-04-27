@@ -139,7 +139,7 @@ update_aide_db() {
 }
 
 atexit() {
-  trap - EXIT INT TERM
+  trap - EXIT INT TERM HUP QUIT
   local errno="$?"
   if [[ "$ATEXIT_DONE" -eq 0 ]]; then
     if [[ -f "$LOCK_FILE" ]]; then
@@ -154,7 +154,7 @@ main() {
   TEMPORARY_DIR=$(dirname $(mktemp -u))
   LOCK_FILE="$TEMPORARY_DIR/haide.lock"
   ATEXIT_DONE=0
-  trap 'atexit' INT TERM EXIT
+  trap 'atexit' EXIT INT TERM HUP QUIT
 
   if [[ -f "$LOCK_FILE" ]]; then
     echo "Error: Another instance of '$0' is running." \

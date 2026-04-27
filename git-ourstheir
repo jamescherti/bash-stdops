@@ -41,7 +41,7 @@ set -euo pipefail
 
 TMPFILE=""
 atexit() {
-  trap - EXIT INT TERM
+  trap - EXIT INT TERM HUP QUIT
   local errno="$?"
   if [[ -n "$TMPFILE" && -f "$TMPFILE" ]]; then
     rm -f "$TMPFILE"
@@ -51,7 +51,7 @@ atexit() {
 }
 
 main() {
-  trap 'atexit' INT TERM EXIT
+  trap 'atexit' EXIT INT TERM HUP QUIT
 
   if [[ $# -ne 1 ]]; then
     echo "Usage: $0 <FILENAME>" >&2

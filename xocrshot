@@ -74,7 +74,7 @@ notify() {
 TEMP_DIR=""
 ATEXIT_DONE=0
 atexit() {
-  trap - EXIT INT TERM
+  trap - EXIT INT TERM HUP QUIT
   local errno="$?"
   if [[ "$ATEXIT_DONE" -eq 0 ]]; then
     ATEXIT_DONE=1
@@ -86,7 +86,7 @@ atexit() {
   exit "$errno"
 }
 
-trap 'atexit' INT TERM EXIT
+trap 'atexit' EXIT INT TERM HUP QUIT
 
 take_screenshot() {
   TEMP_DIR=$(mktemp -d -t xocrshot-XXXXXX)
