@@ -29,6 +29,10 @@
 #     signature metadata alongside the diff, allowing the user to explicitly add
 #     the specific commit hash to a permanent ignore list for future runs.
 #
+#   - Auto-Yes (Option -y):
+#     Automatically answers "yes" to add any encountered unsigned or invalid
+#     commits directly to the permanent ignore list without prompting.
+#
 # Environment Variables:
 #   GIT_CHECK_GPG_DATA_DIR Override the default base storage path for data tracking
 #                (Defaults to: $HOME/.git-check-gpg)
@@ -73,27 +77,32 @@ IGNORE_DIR="$GIT_CHECK_GPG_DATA_DIR/ignore"
 ACCEPT_DIR="$GIT_CHECK_GPG_DATA_DIR/accept"
 
 GIT_CHECK_GPG_INTERACTIVE=0
+GIT_CHECK_GPG_AUTO_YES=0
 
 show_usage() {
-  echo "Usage: git-check-gpg [-i] [-h]"
+  echo "Usage: git-check-gpg [-i] [-y] [-h]"
   echo
   echo "Options:"
   echo "  -i  Interactive mode: prompt to ignore unsigned/invalid commits"
+  echo "  -y  Auto-yes: ignore unsigned/invalid commits without prompting"
   echo "  -h  Display this help menu"
 }
 
 parse_args() {
-  while getopts "ih" opt; do
+  while getopts "ihy" opt; do
     case ${opt} in
     i)
       GIT_CHECK_GPG_INTERACTIVE=1
+      ;;
+    y)
+      GIT_CHECK_GPG_AUTO_YES=1
       ;;
     h)
       show_usage
       exit 0
       ;;
     \?)
-      show_usage
+      show_usage >&2
       exit 1
       ;;
     esac
@@ -130,24 +139,26 @@ main() {
   mkdir -p "$IGNORE_DIR" "$ACCEPT_DIR"
 
   for commit in "${list_commits[@]}"; do
+    amount_commits=$((amount_commits + 1))
+
     # Skip commits that were previously ignored
     if [[ -f "$IGNORE_DIR/$commit" ]]; then
-      amount_commits=$((amount_commits + 1))
       continue
     fi
 
     # Skip checking commits that were previously verified and accepted
     if [[ -f "$ACCEPT_DIR/$commit" ]]; then
-      amount_commits=$((amount_commits + 1))
       continue
     fi
 
     # Check the GPG signature
     if git verify-commit "$commit" >/dev/null 2>&1; then
       touch "$ACCEPT_DIR/$commit"
-      amount_commits=$((amount_commits + 1))
     else
-      if [[ $GIT_CHECK_GPG_INTERACTIVE -eq 1 ]]; then
+      if [[ $GIT_CHECK_GPG_AUTO_YES -eq 1 ]]; then
+        touch "$IGNORE_DIR/$commit"
+        continue
+      elif [[ $GIT_CHECK_GPG_INTERACTIVE -eq 1 ]]; then
         printf '%.0s=' {1..80}
         echo
         git show --show-signature "$commit"
