@@ -30,7 +30,7 @@
 #     the specific commit hash to a permanent ignore list for future runs.
 #
 # Environment Variables:
-#   GCG_CFG_BASE Override the default base storage path for data tracking
+#   GIT_CHECK_GPG_DATA_DIR Override the default base storage path for data tracking
 #                (Defaults to: $HOME/.git-check-gpg)
 #
 # Prerequisites:
@@ -68,11 +68,11 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # Global configuration variables
-GCG_CFG_BASE="${GCG_CFG_BASE:-$HOME/.git-check-gpg}"
-GCG_DATA_IGNORE="$GCG_CFG_BASE/ignore"
-GCG_DATA_ACCEPT="$GCG_CFG_BASE/accept"
+GIT_CHECK_GPG_DATA_DIR="${GIT_CHECK_GPG_DATA_DIR:-$HOME/.git-check-gpg}"
+IGNORE_DIR="$GIT_CHECK_GPG_DATA_DIR/ignore"
+ACCEPT_DIR="$GIT_CHECK_GPG_DATA_DIR/accept"
 
-GCG_INTERACTIVE=0
+GIT_CHECK_GPG_INTERACTIVE=0
 
 show_usage() {
   echo "Usage: git-check-gpg [-i] [-h]"
@@ -86,7 +86,7 @@ parse_args() {
   while getopts "ih" opt; do
     case ${opt} in
     i)
-      GCG_INTERACTIVE=1
+      GIT_CHECK_GPG_INTERACTIVE=1
       ;;
     h)
       show_usage
@@ -127,26 +127,26 @@ main() {
   fi
 
   # Ensure the configuration directories exist
-  mkdir -p "$GCG_DATA_IGNORE" "$GCG_DATA_ACCEPT"
+  mkdir -p "$IGNORE_DIR" "$ACCEPT_DIR"
 
   for commit in "${list_commits[@]}"; do
     # Skip commits that were previously ignored
-    if [[ -f "$GCG_DATA_IGNORE/$commit" ]]; then
+    if [[ -f "$IGNORE_DIR/$commit" ]]; then
       continue
     fi
 
     # Skip checking commits that were previously verified and accepted
-    if [[ -f "$GCG_DATA_ACCEPT/$commit" ]]; then
+    if [[ -f "$ACCEPT_DIR/$commit" ]]; then
       amount_commits=$((amount_commits + 1))
       continue
     fi
 
     # Check the GPG signature
     if git verify-commit "$commit" >/dev/null 2>&1; then
-      touch "$GCG_DATA_ACCEPT/$commit"
+      touch "$ACCEPT_DIR/$commit"
       amount_commits=$((amount_commits + 1))
     else
-      if [[ $GCG_INTERACTIVE -eq 1 ]]; then
+      if [[ $GIT_CHECK_GPG_INTERACTIVE -eq 1 ]]; then
         printf '%.0s=' {1..80}
         echo
         git show --show-signature "$commit"
@@ -160,7 +160,7 @@ main() {
           response </dev/tty
 
         if [[ $response =~ ^[Yy]$ ]]; then
-          touch "$GCG_DATA_IGNORE/$commit"
+          touch "$IGNORE_DIR/$commit"
           continue
         fi
       else
