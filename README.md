@@ -32,6 +32,7 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
       - [Script: path-is](#script-path-is)
     - [Script category: git](#script-category-git)
       - [git-checkout-default](#git-checkout-default)
+      - [git-check-gpg](#git-check-gpg)
       - [git-dcommit](#git-dcommit)
       - [git-squash](#git-squash)
       - [git-finder](#git-finder)
@@ -39,10 +40,10 @@ The author uses these scripts in conjunction with text editors like Emacs and Vi
       - [git-ourstheir](#git-ourstheir)
       - [git-sync-upstream](#git-sync-upstream)
       - [git-author](#git-author)
-    - [Script category: ssh](#script-category-ssh)
-      - [Script: esa](#script-esa)
       - [git-ls-files-dates](#git-ls-files-dates)
       - [git-is-clean](#git-is-clean)
+    - [Script category: ssh](#script-category-ssh)
+      - [Script: esa](#script-esa)
       - [Script: sshwait](#script-sshwait)
     - [X11/Wayland scripts](#x11wayland-scripts)
       - [xocrshot](#xocrshot)
@@ -295,6 +296,28 @@ The script first verifies that the current directory is a Git repository, determ
 
 This ensures the local repository is aligned with the remote default branch without requiring manual specification of the branch name.
 
+#### git-check-gpg
+
+The `git-check-gpg` script validates GPG signatures for all commits in the current branch history.
+
+It iterates through the commit history of the current HEAD and verifies that every single commit has a valid GPG signature.
+
+To optimize performance and handle exceptions, the script caches results:
+- Validated commits are cached to skip redundant verification in future runs.
+- Unsigned or invalid commits can be interactively ignored, tracking exceptions permanently across runs.
+
+Modes of Operation:
+- Non-interactive (Default): Validates history cleanly. If an invalid or missing signature is found, the script outputs the offending commit details to stderr and terminates immediately with exit code 1.
+- Interactive (Option -i): Prompts the user upon encountering an unverified commit. Displays the signature metadata alongside the diff, allowing the user to explicitly add the specific commit hash to a permanent ignore list for future runs.
+
+Prerequisites:
+- Must be executed inside a Git repository containing at least one commit.
+- Requires Git to be configured with access to the appropriate GPG/GSSH keys.
+
+Exit Codes:
+- 0: Success: All checked commits have valid GPG signatures (or are explicitly ignored).
+- 1: Failure: No commits found, or an unsigned/invalidly signed commit was encountered.
+
 #### git-dcommit
 
 Script to automate common Git commit tasks:
@@ -379,6 +402,16 @@ Usage:
 
 The git-author script displays the Git user's name and email by retrieving `user.name` and `user.email` from Git configuration.
 
+#### git-ls-files-dates
+
+The `git-ls-files-dates` script lists all tracked files in the current Git repository along with the date of their most recent commit.
+
+The output is sorted chronologically by commit date. Each line contains the last commit date in ISO format followed by the file path.
+
+#### git-is-clean
+
+Ensure the Git working tree is pristine. Terminate with an error if any uncommitted, deleted, or untracked files are present in the repository.
+
 ### Script category: ssh
 
 #### Script: esa
@@ -395,16 +428,6 @@ add: Adds private keys requiring a password with ssh-add
 exec: Executes a program using this agent
 env: Displays the ssh-agent environment variables
 ```
-
-#### git-ls-files-dates
-
-The `git-ls-files-dates` script lists all tracked files in the current Git repository along with the date of their most recent commit.
-
-The output is sorted chronologically by commit date. Each line contains the last commit date in ISO format followed by the file path.
-
-#### git-is-clean
-
-Ensure the Git working tree is pristine. Terminate with an error if any uncommitted, deleted, or untracked files are present in the repository.
 
 #### Script: sshwait
 
