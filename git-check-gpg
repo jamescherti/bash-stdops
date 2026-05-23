@@ -132,6 +132,7 @@ main() {
   for commit in "${list_commits[@]}"; do
     # Skip commits that were previously ignored
     if [[ -f "$IGNORE_DIR/$commit" ]]; then
+      amount_commits=$((amount_commits + 1))
       continue
     fi
 
