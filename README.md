@@ -371,7 +371,7 @@ git-finder-exec pwd
 
 #### git-ourstheir
 
-This script extracts the 'ours' and 'theirs' versions of a file involved in a Git merge conflict. It is intended to facilitate manual conflict resolution by saving both conflicting versions under distinct filenames ("ours-<FILENAME>" and "theirs-<FILENAME>"). This allows users to inspect and compare the conflicting changes independently of Git’s built-in merge tools.
+This script extracts the 'ours' and 'theirs' versions of a file involved in a Git merge conflict. It is intended to facilitate manual conflict resolution by saving both conflicting versions under distinct filenames ("ours-<FILENAME>" and "theirs-<FILENAME>"). This allows users to inspect and compare the conflicting changes independently of Git's built-in merge tools.
 
 Usage:
 ```
