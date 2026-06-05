@@ -115,6 +115,12 @@ main() {
   fi
 
   git pull -q --rebase upstream "$CURRENT_BRANCH"
+
+  if git diff --quiet "origin/$CURRENT_BRANCH" "$CURRENT_BRANCH" 2>/dev/null; then
+    echo "Nothing to do."
+    exit 0
+  fi
+
   git diff "origin/$CURRENT_BRANCH" "$CURRENT_BRANCH" || true
 
   if [[ $BATCH_MODE -eq 0 ]]; then
