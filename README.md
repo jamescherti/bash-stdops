@@ -14,7 +14,7 @@ To install `bash-stdops` scripts system-wide, use the following command:
 git clone https://github.com/jamescherti/bash-stdops
 cd bash-stdops
 
-sudo ./install.sh
+sudo ./make.sh install
 ```
 
 ### Alternative installation: Install in your home directory
@@ -24,7 +24,7 @@ If you prefer to install the scripts locally in your home directory, you can use
 Use the following command to install the scripts into the `~/.local/bin` directory:
 
 ```bash
-PREFIX=~/.local ./install.sh
+PREFIX=~/.local ./make.sh install
 ```
 
 Ensure that `~/.local/bin` is included in your `$PATH` by adding the following line to your `~/.bashrc`:
