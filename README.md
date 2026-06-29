@@ -475,6 +475,22 @@ This script is an alternative to xargs.
 { echo "file1"; echo "file2"; } | largs ls {}
 ```
 
+#### Script: is-battery-discharging
+
+Returns an exit code of 0 when the system is discharging (running on battery power) and 1 when charging or if no battery is detected.
+
+Note: This script is specific to Linux operating systems. The state is determined by reading directly from the sysfs pseudo-file system (/sys/class/power_supply).
+
+Because the script communicates via standard exit codes, it is designed to be used directly in conditional statements. Example using an if statement to trigger power-saving commands:
+```sh
+if is-battery-discharging; then
+  echo "System is on battery power. Dimming screen..."
+  # Insert commands to reduce power consumption here
+else
+  echo "System is connected to AC power."
+fi
+```
+
 ## License
 
 Copyright (C) 2012-2026 [James Cherti](https://www.jamescherti.com)
