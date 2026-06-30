@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# This script functions as a mutual exclusion wrapper. It prevents concurrent
+# executions of the same operation by using a dedicated lockfile.
+#
+# Usage Example:
+#   singleton /var/run/backup.lock /usr/local/bin/backup.sh --verbose
+#
+# The above command prevents concurrent executions of the
+# /usr/local/bin/backup.sh script. Running the command a second time while the
+# first instance is active results in an error message, which prevents multiple
+# executions:
+#   singleton /var/run/backup.lock /usr/local/bin/backup.sh --verbose
+#
+# Here is the error message caused by the second execution:
+#   Error: Another instance of '/usr/local/bin/backup.sh' is running. To be able
+#   to run the program again, delete the lock file: '/var/run/backup.lock'.
+#
+# The second execution outputs the following error message:
+#   Error: Another instance of '%s' is running. To be able to run the program
+#   again, delete the lock file: '/var/run/backup.lock'.
+#
+# License:
+# --------
+# Copyright (C) 2012-2026 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+main() {
+  if [[ $# -lt 2 ]]; then
+    printf "Usage: %s <lockfile> <command> [args...]\n" "$0" >&2
+    exit 1
+  fi
+
+  local lockfile="$1"
+  shift
+  local cmd=("$@")
+  local command_name="${cmd[0]}"
+
+  # Open file descriptor 9 for the lockfile
+  exec 9>"$lockfile"
+
+  # Attempt to acquire an exclusive, non-blocking lock
+  if ! flock -n 9; then
+    printf "Error: Another instance of '%s' is running. To be able to run" \
+      "the program again, delete the lock file: " \
+      "'%s'.\n" "$command_name" "$lockfile" >&2
+    exit 1
+  fi
+
+  # Ensure the lockfile is removed when the script exits
+  trap 'rm -f "$lockfile"' EXIT
+
+  # Execute the provided command
+  "${cmd[@]}"
+}
+
+main "$@"

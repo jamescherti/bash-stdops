@@ -433,6 +433,27 @@ Notes:
 
 ### Script category: Misc
 
+#### Script: singleton
+
+The `singleton` script functions as a mutual exclusion wrapper. It prevents concurrent executions of the same operation by using a dedicated lockfile.
+
+Usage Example:
+
+```
+singleton /var/run/backup.lock /usr/local/bin/backup.sh --verbose
+```
+
+The above command prevents concurrent executions of the `/usr/local/bin/backup.sh` script. Running the command a second time while the first instance is active results in an error message, which prevents multiple executions:
+
+```
+singleton /var/run/backup.lock /usr/local/bin/backup.sh --verbose
+```
+
+The second execution outputs the following error message:
+```
+Error: Another instance of '/usr/local/bin/backup.sh' is running. To be able to run the program again, delete the lock file: '/var/run/backup.lock'.
+```
+
 #### Script: haide
 
 The haide script utilizes AIDE (Advanced Intrusion Detection Environment) to monitor the file integrity of the user's home directory, ensuring no files are modified, added, or deleted without the user's knowledge. Key functions handle database setup, integrity checks, and user-approved updates. The script filters non-critical changes, ensuring meaningful alerts while maintaining a secure and reliable monitoring process.
