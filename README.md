@@ -443,7 +443,7 @@ Usage Example:
 singleton /var/run/backup.lock /usr/local/bin/backup.sh --verbose
 ```
 
-The above command prevents concurrent executions of the `/usr/local/bin/backup.sh` script. Running the command a second time while the first instance is active results in an error message, which prevents multiple executions:
+The above command prevents concurrent executions of the `/usr/local/bin/backup.sh` script. Running the command a second time while the first instance is active results in an error message and a non-zero exit code, preventing multiple executions:
 
 ```
 singleton /var/run/backup.lock /usr/local/bin/backup.sh --verbose

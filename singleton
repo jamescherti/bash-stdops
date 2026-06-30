@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# Requirement:
+#   - flock
+#
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
 #
@@ -13,8 +16,8 @@
 #
 # The above command prevents concurrent executions of the
 # /usr/local/bin/backup.sh script. Running the command a second time while the
-# first instance is active results in an error message, which prevents multiple
-# executions:
+# first instance is active results in an error message and a non-zero exit code,
+# which prevents multiple executions:
 #   singleton /var/run/backup.lock /usr/local/bin/backup.sh --verbose
 #
 # Here is the error message caused by the second execution:
@@ -58,19 +61,26 @@ main() {
   local cmd=("$@")
   local command_name="${cmd[0]}"
 
+  # Ensure secure permissions for the lockfile creation
+  local old_umask
+  old_umask=$(umask)
+  umask 077
+
   # Open file descriptor 9 for the lockfile
   exec 9>"$lockfile"
+  umask "$old_umask"
 
   # Attempt to acquire an exclusive, non-blocking lock
   if ! flock -n 9; then
-    printf "Error: Another instance of '%s' is running. To be able to run" \
-      "the program again, delete the lock file: " \
-      "'%s'.\n" "$command_name" "$lockfile" >&2
+    printf "Error: Another instance of '%s' is running. " "$command_name" >&2
+    printf \
+      "To be able to run the program again, delete the lock file: '%s'.\n" \
+      "$lockfile" >&2
     exit 1
   fi
 
   # Ensure the lockfile is removed when the script exits
-  trap 'rm -f "$lockfile"' EXIT
+  trap 'rm -f "$lockfile"; exec 9>&-' EXIT
 
   # Execute the provided command
   "${cmd[@]}"
