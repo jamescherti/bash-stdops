@@ -53,7 +53,7 @@ AIDE_WORKERS=$(nproc)
 # log_level values:
 # error  - Logs only errors that may affect AIDE's operation.
 # info   - Logs general informational messages, warnings, and errors (default).
-LOG_LEVEL=error
+LOG_LEVEL="error"
 
 # shellcheck disable=SC2317
 error_handler() {
@@ -67,8 +67,6 @@ trap "error_handler" ERR
 set -o errtrace
 
 run_aide() {
-  # Run AIDE and return its exit code
-  local errno=0
   echo "[RUN] aide" "$@"
   aide "--workers=${AIDE_WORKERS}" "--config=${AIDE_CONF}" "$@" \
     || return "$?"
@@ -104,8 +102,8 @@ init_aide_db() {
   mkdir -p "$BASE"
 
   {
-    if [[ -f ~/.haide/pre-aide.conf ]]; then
-      cat ~/.haide/pre-aide.conf
+    if [[ -f "$HOME/.haide/pre-aide.conf" ]]; then
+      cat "$HOME/.haide/pre-aide.conf"
     fi
 
     echo "database_in=file:$AIDE_DB"
@@ -120,8 +118,8 @@ init_aide_db() {
     echo "report_url=stdout"
     echo "Home=i+n+u+g+s+b+sha256+rmd160"
     echo
-    if [[ -f ~/.haide/post-aide-conf.sh ]]; then
-      /usr/bin/env bash ~/.haide/post-aide-conf.sh
+    if [[ -f "$HOME/.haide/post-aide-conf.sh" ]]; then
+      /usr/bin/env bash "$HOME/.haide/post-aide-conf.sh"
     else
       echo "$HOME/ Home"
       echo
@@ -139,10 +137,10 @@ update_aide_db() {
 }
 
 atexit() {
-  trap - EXIT INT TERM HUP QUIT
+  trap - EXIT INT TERM
   local errno="$?"
-  if [[ "$ATEXIT_DONE" -eq 0 ]]; then
-    if [[ -f "$LOCK_FILE" ]]; then
+  if [[ "${ATEXIT_DONE:-0}" -eq 0 ]]; then
+    if [[ -n "${LOCK_FILE:-}" && -f "$LOCK_FILE" ]]; then
       rm -f "$LOCK_FILE"
     fi
     ATEXIT_DONE=1
@@ -151,10 +149,10 @@ atexit() {
 }
 
 main() {
-  TEMPORARY_DIR=$(dirname $(mktemp -u))
+  TEMPORARY_DIR="$(dirname "$(mktemp -u)")"
   LOCK_FILE="$TEMPORARY_DIR/haide.lock"
   ATEXIT_DONE=0
-  trap 'atexit' EXIT INT TERM HUP QUIT
+  trap 'atexit' EXIT INT TERM
 
   if [[ -f "$LOCK_FILE" ]]; then
     echo "Error: Another instance of '$0' is running." \
@@ -177,9 +175,10 @@ main() {
     | sed '/^Detailed information about changes:/,$d') \
     || ERRNO="$?"
 
+  local answer
   if [[ $ERRNO -ne 0 ]]; then
-    read -t 86400 -r -p "Do you accept the changes? [y,n] " ANSWER
-    if [[ "$ANSWER" != "y" ]]; then
+    read -t 86400 -r -p "Do you accept the changes? [y,n] " answer
+    if [[ "$answer" != "y" ]]; then
       exit 1
     fi
 
