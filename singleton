@@ -58,7 +58,7 @@ main() {
 
   local lockfile="$1"
   shift
-  local cmd=("$@")
+  local -a cmd=("$@")
   local command_name="${cmd[0]}"
 
   # Ensure secure permissions for the lockfile creation
@@ -66,12 +66,13 @@ main() {
   old_umask=$(umask)
   umask 077
 
-  # Open file descriptor 25 for the lockfile
-  exec 25>"$lockfile"
+  # Open file descriptor for the lockfile
+  local lockfd
+  exec {lockfd}>"$lockfile"
   umask "$old_umask"
 
   # Attempt to acquire an exclusive, non-blocking lock
-  if ! flock -x -n 25; then
+  if ! flock -x -n "$lockfd"; then
     printf "Error: Another instance of '%s' is running. " "$command_name" >&2
     printf \
       "To be able to run the program again, delete the lock file: '%s'.\n" \
@@ -80,7 +81,8 @@ main() {
   fi
 
   # Ensure the lockfile is removed when the script exits
-  trap 'rm -f "$lockfile"; exec 25>&-' EXIT
+  # trap 'rm -f "$lockfile"; exec {lockfd}>&-' EXIT
+  trap 'exec {lockfd}>&-' EXIT
 
   # Execute the provided command
   "${cmd[@]}"
