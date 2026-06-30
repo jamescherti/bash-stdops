@@ -42,6 +42,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
+
 set -euf -o pipefail
 
 main() {
@@ -71,9 +72,9 @@ main() {
     exit 1
   fi
 
-  # Ensure the lockfile is removed when the script exits
-  # trap 'rm -f "$lockfile"; exec {lockfd}>&-' EXIT
-  trap 'exec {lockfd}>&-' EXIT
+  # Release the lock when the shell exits.
+  # shellcheck disable=SC2064
+  trap "exec $lockfd>&-" EXIT
 
   # Execute the provided command
   "${cmd[@]}"
