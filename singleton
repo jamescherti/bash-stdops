@@ -66,12 +66,12 @@ main() {
   old_umask=$(umask)
   umask 077
 
-  # Open file descriptor 200 for the lockfile
-  exec 200>"$lockfile"
+  # Open file descriptor 25 for the lockfile
+  exec 25>"$lockfile"
   umask "$old_umask"
 
   # Attempt to acquire an exclusive, non-blocking lock
-  if ! flock -x -n 200; then
+  if ! flock -x -n 25; then
     printf "Error: Another instance of '%s' is running. " "$command_name" >&2
     printf \
       "To be able to run the program again, delete the lock file: '%s'.\n" \
@@ -80,7 +80,7 @@ main() {
   fi
 
   # Ensure the lockfile is removed when the script exits
-  trap 'rm -f "$lockfile"; exec 200>&-' EXIT
+  trap 'rm -f "$lockfile"; exec 25>&-' EXIT
 
   # Execute the provided command
   "${cmd[@]}"
