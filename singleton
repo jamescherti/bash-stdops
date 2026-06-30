@@ -21,12 +21,7 @@
 #   singleton /var/run/backup.lock /usr/local/bin/backup.sh --verbose
 #
 # Here is the error message caused by the second execution:
-#   Error: Another instance of '/usr/local/bin/backup.sh' is running. To be able
-#   to run the program again, delete the lock file: '/var/run/backup.lock'.
-#
-# The second execution outputs the following error message:
-#   Error: Another instance of '%s' is running. To be able to run the program
-#   again, delete the lock file: '/var/run/backup.lock'.
+#   Error: Another instance of '/usr/local/bin/backup.sh' is running.
 #
 # License:
 # --------
@@ -47,7 +42,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-
 set -euf -o pipefail
 
 main() {
@@ -73,10 +67,7 @@ main() {
 
   # Attempt to acquire an exclusive, non-blocking lock
   if ! flock -x -n "$lockfd"; then
-    printf "Error: Another instance of '%s' is running. " "$command_name" >&2
-    printf \
-      "To be able to run the program again, delete the lock file: '%s'.\n" \
-      "$lockfile" >&2
+    printf "Error: Another instance of '%s' is running.\n" "$command_name" >&2
     exit 1
   fi
 

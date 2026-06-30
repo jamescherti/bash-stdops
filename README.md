@@ -451,7 +451,7 @@ singleton /var/run/backup.lock /usr/local/bin/backup.sh --verbose
 
 The second execution outputs the following error message:
 ```
-Error: Another instance of '/usr/local/bin/backup.sh' is running. To be able to run the program again, delete the lock file: '/var/run/backup.lock'.
+Error: Another instance of '/usr/local/bin/backup.sh' is running.
 ```
 
 #### Script: haide
