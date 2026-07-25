@@ -114,23 +114,21 @@ reload-ssh-agent() {
 }
 
 esa-start() {
-  local item
-  local errno=0
+  if [[ -z "${SSH_AUTH_SOCK:-}" && -z "${SSH_AGENT_PID:-}" ]]; then
+    local item
+    local errno=0
 
-  load-ssh-agent-pidfile
+    load-ssh-agent-pidfile
 
-  ssh-add -l >/dev/null 2>&1 || errno="$?"
-  if [ "$errno" -eq "2" ]; then
-    # errno=2 when ssh-add is unable to contact the authentication agent
-    reload-ssh-agent
-  elif [ "$errno" -ne "0" ] && [ "$errno" -ne "1" ]; then
-    msg "Error: 'ssh-add -l' returned $errno." >&2
-    return 1
+    ssh-add -l >/dev/null 2>&1 || errno="$?"
+    if [ "$errno" -eq "2" ]; then
+      # errno=2 when ssh-add is unable to contact the authentication agent
+      reload-ssh-agent
+    elif [ "$errno" -ne "0" ] && [ "$errno" -ne "1" ]; then
+      msg "Error: 'ssh-add -l' returned $errno." >&2
+      return 1
+    fi
   fi
-
-  # Output
-  # echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
-  # echo "SSH_AGENT_PID=$SSH_AGENT_PID"
 }
 
 esa-stop() {
