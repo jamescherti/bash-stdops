@@ -354,7 +354,11 @@ The output is sorted chronologically by commit date. Each line contains the last
 
 #### git-is-clean
 
-Ensure the Git working tree is pristine. Terminate with an error if any uncommitted, deleted, or untracked files are present in the repository.
+The git-is-clean Verifies that a Git repository has a clean working tree. It checks for uncommitted modifications, deletions, or untracked files. Exits with status 1 if any uncommitted changes are detected.
+
+#### git-is-pushed
+
+The git-is-pushed script checks if all local commits have been pushed to that remote. Exits with status 1 if there are unpushed commits or if no upstream branch is configured.
 
 ### Script category: ssh
 

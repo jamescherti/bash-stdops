@@ -8,9 +8,9 @@
 #
 # Description:
 # ------------
-# The git-is-clean Verifies that a Git repository has a clean working tree. It
-# checks for uncommitted modifications, deletions, or untracked files. Exits
-# with status 1 if any uncommitted changes are detected.
+# The git-is-pushed script checks if all local commits have been pushed to that
+# remote. Exits with status 1 if there are unpushed commits or if no upstream
+# branch is configured.
 #
 # License:
 # --------
@@ -37,10 +37,15 @@ set -e
 
 TARGET_DIR=$(realpath "${1:-.}")
 
-# Identify any changes in the working tree, index, or untracked files
-OUTPUT=$(git -C "$TARGET_DIR" status --porcelain) || true
-if [[ -n "$OUTPUT" ]]; then
-  echo "Error: $TARGET_DIR: Uncommitted modifications, deletions, or" \
-    "untracked files detected." >&2
+# Check if the current branch has a tracking remote branch configured
+if ! git -C "$TARGET_DIR" rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
+  echo "Error: $TARGET_DIR: The current branch has no remote upstream branch." >&2
+  exit 1
+fi
+
+# Check for commits that exist locally but have not been pushed to the upstream branch
+UNPUSHED=$(git -C "$TARGET_DIR" rev-list '@{u}..HEAD')
+if [[ -n "$UNPUSHED" ]]; then
+  echo "Error: $TARGET_DIR: Unpushed commits detected." >&2
   exit 1
 fi
