@@ -39,11 +39,13 @@ TARGET_DIR=$(realpath "${1:-.}")
 
 # Check if the current branch has a tracking remote branch configured
 if ! git -C "$TARGET_DIR" rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
-  echo "Error: $TARGET_DIR: The current branch has no remote upstream branch." >&2
+  echo \
+    "Error: $TARGET_DIR: The current branch has no remote upstream branch." >&2
   exit 1
 fi
 
-# Check for commits that exist locally but have not been pushed to the upstream branch
+# Check for commits that exist locally but have not been pushed to the upstream
+# branch
 UNPUSHED=$(git -C "$TARGET_DIR" rev-list '@{u}..HEAD')
 if [[ -n "$UNPUSHED" ]]; then
   echo "Error: $TARGET_DIR: Unpushed commits detected." >&2
