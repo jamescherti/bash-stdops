@@ -2,9 +2,6 @@
 
 # Function to detect Wayland without environment variables
 is_wayland() {
-  local user_id
-  user_id=$(id -u)
-
   # Method 1: Environment variables
   if [[ "${XDG_SESSION_TYPE:-}" == "wayland" ]] \
     || [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
@@ -25,7 +22,7 @@ is_wayland() {
         return 0
       fi
     done < <(loginctl list-sessions --no-legend \
-      | awk -v uid="$user_id" '$2 == uid { print $1 }')
+      | awk -v uid="$EUID" '$2 == uid { print $1 }')
   fi
 
   # Method 3: Check for Wayland socket existence
@@ -34,7 +31,7 @@ is_wayland() {
   if [[ -n "${XDG_RUNTIME_DIR:-}" ]]; then
     local runtime_path="$XDG_RUNTIME_DIR"
   else
-    local runtime_path="/run/user/$user_id"
+    local runtime_path="/run/user/$EUID"
   fi
 
   if [[ -d "$runtime_path" ]]; then
@@ -44,6 +41,15 @@ is_wayland() {
       | grep -q .; then
       return 0
     fi
+  fi
+
+  return 1
+}
+
+# Function to detect X11/Xorg without relying purely on environment variables
+is_x11() {
+  if [[ "${XDG_SESSION_TYPE:-}" == "x11" ]] || [[ -n "${DISPLAY:-}" ]]; then
+    return 0
   fi
 
   return 1

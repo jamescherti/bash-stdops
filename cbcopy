@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Requirements: xclip
 #
@@ -12,8 +12,6 @@
 # It intelligently chooses the appropriate method for the current environment:
 # - If running on macOS with pbcopy available, it uses pbcopy.
 # - If running in an X11 environment with xclip available, it uses xclip.
-# - If no GUI environment is detected (no $DISPLAY variable), it saves the
-#   content to a file at ~/.clipboard.
 #
 # Usage:
 #   echo text | cbcopy
@@ -49,14 +47,6 @@ cbcopy_xclip() {
   xclip -o -selection primary | xclip -i -selection clipboard
 }
 
-cbcopy_file() {
-  # Function to copy content to a local file as a fallback clipboard
-  local clipboard_file="$HOME/.clipboard"
-  touch "$clipboard_file"
-  chmod 600 "$clipboard_file"
-  cat - >"$clipboard_file"
-}
-
 main() {
   if type -P pbcopy &>/dev/null; then
     exec pbcopy
@@ -70,13 +60,9 @@ main() {
 
   # Copy
   local errno=0
-  if type -P xclip &>/dev/null && is_wayland; then
-    cbcopy_xclip 2>/dev/null || errno=1
-  elif type -P wl-copy &>/dev/null && is_wayland; then
+  if is_wayland && type -P wl-copy &>/dev/null; then
     wl-copy -f || errno=1
-  elif [[ "${DISPLAY:-}" = "" ]]; then
-    cbcopy_file || errno=1
-  else
+  elif { is_x11 || is_wayland; } && type -P xclip &>/dev/null; then
     cbcopy_xclip 2>/dev/null || errno=1
   fi
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Requirements:
 #   - pbpaste (on macOS)
@@ -20,8 +20,6 @@
 # - If running on macOS with pbpaste, it uses pbpaste.
 # - If running in an X11 environment with xclip, it uses xclip to access the
 #   clipboard.
-# - If no GUI environment is detected (no $DISPLAY variable), it reads from a
-#   file located at $HOME/.clipboard as a fallback clipboard.
 #
 # Usage:
 #   cbpaste
@@ -52,13 +50,6 @@ paste_from_xclip() {
   xclip -o -selection clipboard || return 1
 }
 
-paste_from_file() {
-  local cbfile="$HOME/.clipboard"
-  if [[ -f "$cbfile" ]]; then
-    cat "$HOME/.clipboard" || return 1
-  fi
-}
-
 remove_newline() {
   if [[ "${CBPASTE_STRIP_NEWLINE:-}" -eq 0 ]]; then
     cat
@@ -81,13 +72,9 @@ main() {
 
   # Paste
   local errno=0
-  if type -P xclip &>/dev/null && is_wayland; then
-    paste_from_xclip | remove_newline 2>/dev/null || errno=1
-  elif type -P wl-paste &>/dev/null && is_wayland; then
+  if is_wayland && type -P wl-paste &>/dev/null; then
     wl-paste --no-newline || errno=1
-  elif [[ "${DISPLAY:-}" = "" ]]; then
-    paste_from_file | remove_newline || errno=1
-  else
+  elif { is_x11 || is_wayland; } && type -P xclip &>/dev/null; then
     paste_from_xclip | remove_newline 2>/dev/null || errno=1
   fi
 
