@@ -49,16 +49,25 @@ fi
 
 export CBPASTE_STRIP_NEWLINE=1
 
-if [[ $("$CBPASTE_BIN" | wc -l) -le 1 ]]; then
-  tmux run \
-    "'$CBPASTE_BIN' | tmux load-buffer - ; tmux paste-buffer" || true
+# Fetch the clipboard content exactly once and load it into a tmux buffer.
+"$CBPASTE_BIN" | tmux load-buffer -
+
+# Count the lines directly from the tmux buffer.
+line_count=$(tmux show-buffer | wc -l)
+
+if [[ "$line_count" -le 1 ]]; then
+  # Paste directly from the buffer.
+  tmux paste-buffer
 else
   if tmux list-commands | grep -q '^display-popup ' &>/dev/null; then
-    tmux display-popup -T \
-      "Clipboard" "'$CBPASTE_BIN'" ';' 'confirm-before' '-p' 'Paste? [y,n]' \
-      "run '$CBPASTE_BIN | tmux load-buffer - ; tmux paste-buffer'" || true
+    # Preview and paste using the buffer instead of re-evaluating the binary.
+    tmux display-popup -T "Clipboard" "tmux show-buffer" ';' \
+      'confirm-before' '-p' 'Paste? [y/n]' 'paste-buffer' || true
   else
-    tmux confirm-before -p "'$(cbpaste)' PASTE? [y,n]" \
-      "run '$CBPASTE_BIN | tmux load-buffer - ; tmux paste-buffer'" || true
+    # Fallback: Extract only the first line for the prompt to avoid shell
+    # escaping issues with large multi-line payloads in the tmux command line.
+    preview=$(tmux show-buffer | head -n 1)
+    tmux confirm-before -p "'${preview}...' PASTE? [y/n]" \
+      "paste-buffer" || true
   fi
 fi
