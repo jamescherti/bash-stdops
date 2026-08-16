@@ -61,7 +61,7 @@ main() {
   # Copy
   local errno=0
   if is_wayland && type -P wl-copy &>/dev/null; then
-    wl-copy -f || errno=1
+    wl-copy || errno=1
   elif { is_x11 || is_wayland; } && type -P xclip &>/dev/null; then
     cbcopy_xclip 2>/dev/null || errno=1
   fi
