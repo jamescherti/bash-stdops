@@ -36,18 +36,17 @@
 
 set -euo pipefail
 
-if [[ "${OSTYE:-}" == darwin* ]]; then
+if [[ "${OSTYPE:-}" == darwin* ]]; then
   echo "darwin"
   exit 0
 fi
 
-if [[ -r /etc/os-release ]]; then
+OS_ID=$(
   # shellcheck disable=SC1091
-  source /etc/os-release
-  if [[ -n "${ID:-}" ]]; then
-    echo "$ID"
-    exit 0
+  if [[ -r /etc/os-release ]]; then
+    source /etc/os-release 2>/dev/null
   fi
-fi
+  echo "${ID:-unknown}"
+)
 
-echo "unknown"
+echo "$OS_ID"
