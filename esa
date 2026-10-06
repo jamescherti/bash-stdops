@@ -73,21 +73,12 @@ load-ssh-agent-pidfile() {
   fi
 }
 
-# TODO: Make this ensure the PID is an ssh-agent.
-# kill-ssh-agent() {
-#   if [[ -f "$ESA_SSH_AGENT_PIDFILE" ]]; then
-#     source "$ESA_SSH_AGENT_PIDFILE" >/dev/null 2>&1 || return
-#     if [[ -n "${SSH_AGENT_PID:-}" ]]; then
-#       kill "$SSH_AGENT_PID" >/dev/null 2>&1 || true
-#     fi
-#   fi
-# }
-
 kill-ssh-agent() {
   if [[ -f "$ESA_SSH_AGENT_PIDFILE" ]]; then
     # shellcheck disable=SC1090
     source "$ESA_SSH_AGENT_PIDFILE" >/dev/null 2>&1 || return 0
     if [[ -n "${SSH_AGENT_PID:-}" ]]; then
+      # TODO: Make this ensure the PID is an ssh-agent.
       kill "$SSH_AGENT_PID" >/dev/null 2>&1 || true
     fi
   fi
