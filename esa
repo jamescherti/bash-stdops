@@ -85,13 +85,19 @@ load-ssh-agent-pidfile() {
 # }
 
 kill-ssh-agent() {
-  killall -u "$USER" ssh-agent >/dev/null 2>&1 || true
+  if [[ -f "$ESA_SSH_AGENT_PIDFILE" ]]; then
+    # shellcheck disable=SC1090
+    source "$ESA_SSH_AGENT_PIDFILE" >/dev/null 2>&1 || return 0
+    if [[ -n "${SSH_AGENT_PID:-}" ]]; then
+      kill "$SSH_AGENT_PID" >/dev/null 2>&1 || true
+    fi
+  fi
 }
 
 msg() {
   local cmd
   cmd=$(basename "$0")
-  printf "$cmd: %s\n" "$*"
+  printf "%s: %s\n" "$cmd" "$*"
 }
 
 reload-ssh-agent() {
@@ -143,7 +149,7 @@ esa-stop() {
 
 esa-ssh-add() {
   local item
-  for item in ssh-add expect; do
+  for item in ssh-add ssh-keygen expect; do
     if ! type -P "$item" >/dev/null 2>&1; then
       msg "No '$item' in ($PATH)" >&2
       return 1
@@ -159,7 +165,11 @@ esa-ssh-add() {
   local file
   while IFS= read -r file; do
     LIST_SSH_KEY_FILES+=("$file")
-  done < <(grep -lR --no-messages -- "BEGIN .*PRIVATE KEY" "$SSH_DIR" || true)
+  done < <(grep -lsR -- "BEGIN .*PRIVATE KEY" "$SSH_DIR" || true)
+
+  if [[ ${#LIST_SSH_KEY_FILES[@]} -eq 0 ]]; then
+    return 0
+  fi
 
   local ssh_password=""
   local PRIVATE_KEY_FILE
@@ -180,10 +190,19 @@ esa-ssh-add() {
         LC_ALL=C expect >/dev/null <<EOF
 set timeout 10
 spawn ssh-add "\$env(E_PRIVATE_KEY_FILE)"
-expect "passphrase"
-send "\$env(E_ssh_password)\r"
-expect eof
+expect {
+  "passphrase" {
+    send "\$env(E_ssh_password)\r"
+    expect eof
+  }
+  eof
+}
 EOF
+
+      if ! ssh-add -l 2>/dev/null | awk '{print $2}' | grep -Fxq -- "$FINGERPRINT"; then
+        msg "Warning: Failed to add $PRIVATE_KEY_FILE. Resetting cached password." >&2
+        ssh_password=""
+      fi
     fi
   done
 }
@@ -203,7 +222,7 @@ main() {
   fi
 
   local item
-  for item in killall chmod grep; do
+  for item in chmod grep; do
     if ! type -P "$item" >/dev/null 2>&1; then
       msg "no '$item' in ($PATH)" >&2
       return 1
