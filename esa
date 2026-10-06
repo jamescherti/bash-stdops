@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
 # Requirements:
-#   - killall
 #   - openssh (ssh-agent and ssh-add)
 #   - expect
 #
