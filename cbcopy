@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 #
-# Requirements: xclip, iconv
+# Requirements:
+#   # Linux: xclip or wl-copy
+#   # macOS: pbcopy
+#   #
+#   # Optional: iconv, cmp
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
