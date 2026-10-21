@@ -175,7 +175,7 @@ main() {
       exit 1
     fi
   elif type -P xclip &>/dev/null; then
-    if ! cbcopy_xclip 2>/dev/null; then
+    if ! cbcopy_xclip; then
       echo "$SCRIPT_NAME: Error: Failed to copy data to the X11 clipboard" \
         "via 'xclip'." >&2
       exit 1
