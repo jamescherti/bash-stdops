@@ -103,13 +103,23 @@ cbcopy_pbcopy() {
   fi
 }
 
+cbcopy_wlcopy() {
+  if [[ "$USE_DISK" == 1 ]]; then
+    wl-copy <"$TMP_FILE"
+  else
+    wl-copy
+  fi
+}
+
 cbcopy_xclip() {
   if [[ "$USE_DISK" == 1 ]]; then
     xclip -i -selection clipboard <"$TMP_FILE"
-    xclip -i -selection primary <"$TMP_FILE"
+    # xclip -i -selection primary <"$TMP_FILE"
   else
     # Use tee to stream standard input into both X11 selections in memory
-    tee >(xclip -i -selection primary) | xclip -i -selection clipboard
+
+    # tee >(xclip -i -selection primary) | xclip -i -selection clipboard
+    xclip -i -selection clipboard
   fi
 }
 
