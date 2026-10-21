@@ -11,6 +11,7 @@
 #
 # It intelligently chooses the appropriate method for the current environment:
 # - If running on macOS with pbcopy available, it uses pbcopy.
+# - If running in a Wayland environment with wl-copy available, it uses wl-copy.
 # - If running in an X11 environment with xclip available, it uses xclip.
 #
 # Usage:
@@ -41,6 +42,7 @@
 
 set -euf -o pipefail
 
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 TMP_FILE=""
 
 # shellcheck disable=SC2329
@@ -53,9 +55,14 @@ cleanup() {
 # shellcheck disable=SC2329
 error_handler() {
   local errno="$?"
-  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
-    "(${BASH_COMMAND} exited with status $errno)" >&2
+  echo "$SCRIPT_NAME: Unexpected error at ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "('${BASH_COMMAND}' exited with status $errno)." >&2
   exit "${errno}"
+}
+
+die() {
+  echo "$SCRIPT_NAME: Error: $*" >&2
+  exit 1
 }
 
 trap "error_handler" ERR
@@ -73,45 +80,73 @@ sanitize_utf8() {
   fi
 }
 
+cbcopy_pbcopy() {
+  pbcopy </dev/null
+  pbcopy <"$TMP_FILE"
+}
+
+cbcopy_wlcopy() {
+  wl-copy </dev/null
+  wl-copy <"$TMP_FILE"
+}
+
 cbcopy_xclip() {
-  # Function to copy content to clipboard using xclip
-  xclip -i -selection clipboard
-  xclip -o -selection clipboard | xclip -i -selection primary
+  xclip -i -selection clipboard </dev/null
+  xclip -i -selection primary </dev/null
+  xclip -i -selection clipboard <"$TMP_FILE"
+  xclip -i -selection primary <"$TMP_FILE"
 }
 
 main() {
-  TMP_FILE="$(mktemp)"
+  TMP_FILE="$(mktemp)" \
+    || die "Failed to create a temporary file."
   sanitize_utf8 >"$TMP_FILE"
 
   # Source bash-stdops library
   local script_dir
   script_dir="$(dirname "${BASH_SOURCE[0]}")"
-  # shellcheck disable=SC1091
-  source "$script_dir/.bash-stdops.inc.sh"
+  local stdops_lib="$script_dir/.bash-stdops.inc.sh"
+  if [[ ! -f "$stdops_lib" ]]; then
+    die "Required helper library not found at '$stdops_lib'."
+  fi
+  # shellcheck disable=SC1090
+  source "$stdops_lib"
 
   # Copy
-  # Clear the clipboard first so a failed copy won't leave stale data behind
   if type -P pbcopy &>/dev/null; then
-    echo "" | pbcopy
-    pbcopy <"$TMP_FILE" || exit 1
+    cbcopy_pbcopy \
+      || die "Failed to copy data to the macOS clipboard via 'pbcopy'."
   elif is_wayland && type -P wl-copy &>/dev/null; then
-    echo "" | wl-copy
-    wl-copy <"$TMP_FILE" || exit 1
+    cbcopy_wlcopy \
+      || die "Failed to copy data to the Wayland clipboard via 'wl-copy'."
   elif type -P xclip &>/dev/null; then
-    cbcopy_xclip </dev/null 2>/dev/null || true
-    cbcopy_xclip <"$TMP_FILE" 2>/dev/null || exit 1
+    cbcopy_xclip 2>/dev/null \
+      || die "Failed to copy data to the X11 clipboard via 'xclip'."
   else
-    echo "Error: Unsupported." >&2
-    exit 1
+    if is_wayland; then
+      die "No clipboard utility found for Wayland. Please install" \
+        "'wl-clipboard' (provides 'wl-copy')."
+    else
+      die "No supported clipboard utility found. Please install 'xclip'" \
+        "(Linux/X11), 'wl-clipboard' (Linux/Wayland), or ensure 'pbcopy'" \
+        "is available (macOS)."
+    fi
   fi
 
   # Verify the clipboard is non-empty if the input file was non-empty
   export CBPASTE_STRIP_NEWLINE=0
-  CLIPBOARD_CONTENT=$(cat "$TMP_FILE")
-  if [[ "$CLIPBOARD_CONTENT" != "" ]] \
-    && [[ -z "$("$script_dir/cbpaste" 2>/dev/null || true)" ]]; then
-    echo "Error." >&2
-    exit 1
+
+  if [[ -s "$TMP_FILE" ]]; then
+    if [[ ! -x "$script_dir/cbpaste" ]]; then
+      die "Cannot verify clipboard contents: companion script" \
+        "'$script_dir/cbpaste' is missing or not executable."
+    fi
+
+    if [[ -z "$("$script_dir/cbpaste" 2>/dev/null || true)" ]]; then
+      die "Clipboard verification failed: data was sent to the clipboard," \
+        "but reading it back returned empty. Check if your display server or" \
+        "clipboard manager is running properly."
+    fi
   fi
 
   return 0
