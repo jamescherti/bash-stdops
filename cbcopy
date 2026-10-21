@@ -3,8 +3,7 @@
 # Requirements:
 #   # Linux: xclip or wl-copy
 #   # macOS: pbcopy
-#   #
-#   # Optional: iconv, cmp
+#   # All operating systems: iconv, cmp, tee
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
@@ -104,22 +103,24 @@ cbcopy_pbcopy() {
 }
 
 cbcopy_wlcopy() {
+  local opts
+  opts=("--type" "text/plain;charset=utf-8")
   if [[ "$USE_DISK" == 1 ]]; then
-    wl-copy <"$TMP_FILE"
+    wl-copy "${opts[@]}" <"$TMP_FILE"
+    wl-copy "${opts[@]}" --primary <"$TMP_FILE"
   else
-    wl-copy
+    # Process substitution feeds stdin into both clipboard and primary selection
+    # in memory
+    tee >(wl-copy "${opts[@]}" --primary) | wl-copy "${opts[@]}"
   fi
 }
 
 cbcopy_xclip() {
   if [[ "$USE_DISK" == 1 ]]; then
-    xclip -i -selection clipboard <"$TMP_FILE"
-    # xclip -i -selection primary <"$TMP_FILE"
+    xclip -i -selection primary <"$TMP_FILE"
   else
     # Use tee to stream standard input into both X11 selections in memory
-
-    # tee >(xclip -i -selection primary) | xclip -i -selection clipboard
-    xclip -i -selection clipboard
+    tee >(xclip -i -selection primary) | xclip -i -selection clipboard
   fi
 }
 
