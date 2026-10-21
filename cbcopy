@@ -153,7 +153,7 @@ main() {
   source "$stdops_lib"
 
   if [[ "$USE_DISK" == 1 ]]; then
-    if ! TMP_FILE="$(mktemp --suffix .cbcopy)"; then
+    if ! TMP_FILE="$(mktemp)"; then
       echo "$SCRIPT_NAME: Error: Failed to create a temporary file." >&2
       exit 1
     fi
@@ -210,7 +210,7 @@ main() {
         exit 1
       fi
 
-      if ! TMP_FILE2="$(mktemp --suffix .cbcopy)"; then
+      if ! TMP_FILE2="$(mktemp)"; then
         echo "$SCRIPT_NAME: Error: Failed to create a temporary file." >&2
         exit 1
       fi
