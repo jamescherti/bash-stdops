@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Requirements: xclip
+# Requirements: xclip, iconv
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
@@ -41,15 +41,38 @@
 
 set -euf -o pipefail
 
+# shellcheck disable=SC2329
+error_handler() {
+  local errno="$?"
+  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
+}
+
+trap "error_handler" ERR
+set -o errtrace
+
+sanitize_utf8() {
+  if type -P iconv &>/dev/null; then
+    # -c: Discard characters that cannot be converted instead of terminating
+    # when encountering such characters. POSIX requires that this option does
+    # not change the exit status of the program.
+    iconv -c -f UTF-8 -t UTF-8
+  else
+    cat
+  fi
+}
+
 cbcopy_xclip() {
   # Function to copy content to clipboard using xclip
-  xclip -i -selection primary
-  xclip -o -selection primary | xclip -i -selection clipboard
+  xclip -i -selection clipboard
+  xclip -o -selection clipboard | xclip -i -selection primary
 }
 
 main() {
   if type -P pbcopy &>/dev/null; then
-    exec pbcopy
+    sanitize_utf8 | pbcopy
+    exit 0
   fi
 
   # Source bash-stdops library
@@ -60,10 +83,13 @@ main() {
 
   # Copy
   local errno=0
+  # Clear the clipboard first so a failed copy won't leave stale data behind
   if is_wayland && type -P wl-copy &>/dev/null; then
-    wl-copy || errno=1
+    echo "" | wl-copy
+    sanitize_utf8 | wl-copy || errno=1
   elif type -P xclip &>/dev/null; then
-    cbcopy_xclip 2>/dev/null || errno=1
+    echo "" | cbcopy_xclip
+    sanitize_utf8 | cbcopy_xclip 2>/dev/null || errno=1
   fi
 
   exit "$errno"
