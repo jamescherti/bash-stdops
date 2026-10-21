@@ -102,23 +102,16 @@ cbcopy_wlcopy() {
   opts=("--type" "text/plain;charset=utf-8")
   if [[ "$USE_DISK" == 1 ]]; then
     wl-copy "${opts[@]}" <"$TMP_FILE"
-    wl-copy "${opts[@]}" --primary <"$TMP_FILE"
   else
-    # Process substitution feeds stdin into both clipboard and primary selection
-    # in memory
-    tee >(wl-copy "${opts[@]}" --primary) | wl-copy "${opts[@]}"
-    wait "$!"
+    wl-copy "${opts[@]}"
   fi
 }
 
 cbcopy_xclip() {
   if [[ "$USE_DISK" == 1 ]]; then
-    xclip -i -selection primary <"$TMP_FILE"
     xclip -i -selection clipboard <"$TMP_FILE"
   else
-    # Use tee to stream standard input into both X11 selections in memory
-    tee >(xclip -i -selection primary) | xclip -i -selection clipboard
-    wait "$!"
+    xclip -i -selection clipboard
   fi
 }
 
@@ -202,7 +195,7 @@ main() {
 
   # Verify the clipboard is non-empty if the input file was non-empty.
   if [[ "$OPT_VERIFY" == 1 ]]; then
-    export CBPASTE_STRIP_NEWLINE=1
+    export CBPASTE_STRIP_NEWLINE=0
 
     if [[ -s "$TMP_FILE" ]]; then
       local cbpaste_bin="$script_dir/cbpaste"

@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 #
 # Requirements:
-#   - pbpaste (on macOS)
-#   - xclip (for X11 environments)
-#   - sed
+#   # Linux: xclip or wl-paste
+#   # macOS: pbpaste
+#   # All operating systems: awk
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
 #
 # Description:
 # ------------
-# The pbpaste command-line utility that reads the contents of the system
-# clipboard and writes it to standard output (stdout). This allows users to
-# access clipboard contents within scripts, the terminal, or other command-line
-# tools.
+# This script reads the contents of the system clipboard and writes it to
+# standard output (stdout). This allows users to access clipboard contents
+# within scripts, the terminal, or other command-line tools.
 #
 # This script pastes content from the clipboard. It adapts based on the
 # environment:
 # - If running on macOS with pbpaste, it uses pbpaste.
+# - If running in a Wayland environment with wl-paste, it uses wl-paste.
 # - If running in an X11 environment with xclip, it uses xclip to access the
 #   clipboard.
 #
@@ -46,43 +46,82 @@
 
 set -euf -o pipefail
 
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+
 paste_from_xclip() {
-  xclip -o -selection clipboard || return 1
+  xclip -o -selection clipboard 2>/dev/null || return 1
 }
 
 remove_newline() {
-  if [[ "${CBPASTE_STRIP_NEWLINE:-}" -eq 0 ]]; then
+  if [[ "${CBPASTE_STRIP_NEWLINE:-1}" == "0" ]]; then
     cat
   else
     sed -z "s/\\n\+$//"
+    # TODO
+    # awk '
+    #   {
+    #     if (NR > 1) {
+    #       buf = buf "\n"
+    #     }
+    #     buf = buf $0
+    #     if ($0 != "") {
+    #       printf "%s", buf
+    #       buf = ""
+    #     }
+    #   }
+    # '
   fi
 }
 
 main() {
-  # macOS
-  if type -P pbpaste &>/dev/null; then
-    exec pbpaste
-  fi
-
   # Source bash-stdops library
   local script_dir
   script_dir="$(dirname "${BASH_SOURCE[0]}")"
-  # shellcheck disable=SC1091
-  source "$script_dir/.bash-stdops.inc.sh"
-
-  # Paste
-  if is_wayland && type -P wl-paste &>/dev/null; then
-    local opts
-    opts=("--type" "text/plain;charset=utf-8")
-
-    if [[ "${CBPASTE_STRIP_NEWLINE:-}" -ne 0 ]]; then
-      opts+=("--no-newline")
-    fi
-
-    wl-paste "${opts[@]}" || exit 1
-  elif type -P xclip &>/dev/null; then
-    paste_from_xclip | remove_newline 2>/dev/null || exit 1
+  local stdops_lib="$script_dir/.bash-stdops.inc.sh"
+  if [[ ! -f "$stdops_lib" ]]; then
+    echo "$SCRIPT_NAME: Error: Required helper library not found" \
+      "at '$stdops_lib'." >&2
+    exit 1
   fi
+  # shellcheck disable=SC1090
+  source "$stdops_lib"
+
+  if type -P pbpaste &>/dev/null; then
+    if ! pbpaste | remove_newline; then
+      echo "$SCRIPT_NAME: Error: Failed to read data from the macOS" \
+        "clipboard via 'pbpaste'." >&2
+      exit 1
+    fi
+    return 0
+  elif is_wayland && type -P wl-paste &>/dev/null; then
+    local opts
+    opts=("--type" "text/plain;charset=utf-8" "--no-newline")
+
+    if ! wl-paste "${opts[@]}" 2>/dev/null; then
+      echo "$SCRIPT_NAME: Error: Failed to read data from the Wayland" \
+        "clipboard via 'wl-paste'." >&2
+      exit 1
+    fi
+  elif type -P xclip &>/dev/null; then
+    if ! paste_from_xclip | remove_newline; then
+      echo "$SCRIPT_NAME: Error: Failed to read data from the X11" \
+        "clipboard via 'xclip'." >&2
+      exit 1
+    fi
+  else
+    if is_wayland; then
+      echo "$SCRIPT_NAME: Error: No clipboard utility found for Wayland." \
+        "Please install 'wl-clipboard' (provides 'wl-paste')." >&2
+      exit 1
+    else
+      echo "$SCRIPT_NAME: Error: No supported clipboard utility found." \
+        "Please install 'xclip' (Linux/X11), 'wl-clipboard' (Linux/Wayland)," \
+        "or ensure 'pbpaste' is available (macOS)." >&2
+      exit 1
+    fi
+  fi
+
+  return 0
 }
 
-main
+main "$@"
