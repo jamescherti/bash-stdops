@@ -107,15 +107,18 @@ cbcopy_wlcopy() {
     # Process substitution feeds stdin into both clipboard and primary selection
     # in memory
     tee >(wl-copy "${opts[@]}" --primary) | wl-copy "${opts[@]}"
+    wait "$!"
   fi
 }
 
 cbcopy_xclip() {
   if [[ "$USE_DISK" == 1 ]]; then
     xclip -i -selection primary <"$TMP_FILE"
+    xclip -i -selection clipboard <"$TMP_FILE"
   else
     # Use tee to stream standard input into both X11 selections in memory
     tee >(xclip -i -selection primary) | xclip -i -selection clipboard
+    wait "$!"
   fi
 }
 
