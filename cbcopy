@@ -74,11 +74,6 @@ error_handler() {
   exit "${errno}"
 }
 
-die() {
-  echo "$SCRIPT_NAME: Error: $*" >&2
-  exit 1
-}
-
 trap "error_handler" ERR
 trap "cleanup" EXIT INT TERM
 set -o errtrace
@@ -150,14 +145,18 @@ main() {
   script_dir="$(dirname "${BASH_SOURCE[0]}")"
   local stdops_lib="$script_dir/.bash-stdops.inc.sh"
   if [[ ! -f "$stdops_lib" ]]; then
-    die "Required helper library not found at '$stdops_lib'."
+    echo "$SCRIPT_NAME: Error: Required helper library not found" \
+      "at '$stdops_lib'." >&2
+    exit 1
   fi
   # shellcheck disable=SC1090
   source "$stdops_lib"
 
   if [[ "$USE_DISK" == 1 ]]; then
-    TMP_FILE="$(mktemp)" \
-      || die "Failed to create a temporary file."
+    if ! TMP_FILE="$(mktemp --suffix .cbcopy)"; then
+      echo "$SCRIPT_NAME: Error: Failed to create a temporary file." >&2
+      exit 1
+    fi
 
     if [[ "$OPT_SANITIZE" == 1 ]]; then
       sanitize_utf8 >"$TMP_FILE"
@@ -168,22 +167,33 @@ main() {
 
   # Copy
   if type -P pbcopy &>/dev/null; then
-    cbcopy_pbcopy \
-      || die "Failed to copy data to the macOS clipboard via 'pbcopy'."
+    if ! cbcopy_pbcopy; then
+      echo "$SCRIPT_NAME: Error: Failed to copy data to the macOS" \
+        "clipboard via 'pbcopy'." >&2
+      exit 1
+    fi
   elif is_wayland && type -P wl-copy &>/dev/null; then
-    cbcopy_wlcopy \
-      || die "Failed to copy data to the Wayland clipboard via 'wl-copy'."
+    if ! cbcopy_wlcopy; then
+      echo "$SCRIPT_NAME: Error: Failed to copy data to the Wayland" \
+        "clipboard via 'wl-copy'." >&2
+      exit 1
+    fi
   elif type -P xclip &>/dev/null; then
-    cbcopy_xclip 2>/dev/null \
-      || die "Failed to copy data to the X11 clipboard via 'xclip'."
+    if ! cbcopy_xclip 2>/dev/null; then
+      echo "$SCRIPT_NAME: Error: Failed to copy data to the X11 clipboard" \
+        "via 'xclip'." >&2
+      exit 1
+    fi
   else
     if is_wayland; then
-      die "No clipboard utility found for Wayland. Please install" \
-        "'wl-clipboard' (provides 'wl-copy')."
+      echo "$SCRIPT_NAME: Error: No clipboard utility found for Wayland." \
+        "Please install 'wl-clipboard' (provides 'wl-copy')." >&2
+      exit 1
     else
-      die "No supported clipboard utility found. Please install 'xclip'" \
-        "(Linux/X11), 'wl-clipboard' (Linux/Wayland), or ensure 'pbcopy'" \
-        "is available (macOS)."
+      echo "$SCRIPT_NAME: Error: No supported clipboard utility found." \
+        "Please install 'xclip' (Linux/X11), 'wl-clipboard' (Linux/Wayland)," \
+        "or ensure 'pbcopy' is available (macOS)." >&2
+      exit 1
     fi
   fi
 
@@ -194,16 +204,22 @@ main() {
     if [[ -s "$TMP_FILE" ]]; then
       local cbpaste_bin="$script_dir/cbpaste"
       if [[ ! -x "$cbpaste_bin" ]]; then
-        die "Cannot verify clipboard contents: Companion script" \
-          "'$script_dir/cbpaste' is missing or not executable."
+        echo "$SCRIPT_NAME: Error: Cannot verify clipboard contents:" \
+          "Companion script '$script_dir/cbpaste' is missing or" \
+          "not executable." >&2
+        exit 1
       fi
 
-      TMP_FILE2="$(mktemp)" \
-        || die "Failed to create a temporary file."
+      if ! TMP_FILE2="$(mktemp --suffix .cbcopy)"; then
+        echo "$SCRIPT_NAME: Error: Failed to create a temporary file." >&2
+        exit 1
+      fi
       "$cbpaste_bin" >"$TMP_FILE2"
       if ! cmp "$TMP_FILE" "$TMP_FILE2" &>/dev/null; then
-        die "Clipboard verification failed: Data was sent to the clipboard," \
-          "but reading it returned a different content."
+        echo "$SCRIPT_NAME: Error: Clipboard verification failed: Data was" \
+          "sent to the clipboard, but reading it returned a" \
+          "different content." >&2
+        exit 1
       fi
     fi
   fi
