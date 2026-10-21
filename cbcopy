@@ -199,7 +199,7 @@ main() {
 
   # Verify the clipboard is non-empty if the input file was non-empty.
   if [[ "$OPT_VERIFY" == 1 ]]; then
-    export CBPASTE_STRIP_NEWLINE=0
+    export CBPASTE_STRIP_NEWLINE=1
 
     if [[ -s "$TMP_FILE" ]]; then
       local cbpaste_bin="$script_dir/cbpaste"
