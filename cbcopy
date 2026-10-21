@@ -103,20 +103,13 @@ cbcopy_pbcopy() {
   fi
 }
 
-cbcopy_wlcopy() {
-  if [[ "$USE_DISK" == 1 ]]; then
-    wl-copy <"$TMP_FILE"
-  else
-    wl-copy
-  fi
-}
-
 cbcopy_xclip() {
   if [[ "$USE_DISK" == 1 ]]; then
     xclip -i -selection clipboard <"$TMP_FILE"
+    xclip -i -selection primary <"$TMP_FILE"
   else
-    # Process substitution allows splitting the pipe in memory securely
-    xclip -i -selection clipboard
+    # Use tee to stream standard input into both X11 selections in memory
+    tee >(xclip -i -selection primary) | xclip -i -selection clipboard
   fi
 }
 
@@ -190,15 +183,15 @@ main() {
     if [[ -s "$TMP_FILE" ]]; then
       local cbpaste_bin="$script_dir/cbpaste"
       if [[ ! -x "$cbpaste_bin" ]]; then
-        die "Cannot verify clipboard contents: companion script" \
+        die "Cannot verify clipboard contents: Companion script" \
           "'$script_dir/cbpaste' is missing or not executable."
       fi
 
       TMP_FILE2="$(mktemp)" \
         || die "Failed to create a temporary file."
       "$cbpaste_bin" >"$TMP_FILE2"
-      if ! cmp "$TMP_FILE" "$TMP_FILE2"; then
-        die "Clipboard verification failed: data was sent to the clipboard," \
+      if ! cmp "$TMP_FILE" "$TMP_FILE2" &>/dev/null; then
+        die "Clipboard verification failed: Data was sent to the clipboard," \
           "but reading it returned a different content."
       fi
     fi
