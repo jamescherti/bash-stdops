@@ -46,6 +46,7 @@ set -euf -o pipefail
 
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 TMP_FILE=""
+TMP_FILE2=""
 
 USE_DISK=0
 OPT_SANITIZE=0
@@ -55,6 +56,10 @@ OPT_VERIFY=0
 cleanup() {
   if [[ -n "${TMP_FILE:-}" && -f "$TMP_FILE" ]]; then
     rm -f "$TMP_FILE"
+  fi
+
+  if [[ -n "${TMP_FILE2:-}" && -f "$TMP_FILE2" ]]; then
+    rm -f "$TMP_FILE2"
   fi
 }
 
@@ -87,10 +92,6 @@ sanitize_utf8() {
 }
 
 cbcopy_pbcopy() {
-  # Clear the clipboard first with an empty stream (< /dev/null) so a failed
-  # copy operation won't leave stale data behind.
-  pbcopy </dev/null
-
   if [[ "$USE_DISK" == 1 ]]; then
     pbcopy <"$TMP_FILE"
   else
@@ -99,10 +100,6 @@ cbcopy_pbcopy() {
 }
 
 cbcopy_wlcopy() {
-  # Clear the clipboard first with an empty stream (< /dev/null) so a failed
-  # copy operation won't leave stale data behind.
-  wl-copy </dev/null
-
   if [[ "$USE_DISK" == 1 ]]; then
     wl-copy <"$TMP_FILE"
   else
@@ -111,17 +108,11 @@ cbcopy_wlcopy() {
 }
 
 cbcopy_xclip() {
-  # Clear the clipboard first with an empty stream (< /dev/null) so a failed
-  # copy operation won't leave stale data behind.
-  xclip -i -selection clipboard </dev/null
-  xclip -i -selection primary </dev/null
-
   if [[ "$USE_DISK" == 1 ]]; then
     xclip -i -selection clipboard <"$TMP_FILE"
-    xclip -i -selection primary <"$TMP_FILE"
   else
     # Process substitution allows splitting the pipe in memory securely
-    tee >(xclip -i -selection primary) | xclip -i -selection clipboard
+    xclip -i -selection clipboard
   fi
 }
 
@@ -193,14 +184,18 @@ main() {
     export CBPASTE_STRIP_NEWLINE=0
 
     if [[ -s "$TMP_FILE" ]]; then
-      if [[ ! -x "$script_dir/cbpaste" ]]; then
+      local cbpaste_bin="$script_dir/cbpaste"
+      if [[ ! -x "$cbpaste_bin" ]]; then
         die "Cannot verify clipboard contents: companion script" \
           "'$script_dir/cbpaste' is missing or not executable."
       fi
 
-      if [[ -z "$("$script_dir/cbpaste" 2>/dev/null || true)" ]]; then
+      TMP_FILE2="$(mktemp)" \
+        || die "Failed to create a temporary file."
+      "$cbpaste_bin" >"$TMP_FILE2"
+      if ! cmp "$TMP_FILE" "$TMP_FILE2"; then
         die "Clipboard verification failed: data was sent to the clipboard," \
-          "but reading it back returned empty."
+          "but reading it returned a different content."
       fi
     fi
   fi
