@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Requirements: xclip, iconv, cbpaste
+# Requirements: xclip, iconv
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
@@ -15,7 +15,9 @@
 # - If running in an X11 environment with xclip available, it uses xclip.
 #
 # Usage:
-#   echo text | cbcopy
+#   echo text | cbcopy        (Secure: uses memory/pipes by default)
+#   cat file.txt | cbcopy -c  (Uses disk: allows copy verification)
+#   cat file.txt | cbcopy -s  (Uses disk: sanitizes UTF-8)
 #
 # The script handles both GUI and non-GUI environments for clipboard
 # management.
@@ -44,6 +46,10 @@ set -euf -o pipefail
 
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 TMP_FILE=""
+
+USE_DISK=0
+OPT_SANITIZE=0
+OPT_VERIFY=0
 
 # shellcheck disable=SC2329
 cleanup() {
@@ -81,26 +87,64 @@ sanitize_utf8() {
 }
 
 cbcopy_pbcopy() {
+  # Clear the clipboard first with an empty stream (< /dev/null) so a failed
+  # copy operation won't leave stale data behind.
   pbcopy </dev/null
-  pbcopy <"$TMP_FILE"
+
+  if [[ "$USE_DISK" == 1 ]]; then
+    pbcopy <"$TMP_FILE"
+  else
+    pbcopy
+  fi
 }
 
 cbcopy_wlcopy() {
+  # Clear the clipboard first with an empty stream (< /dev/null) so a failed
+  # copy operation won't leave stale data behind.
   wl-copy </dev/null
-  wl-copy <"$TMP_FILE"
+
+  if [[ "$USE_DISK" == 1 ]]; then
+    wl-copy <"$TMP_FILE"
+  else
+    wl-copy
+  fi
 }
 
 cbcopy_xclip() {
+  # Clear the clipboard first with an empty stream (< /dev/null) so a failed
+  # copy operation won't leave stale data behind.
   xclip -i -selection clipboard </dev/null
   xclip -i -selection primary </dev/null
-  xclip -i -selection clipboard <"$TMP_FILE"
-  xclip -i -selection primary <"$TMP_FILE"
+
+  if [[ "$USE_DISK" == 1 ]]; then
+    xclip -i -selection clipboard <"$TMP_FILE"
+    xclip -i -selection primary <"$TMP_FILE"
+  else
+    # Process substitution allows splitting the pipe in memory securely
+    tee >(xclip -i -selection primary) | xclip -i -selection clipboard
+  fi
 }
 
 main() {
-  TMP_FILE="$(mktemp)" \
-    || die "Failed to create a temporary file."
-  sanitize_utf8 >"$TMP_FILE"
+  while getopts "sc" opt; do
+    case "$opt" in
+    s)
+      OPT_SANITIZE=1
+      USE_DISK=1
+      ;;
+    c)
+      OPT_VERIFY=1
+      USE_DISK=1
+      ;;
+    *)
+      echo "Usage: $SCRIPT_NAME [-s] [-c]" >&2
+      echo "  -s  Sanitize UTF-8 (activates disk buffering)." >&2
+      echo "  -c  Verify clipboard contents (activates disk buffering)." >&2
+      exit 1
+      ;;
+    esac
+  done
+  shift $((OPTIND - 1))
 
   # Source bash-stdops library
   local script_dir
@@ -111,6 +155,17 @@ main() {
   fi
   # shellcheck disable=SC1090
   source "$stdops_lib"
+
+  if [[ "$USE_DISK" == 1 ]]; then
+    TMP_FILE="$(mktemp)" \
+      || die "Failed to create a temporary file."
+
+    if [[ "$OPT_SANITIZE" == 1 ]]; then
+      sanitize_utf8 >"$TMP_FILE"
+    else
+      cat >"$TMP_FILE"
+    fi
+  fi
 
   # Copy
   if type -P pbcopy &>/dev/null; then
@@ -133,23 +188,24 @@ main() {
     fi
   fi
 
-  # Verify the clipboard is non-empty if the input file was non-empty
-  export CBPASTE_STRIP_NEWLINE=0
+  # Verify the clipboard is non-empty if the input file was non-empty.
+  if [[ "$OPT_VERIFY" == 1 ]]; then
+    export CBPASTE_STRIP_NEWLINE=0
 
-  if [[ -s "$TMP_FILE" ]]; then
-    if [[ ! -x "$script_dir/cbpaste" ]]; then
-      die "Cannot verify clipboard contents: companion script" \
-        "'$script_dir/cbpaste' is missing or not executable."
-    fi
+    if [[ -s "$TMP_FILE" ]]; then
+      if [[ ! -x "$script_dir/cbpaste" ]]; then
+        die "Cannot verify clipboard contents: companion script" \
+          "'$script_dir/cbpaste' is missing or not executable."
+      fi
 
-    if [[ -z "$("$script_dir/cbpaste" 2>/dev/null || true)" ]]; then
-      die "Clipboard verification failed: data was sent to the clipboard," \
-        "but reading it back returned empty. Check if your display server or" \
-        "clipboard manager is running properly."
+      if [[ -z "$("$script_dir/cbpaste" 2>/dev/null || true)" ]]; then
+        die "Clipboard verification failed: data was sent to the clipboard," \
+          "but reading it back returned empty."
+      fi
     fi
   fi
 
   return 0
 }
 
-main
+main "$@"
