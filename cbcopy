@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Requirements: xclip, iconv
+# Requirements: xclip, iconv, cbpaste
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
@@ -41,6 +41,15 @@
 
 set -euf -o pipefail
 
+TMP_FILE=""
+
+# shellcheck disable=SC2329
+cleanup() {
+  if [[ -n "${TMP_FILE:-}" && -f "$TMP_FILE" ]]; then
+    rm -f "$TMP_FILE"
+  fi
+}
+
 # shellcheck disable=SC2329
 error_handler() {
   local errno="$?"
@@ -50,6 +59,7 @@ error_handler() {
 }
 
 trap "error_handler" ERR
+trap "cleanup" EXIT INT TERM
 set -o errtrace
 
 sanitize_utf8() {
@@ -70,10 +80,8 @@ cbcopy_xclip() {
 }
 
 main() {
-  if type -P pbcopy &>/dev/null; then
-    sanitize_utf8 | pbcopy
-    exit 0
-  fi
+  TMP_FILE="$(mktemp)"
+  sanitize_utf8 >"$TMP_FILE"
 
   # Source bash-stdops library
   local script_dir
@@ -82,17 +90,31 @@ main() {
   source "$script_dir/.bash-stdops.inc.sh"
 
   # Copy
-  local errno=0
   # Clear the clipboard first so a failed copy won't leave stale data behind
-  if is_wayland && type -P wl-copy &>/dev/null; then
+  if type -P pbcopy &>/dev/null; then
+    echo "" | pbcopy
+    pbcopy <"$TMP_FILE" || exit 1
+  elif is_wayland && type -P wl-copy &>/dev/null; then
     echo "" | wl-copy
-    sanitize_utf8 | wl-copy || errno=1
+    wl-copy <"$TMP_FILE" || exit 1
   elif type -P xclip &>/dev/null; then
-    echo "" | cbcopy_xclip
-    sanitize_utf8 | cbcopy_xclip 2>/dev/null || errno=1
+    cbcopy_xclip </dev/null 2>/dev/null || true
+    cbcopy_xclip <"$TMP_FILE" 2>/dev/null || exit 1
+  else
+    echo "Error: Unsupported." >&2
+    exit 1
   fi
 
-  exit "$errno"
+  # Verify the clipboard is non-empty if the input file was non-empty
+  export CBPASTE_STRIP_NEWLINE=0
+  CLIPBOARD_CONTENT=$(cat "$TMP_FILE")
+  if [[ "$CLIPBOARD_CONTENT" != "" ]] \
+    && [[ -z "$("$script_dir/cbpaste" 2>/dev/null || true)" ]]; then
+    echo "Error." >&2
+    exit 1
+  fi
+
+  return 0
 }
 
 main
