@@ -65,12 +65,13 @@ main() {
 
   shopt -s dotglob nullglob
   local base_file
-  for file in "$script_dir"/*; do
+  for file in "$script_dir"/* .bash-stdops.inc.sh; do
     base_file="${file##*/}"
 
     # Check if it is a regular file, is executable, and is not an installer script
-    if [[ -f "$file" && -x "$file" && "$base_file" != "$script_name" &&
-      "$base_file" != "install.sh" && "$base_file" != "uninstall.sh" ]]; then
+    if [[ $file = ".bash-stdops.inc.sh" ]] \
+      || [[ -f "$file" && -x "$file" && "$base_file" != "$script_name" &&
+        "$base_file" != "install.sh" && "$base_file" != "uninstall.sh" ]]; then
       if [[ "$action" == "install" ]]; then
         printf "%s\n" "[INSTALL] ${PREFIX}/bin/$base_file"
         install -m 755 "$file" "${PREFIX}/bin/"
