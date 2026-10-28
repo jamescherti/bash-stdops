@@ -118,11 +118,11 @@ main() {
 
   local errno=0
   for repo_path in "${list_repo_path[@]}"; do
-    pushd . &>/dev/null
+    pushd . >/dev/null
     cd "$repo_path"
 
     run_command "$repo_path" "${command[@]}" || errno=1
-    popd &>/dev/null
+    popd >/dev/null
   done
 
   if [[ $errno -ne 0 ]]; then
