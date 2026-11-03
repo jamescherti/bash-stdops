@@ -519,6 +519,17 @@ else
 fi
 ```
 
+#### Script: ncpu
+
+The `ncpu` script prints the number of CPU cores. It provides a portable, POSIX-compliant method to dynamically determine this count across different UNIX-like operating systems.
+
+Key features of this implementation:
+
+- Support Linux, macOS, BSD, and Solaris environments (`getconf`, `nproc`, and `sysctl`).
+- If all hardware checks fail or are missing, it safely falls back to `1` to prevent syntax errors in downstream commands.
+- It avoids Bash-specific syntax, ensuring it runs reliably in minimal shell environments like `dash` or standard `/bin/sh`.
+- It redirects standard error to `/dev/null` to prevent terminal pollution if a specific tool is not installed on the host system.
+
 ## License
 
 Copyright (C) 2012-2026 [James Cherti](https://www.jamescherti.com)
