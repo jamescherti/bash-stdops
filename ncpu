@@ -55,14 +55,14 @@
 #
 # echo 1: Safe integer fallback to prevent syntax errors in downstream commands.
 
-CPU_COUNT=""
+_NCPU=""
 
-if ! CPU_COUNT=$(getconf _NPROCESSORS_ONLN 2>/dev/null); then
-  if ! CPU_COUNT=$(nproc 2>/dev/null); then
-    if ! CPU_COUNT=$(sysctl -n hw.ncpu 2>/dev/null); then
-      CPU_COUNT=1
+if ! _NCPU=$(getconf _NPROCESSORS_ONLN 2>/dev/null); then
+  if ! _NCPU=$(nproc 2>/dev/null); then
+    if ! _NCPU=$(sysctl -n hw.ncpu 2>/dev/null); then
+      _NCPU=1
     fi
   fi
 fi
 
-echo "$CPU_COUNT"
+echo "$_NCPU"
