@@ -2,7 +2,6 @@
 #
 # Requirements:
 #   - parallel: https://www.gnu.org/software/parallel/
-#   - nproc: https://savannah.gnu.org/git/?group=coreutils
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
@@ -41,7 +40,7 @@ if [[ $# -lt 1 ]]; then
   exit 1
 fi
 
-JOBS="$(nproc)"
+JOBS="$(ncpu)"
 
 # Executable
 EXEC_FILE=""

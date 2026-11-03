@@ -530,6 +530,17 @@ Key features of this implementation:
 - It avoids Bash-specific syntax, ensuring it runs reliably in minimal shell environments like `dash` or standard `/bin/sh`.
 - It redirects standard error to `/dev/null` to prevent terminal pollution if a specific tool is not installed on the host system.
 
+Usage:
+
+```
+./ncpu [--ignore <number>]
+
+Options:
+  -h, --help       : Show the help message and exit.
+  --ignore <number>: Subtracts the specified number of cores from the total.
+  If the resulting calculation is less than 1, it defaults to 1.
+```
+
 ## License
 
 Copyright (C) 2012-2026 [James Cherti](https://www.jamescherti.com)

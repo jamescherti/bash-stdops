@@ -48,7 +48,7 @@ BASE="$HOME/.haide"
 AIDE_DB_NEW="$BASE/aide.db.new"
 AIDE_DB="$BASE/aide.db"
 AIDE_CONF="$BASE/aide.conf"
-AIDE_WORKERS=$(nproc)
+AIDE_WORKERS=$(ncpu)
 
 # log_level values:
 # error  - Logs only errors that may affect AIDE's operation.

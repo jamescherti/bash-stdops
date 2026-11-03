@@ -9,10 +9,6 @@
 # POSIX-compliant method to dynamically determine this count across different
 # UNIX-like operating systems.
 #
-# This script provides a portable, POSIX-compliant method to dynamically
-# determine the number of available CPU cores across different UNIX-like
-# operating systems.
-#
 # Key features of this implementation:
 #
 # - Support Linux, macOS, BSD, and Solaris environments (getconf, nproc, and
@@ -23,6 +19,15 @@
 #   environments like dash or standard /bin/sh.
 # - It redirects standard error to /dev/null to prevent terminal pollution if a
 #   specific tool is not installed on the host system.
+#
+# Usage:
+# ------
+# ./ncpu [-h|--help] [--ignore <number>]
+#
+# Options:
+#   -h, --help       : Show the help message and exit.
+#   --ignore <number>: Subtracts the specified number of cores from the total.
+#   If the resulting calculation is less than 1, it defaults to 1.
 #
 # License:
 # --------
@@ -44,25 +49,58 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-# getconf _NPROCESSORS_ONLN: Works on almost all POSIX-compliant systems (Linux,
-# macOS, Solaris) and is usually the most reliable first choice.
-#
-# nproc: Covers GNU/Linux environments where getconf might be missing or
-# stripped down.
-#
-# sysctl -n hw.ncpu: Catches macOS and BSD variants if the standard POSIX
-# utilities are unavailable.
-#
-# echo 1: Safe integer fallback to prevent syntax errors in downstream commands.
+IGNORE_COUNT=0
 
-_NCPU=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+  -h | --help)
+    echo "Usage: $0 [-h|--help] [--ignore <number>]"
+    echo
+    echo "Options:"
+    echo "  -h, --help         Show this help message and exit."
+    echo "  --ignore <number>  Subtracts the specified number of cores from the total."
+    echo "                     If the resulting calculation is less than 1, it defaults to 1."
+    exit 0
+    ;;
+  --ignore)
+    if [ -n "$2" ]; then
+      IGNORE_COUNT="$2"
+      shift 2
+    else
+      echo "Error: --ignore requires a number." >&2
+      exit 1
+    fi
+    ;;
+  *)
+    echo "Usage: $0 [-h|--help] [--ignore <number>]" >&2
+    exit 1
+    ;;
+  esac
+done
 
-if ! _NCPU=$(getconf _NPROCESSORS_ONLN 2>/dev/null); then
-  if ! _NCPU=$(nproc 2>/dev/null); then
-    if ! _NCPU=$(sysctl -n hw.ncpu 2>/dev/null); then
-      _NCPU=1
+if [ "$_NCPU_CACHE" = "" ]; then
+  # getconf _NPROCESSORS_ONLN: Works on almost all POSIX-compliant systems
+  # (Linux, macOS, Solaris) and is usually the most reliable first choice.
+  if ! _NCPU=$(getconf _NPROCESSORS_ONLN 2>/dev/null); then
+    # nproc: Covers GNU/Linux environments where getconf might be missing or
+    # stripped down.
+    if ! _NCPU=$(nproc 2>/dev/null); then
+      # sysctl -n hw.ncpu: Catches macOS and BSD variants if the standard POSIX
+      # utilities are unavailable.
+      if ! _NCPU=$(sysctl -n hw.ncpu 2>/dev/null); then
+        # Safe integer fallback to prevent syntax errors in downstream commands.
+        _NCPU=1
+      fi
     fi
   fi
+fi
+
+if [ "$IGNORE_COUNT" -gt 0 ] 2>/dev/null; then
+  _NCPU=$((_NCPU - IGNORE_COUNT))
+fi
+
+if [ "$_NCPU" -lt 1 ]; then
+  _NCPU=1
 fi
 
 echo "$_NCPU"
