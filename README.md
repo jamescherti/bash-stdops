@@ -490,6 +490,95 @@ The `outonerror` script redirects the command's output to stderr only if the com
 
 Here is an example of how to use this script: [How to make cron notify the user about a failed command by redirecting its output to stderr only when it fails (non-zero exit code)](https://www.jamescherti.com/cron-email-output-failed-commands-only/).
 
+#### Script: borgmachine
+
+The borgmachine script is an automated profile-based manager for [borg](https://www.borgbackup.org/).
+
+It executes repository backups, retention pruning, and single-file or directory restores using profile configurations located in `~/.borgmachine/profiles/`.
+
+Usage:
+
+```
+borgmachine <profile> <command> [args...]
+```
+
+Profiles reside in `~/.borgmachine/profiles/`. The file name serves as the profile identifier passed to the CLI.
+
+```bash
+mkdir -p ~/.borgmachine/profiles
+```
+
+Example: Save the following profile file as `~/.borgmachine/profiles/workstation`:
+
+```bash
+# Borgmachine Profile: workstation
+# Location: ~/.borgmachine/profiles/workstation
+
+# Target repository path (local path or remote SSH URL)
+BORGMACHINE_REPO="/mnt/backup/borg-repo"
+# BORGMACHINE_REPO="ssh://user@backup.example.com:22/var/backups/workstation"
+
+# Absolute paths to include in the backup
+BORGMACHINE_INCLUDE=(
+  /etc
+  /root
+  /home/perso/Documents
+)
+
+# Additional flags passed to 'borg create'
+BORGMACHINE_CREATE_ARGS=(
+  --exclude "$HOME/.config/google-chrome"
+  --exclude "$HOME/projects/*/dir"
+)
+
+BORGMACHINE_PRUNE_ARGS=(
+  --keep-daily 16 \
+  --keep-weekly 48 \
+  --keep-monthly 12 \
+  --keep-yearly 1 \
+  --keep-hourly 24 \
+  --keep-minutely 2 \
+)
+
+BORGMACHINE_ARCHIVE_NAME="backup"
+
+# Optional script or binary to execute before any Borg operation
+# BORGMACHINE_SCRIPT_PRE_HOOK="/usr/local/bin/check-mount"
+```
+
+Run a backup using the rules defined in the workstation profile:
+
+```bash
+borgmachine workstation backup
+```
+
+Restores an exact file or directory target from the workstation profile:
+
+```bash
+borgmachine workstation restore /home/user/projects/my-app
+```
+
+Note: The target path must not exist at the destination prior to restoration to avoid accidental overwrites.
+
+List files in an archive:
+
+```bash
+cd ~/projects
+borgmachine workstation ls
+```
+
+Display deduplicated storage consumption for all archives in the repository:
+
+```bash
+borgmachine workstation size
+```
+
+Run arbitrary Borg subcommands directly against the profile repository without setting environment variables manually:
+
+```bash
+borgmachine workstation borg info
+```
+
 #### Script: over
 
 This program simply displays a notification. It can be used in the terminal while another command is running. Once the command finishes executing, a notification is displayed, informing the user that the process has completed.
