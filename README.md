@@ -636,6 +636,38 @@ Run arbitrary Borg subcommands directly against the profile repository without s
 borgmachine workstation borg info
 ```
 
+#### Script: findup
+
+Search upward through the directory hierarchy starting from the current physical directory until a matching entry is found or root (`/`) is reached. Prints the absolute path of the first match found.
+
+Usage:
+
+```bash
+findup [OPTION] [--] RELATIVE_PATH
+```
+
+Options:
+
+- `-a, --any`: Match any entry, including dangling symlinks.
+- `-f, --file`: Match regular files (default).
+- `-d, --directory`: Match directories.
+- `-h, --help`: Display help and exit.
+
+Example 1: Find the root of a Git repository from a deep subdirectory:
+
+```bash
+git_dir="$(findup -d .git)"
+project_root="${git_dir%/*}"
+```
+
+Example 2: Locate the nearest project configuration file (such as `pyproject.toml`):
+
+```bash
+if config_file="$(findup pyproject.toml)"; then
+  printf 'Using config: %s\n' "$config_file"
+fi
+```
+
 #### Script: over
 
 This program simply displays a notification. It can be used in the terminal while another command is running. Once the command finishes executing, a notification is displayed, informing the user that the process has completed.

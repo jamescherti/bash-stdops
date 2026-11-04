@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Search upward through the directory hierarchy starting from the current
+# physical directory until a matching entry is found or root (/) is reached.
+# Prints the absolute path of the first match found.
+#
+# Usage:
+# ------
+# findup [OPTION] [--] RELATIVE_PATH
+#
+# Options:
+# -a, --any         Match any entry, including dangling symlinks.
+# -f, --file        Match regular files (default).
+# -d, --directory   Match directories.
+# -h, --help        Display help and exit.
+#
+# Examples:
+# ---------
+# 1. Find the root of a Git repository from a deep subdirectory:
+#    git_dir="$(findup -d .git)"
+#    project_root="${git_dir%/*}"
+#
+# 2. Locate the nearest project configuration file (e.g., pyproject.toml):
+#    if config_file="$(findup pyproject.toml)"; then
+#      printf 'Using config: %s\n' "$config_file"
+#    fi
+#
+# Exit Status:
+# ------------
+# 0  Found matching entry or displayed help.
+# 1  No matching entry found before reaching root.
+# 2  Invalid arguments or path errors.
+#
+# License:
+# --------
+# Copyright (C) 2012-2026 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+_find_dominating_file() (
+  local type='f' selected_type='' next_type filename candidate
+
+  while (($# > 0)); do
+    case "$1" in
+    -a | --any) next_type='a' ;;
+    -f | --file) next_type='f' ;;
+    -d | --directory) next_type='d' ;;
+    -h | --help)
+      printf '%s\n' 'Usage: findup-file [OPTION] [--] RELATIVE_PATH
+
+Search the current directory, then its physical ancestors.
+Print the absolute path of the nearest matching entry.
+
+  -a, --any        Match any entry, including dangling symbolic links.
+  -f, --file       Match regular files (default).
+  -d, --directory  Match directories.
+  -h, --help       Display this help.
+
+Type options are mutually exclusive. File and directory tests follow links.
+Use -- before a relative path beginning with a hyphen.
+
+Exit status: 0 = found/help, 1 = not found, 2 = invalid arguments or error.'
+      return "$?"
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      printf 'Unknown option: %s\n' "$1" >&2
+      return 2
+      ;;
+    *) break ;;
+    esac
+
+    if [[ -n "$selected_type" && "$selected_type" != "$next_type" ]]; then
+      printf '%s\n' 'Type options are mutually exclusive.' >&2
+      return 2
+    fi
+
+    type="$next_type"
+    selected_type="$type"
+    shift
+  done
+
+  if (($# != 1)); then
+    printf '%s\n' 'Expected exactly one relative path. Use --help for usage.' >&2
+    return 2
+  fi
+
+  filename="$1"
+  if [[ -z "$filename" || "$filename" == /* ]]; then
+    printf '%s\n' 'The search path must be nonempty and relative.' >&2
+    return 2
+  fi
+
+  builtin cd -P -- . || return 2
+
+  while true; do
+    candidate="${PWD%/}/$filename"
+
+    if [[ ("$type" == 'a' && (-e "$candidate" || -L "$candidate")) ||
+      ("$type" == 'f' && -f "$candidate") ||
+      ("$type" == 'd' && -d "$candidate") ]]; then
+      printf '%s\n' "$candidate" || return 2
+      return 0
+    fi
+
+    [[ "$PWD" == / ]] && return 1
+    builtin cd -P -- "$PWD/.." || return 2
+  done
+)
+
+_find_dominating_file "$@"
