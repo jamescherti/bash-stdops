@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Initialize and enter a chroot environment safely.
+#
+# This script validates the target directory, verifies root privileges, and
+# binds essential system directories (dev, proc, sys, run) before dropping into
+# an interactive shell. It implements an EXIT trap to ensures that all bind
+# mounts are cleanly unmounted when the user exits the chroot session.
+#
+# Usage: chroot-enter <chroot_directory>
+#
+# License:
+# --------
+# Copyright (C) 2012-2026 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euo pipefail
+set -o errtrace
+
+declare -a CHROOT_MOUNTS
+declare CHROOT_DIR=""
+
+usage() {
+  printf 'Usage: %s <chroot_directory>\n' "${0##*/}" >&2
+  exit 1
+}
+
+cleanup() {
+  local target
+  local i
+
+  # Unmount in reverse order of mounting
+  for ((i = ${#CHROOT_MOUNTS[@]} - 1; i >= 0; i--)); do
+    target="${CHROOT_MOUNTS[i]}"
+    if mountpoint -q "$target"; then
+      umount -R "$target" \
+        || printf 'Warning: failed to unmount %s\n' "$target" >&2
+    fi
+  done
+}
+
+require_root() {
+  if [[ "$(id -u)" -ne 0 ]]; then
+    printf 'Error: root privileges required\n' >&2
+    exit 1
+  fi
+}
+
+validate_chroot() {
+  if [[ ! -d "$CHROOT_DIR" ]]; then
+    printf 'Error: directory does not exist: %s\n' "$CHROOT_DIR" >&2
+    exit 1
+  fi
+
+  if [[ ! -x "$CHROOT_DIR/bin/bash" ]]; then
+    printf 'Error: missing executable: %s/bin/bash\n' "$CHROOT_DIR" >&2
+    exit 1
+  fi
+}
+
+mount_fs() {
+  mkdir -p "${CHROOT_MOUNTS[@]}"
+
+  if ! mountpoint -q "$CHROOT_DIR/dev"; then
+    mount --rbind /dev "$CHROOT_DIR/dev"
+    mount --make-rslave "$CHROOT_DIR/dev"
+  fi
+
+  if ! mountpoint -q "$CHROOT_DIR/proc"; then
+    mount -t proc proc "$CHROOT_DIR/proc"
+  fi
+
+  if ! mountpoint -q "$CHROOT_DIR/sys"; then
+    mount --rbind /sys "$CHROOT_DIR/sys"
+    mount --make-rslave "$CHROOT_DIR/sys"
+  fi
+
+  if ! mountpoint -q "$CHROOT_DIR/run"; then
+    mount --bind /run "$CHROOT_DIR/run"
+  fi
+}
+
+# shellcheck disable=SC2317
+error_handler() {
+  local errno="$?"
+  echo -- "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
+}
+
+main() {
+  trap "error_handler" ERR
+  require_root
+
+  if [[ "$#" -ne 1 ]]; then
+    usage
+  fi
+
+  CHROOT_DIR="$(realpath "$1")"
+
+  CHROOT_MOUNTS=(
+    "$CHROOT_DIR/dev"
+    "$CHROOT_DIR/proc"
+    "$CHROOT_DIR/sys"
+    "$CHROOT_DIR/run"
+  )
+
+  validate_chroot
+
+  trap cleanup EXIT INT TERM
+
+  printf 'Preparing chroot: %s\n' "$CHROOT_DIR"
+
+  mount_fs
+
+  chroot "$CHROOT_DIR" /bin/bash -l
+}
+
+main "$@"

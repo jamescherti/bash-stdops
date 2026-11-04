@@ -481,6 +481,18 @@ Here is an example of how to use this script: [How to make cron notify the user 
 
 This program simply displays a notification. It can be used in the terminal while another command is running. Once the command finishes executing, a notification is displayed, informing the user that the process has completed.
 
+#### Script: chroot-shell
+
+Initialize and enter a chroot environment safely.
+
+This script validates the target directory, verifies root privileges, and binds essential system directories (dev, proc, sys, run) before dropping into an interactive shell. It implements an EXIT trap to ensures that all bind mounts are cleanly unmounted when the user exits the chroot session.
+
+Usage:
+
+```
+chroot-enter <chroot_directory>
+```
+
 #### Script: osid
 
 Detects the current operating system and prints a short identifier.
