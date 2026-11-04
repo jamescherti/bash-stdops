@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - git
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# A safe wrapper around 'git reset --hard HEAD' that prevents accidental data
+# loss. It previews all tracked modifications (staged and unstaged) scheduled to
+# be discarded and requires explicit confirmation before resetting the tree.
+# Untracked files are left untouched, and no prompt is shown if the working tree
+# has no tracked changes.
+#
+# Usage:
+#   git-rh
+#
+# License:
+# --------
+# Copyright (C) 2012-2026 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euf -o pipefail
+
+# Reject unexpected positional arguments or flags so passing a file path does
+# not silently trigger a full working-tree reset.
+if [[ $# -gt 0 ]]; then
+  echo "Usage: ${0##*/}" >&2
+  exit 1
+fi
+
+# Verify we are inside a Git work tree
+if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" != "true" ]]; then
+  echo "Error: Not inside a Git working tree." >&2
+  exit 1
+fi
+
+# Capture repository status (staged, unstaged, and untracked files)
+status_output="$(git status --porcelain)"
+
+# If the working tree is completely clean, no confirmation is needed
+if [[ -z "${status_output}" ]]; then
+  echo "Working tree is already clean. Nothing to reset."
+  exit 0
+fi
+
+if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
+  echo "Error: Repository does not have any commits yet (HEAD is unborn)." >&2
+  exit 1
+fi
+
+# Check specifically for tracked modifications (staged or unstaged)
+# git diff-index --quiet HEAD -- returns 1 if there are differences, 0 if clean
+if git diff-index --quiet HEAD -- 2>/dev/null; then
+  echo "No tracked changes to reset (only untracked files are present)."
+  exit 0
+fi
+
+echo "The following tracked changes will be permanently discarded:"
+echo "------------------------------------------------------------"
+git status --short --untracked-files=no
+echo "------------------------------------------------------------"
+
+# Prompt for confirmation directly from the terminal
+# Open /dev/tty directly because '[[ -r /dev/tty ]]' only checks inode mode
+# bits (0666) and succeeds even when no controlling terminal is attached.
+if ! { true </dev/tty; } 2>/dev/null; then
+  echo "Error: Interactive terminal (/dev/tty) is not available." >&2
+  exit 1
+fi
+
+response=""
+if ! read -r -p "Are you sure you want to run 'git reset --hard HEAD'? [y/N] " \
+  response </dev/tty; then
+  echo
+  echo "Reset aborted."
+  exit 1
+fi
+
+case "${response}" in
+[yY][eE][sS] | [yY])
+  git reset --hard HEAD
+  ;;
+*)
+  echo "Reset aborted."
+  exit 1
+
+  ;;
+esac

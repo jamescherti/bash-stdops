@@ -345,6 +345,19 @@ Usage:
   -b    Run in batch mode (no interactive prompts)
 ```
 
+#### git-rh
+
+A safe wrapper around 'git reset --hard HEAD' that prevents accidental data loss.
+
+It previews all tracked modifications (staged and unstaged) scheduled to be discarded and requires explicit confirmation before resetting the tree.
+
+Untracked files are left untouched, and no prompt is shown if the working tree has no tracked changes.
+
+Usage:
+```
+git-rh
+```
+
 #### git-author
 
 The git-author script displays the Git user's name and email by retrieving `user.name` and `user.email` from Git configuration.
