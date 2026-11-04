@@ -37,6 +37,8 @@ export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes
 
 # Variables that can be modified
 # _BORG_ENCRYPTION=none
+BORGMACHINE_REPO=""
+BORGMACHINE_PROFILE=""
 BORGMACHINE_SCRIPT_PRE_HOOK=""
 BORGMACHINE_INCLUDE=("$HOME")
 BORGMACHINE_CREATE_ARGS=()
@@ -50,13 +52,11 @@ BORGMACHINE_PRUNE_ARGS=(
 )
 BORGMACHINE_ARCHIVE_NAME="backup"
 BORGMACHINE_LOG_DIR="$HOME/.logs"
-if ! [[ -d "$BORGMACHINE_LOG_DIR" ]]; then
-  mkdir -p "$BORGMACHINE_LOG_DIR"
-fi
-
-_BORG_LOG_FILE="$BORGMACHINE_LOG_DIR/borg-backup.log"
+BORGMACHINE_REPORTS_PATH="$HOME/.borgmachine/reports"
+BORGMACHINE_REPORT_BACKED_UP_FILES_PATH=""
 
 # Private variables
+_BORG_LOG_FILE=""
 _BORGMACHINE_CREATE_ARGS=(--verbose
   --filter AME
   --list
@@ -71,11 +71,10 @@ if [[ -z "$_BORGMACHINE_BORG_EXE" ]]; then
   exit 1
 fi
 
-BORGMACHINE_REPORTS_PATH="$HOME/.borgmachine/reports"
-
 # check if stdout is a terminal...
 GREEN=""
 NOCOLOR=""
+_NCOLORS=""
 if test -t 1; then
   # see if it supports colors...
   # Prevent set -e from aborting the script when TERM is unset or unsupported by
@@ -113,6 +112,12 @@ _borg_run() {
 }
 
 _borg_init() {
+  if ! [[ -d "$BORGMACHINE_LOG_DIR" ]]; then
+    mkdir -p "$BORGMACHINE_LOG_DIR"
+  fi
+
+  _BORG_LOG_FILE="$BORGMACHINE_LOG_DIR/borg-backup.log"
+
   if ! [[ -f "$_BORG_LOG_FILE" ]]; then
     touch "$_BORG_LOG_FILE"
     chmod 640 "$_BORG_LOG_FILE"
@@ -133,7 +138,7 @@ _borg_init() {
 #
 _borg_archive_exists() {
   local borg_list_archives
-  readarray -t borg_list_archives < <(borg list --format "{archive}{NEWLINE}")
+  readarray -t borg_list_archives < <(_borg_nolog list --format "{archive}{NEWLINE}")
   if [[ ${#borg_list_archives[@]} -eq 0 ]]; then
     return 1
   fi
@@ -153,8 +158,8 @@ BORG_MOST_RECENT_ARCHIVE=''
 _borg_select_archives() {
   BORG_MOST_RECENT_ARCHIVE=''
 
-  borg list
-  BORG_MOST_RECENT_ARCHIVE=$(borg list --last 1 \
+  _borg_nolog list
+  BORG_MOST_RECENT_ARCHIVE=$(_borg_nolog list --last 1 \
     --format "{archive}{NEWLINE}")
 
   if [[ "$BORG_MOST_RECENT_ARCHIVE" = "" ]]; then
@@ -254,7 +259,7 @@ _borg_restore() {
   #
   # Check that the extracted path exists before moving it, and leave the temp
   # directory before deleting it.
-  _borg_run extract "$BORGMACHINE_REPO::$BORG_SELECTED_ARCHIVE" "$borg_path" || true
+  _borg_run extract "::$BORG_SELECTED_ARCHIVE" "$borg_path" || true
   if [[ -e "$borg_path" ]]; then
     mv "$borg_path" "$borg_real_filename"
   fi
@@ -285,7 +290,7 @@ _prune_and_compact() {
   _borg_run prune \
     --show-rc \
     --glob-archives "${BORGMACHINE_ARCHIVE_NAME}-*" \
-    "${BORGMACHINE_PRUNE_ARGS[@]}" || prune_exit="$?"
+    ${BORGMACHINE_PRUNE_ARGS[@]+"${BORGMACHINE_PRUNE_ARGS[@]}"} || prune_exit="$?"
 
   if [[ ${prune_exit} -gt 1 ]]; then
     echo "ERROR: Borg prune finished with an error." >&2
@@ -316,7 +321,7 @@ _borg_backup() {
   fi
 
   local item
-  for item in "${BORGMACHINE_INCLUDE[@]}"; do
+  for item in ${BORGMACHINE_INCLUDE[@]+"${BORGMACHINE_INCLUDE[@]}"}; do
     if ! [[ $item =~ ^/ ]]; then
       echo "Error: '$item' has to be an absolute path." >&2
       exit 1
@@ -342,9 +347,9 @@ _borg_backup() {
   borg_archive_name="::$BORGMACHINE_ARCHIVE_NAME-$(date +%Y%m%d-%H%M%S)$borg_archive_name_suffix"
   _borg_run create \
     "${_BORGMACHINE_CREATE_ARGS[@]}" \
-    "${BORGMACHINE_CREATE_ARGS[@]}" \
+    ${BORGMACHINE_CREATE_ARGS[@]+"${BORGMACHINE_CREATE_ARGS[@]}"} \
     "$borg_archive_name" \
-    "${BORGMACHINE_INCLUDE[@]}" || backup_exit="$?"
+    ${BORGMACHINE_INCLUDE[@]+"${BORGMACHINE_INCLUDE[@]}"} || backup_exit="$?"
 
   # Catch all non-zero borg create exit codes, including fatal errors (>= 2).
   if [[ ${backup_exit} -ne 0 ]]; then
@@ -363,7 +368,7 @@ _borg_backup() {
   # if [[ $deduplicated_size -gt 600000 ]]; then
   #   echo >&2
   #   echo "You can delete the archive with:" >&2
-  #   echo "BORGMACHINE_REPO=$BORGMACHINE_REPO borg delete '$borg_archive_name'" >&2
+  #   echo "BORG_REPO=$BORGMACHINE_REPO borg delete '$borg_archive_name'" >&2
   #   echo "" >&2
   #   echo "[WARNING] the archive '$borg_archive_name' is too big: $deduplicated_size Kb" >&2
   #   echo
@@ -371,7 +376,7 @@ _borg_backup() {
 
   # Save the list
   mkdir -p "$BORGMACHINE_REPORTS_PATH"
-  borg list --format '{path}{NL}' \
+  _borg_nolog list --format '{path}{NL}' \
     "$borg_archive_name" | sed -e 's/^\(.\+\)$/\/\1/g' \
     >"$BORGMACHINE_REPORT_BACKED_UP_FILES_PATH"
 
@@ -398,6 +403,7 @@ _borg_archive_size() {
   local list_archives
   readarray -t list_archives < <(_borg_nolog list --format '{archive}{NL}') \
     || return 1
+  local archive
   for archive in "${list_archives[@]}"; do
     local deduplicated_size
     deduplicated_size=$(_borg_nolog info "::$archive" --json \
@@ -431,7 +437,6 @@ main() {
   fi
 
   BORGMACHINE_PROFILE="$1"
-  BORGMACHINE_REPORT_BACKED_UP_FILES_PATH="$BORGMACHINE_REPORTS_PATH/${BORGMACHINE_PROFILE}.backed_up_files"
   shift
 
   if [[ ! -f "$HOME/.borgmachine/profiles/$BORGMACHINE_PROFILE" ]]; then
@@ -442,6 +447,8 @@ main() {
   # shellcheck disable=SC1090
   source "$HOME/.borgmachine/profiles/$BORGMACHINE_PROFILE"
 
+  BORGMACHINE_REPORT_BACKED_UP_FILES_PATH="$BORGMACHINE_REPORTS_PATH/${BORGMACHINE_PROFILE}.backed_up_files"
+
   if [[ -z "${BORGMACHINE_REPO:-}" ]]; then
     echo "Error: BORGMACHINE_REPO is not defined in the " \
       "profile '$BORGMACHINE_PROFILE'." >&2
@@ -449,13 +456,13 @@ main() {
   fi
 
   if [[ $# -eq 0 ]]; then
-    echo "BORG INCLUDES:     ${BORGMACHINE_INCLUDE[*]}"
-    echo "BORG REPO:         ${BORGMACHINE_REPO[*]}"
-    echo "BORG PRUNE ARGS:   ${BORGMACHINE_PRUNE_ARGS[*]}"
-    echo "BORG PRE HOOK:     ${BORGMACHINE_SCRIPT_PRE_HOOK[*]}"
-    echo "BORG ARCHIVE NAME: ${BORGMACHINE_ARCHIVE_NAME[*]}"
-    # echo "BORG LOG FILE:     ${_BORG_LOG_FILE[*]}"
-    echo "BORG ARGS:         ${BORGMACHINE_CREATE_ARGS[*]}"
+    echo "BORG INCLUDES:     ${BORGMACHINE_INCLUDE[*]:-}"
+    echo "BORG REPO:         ${BORGMACHINE_REPO}"
+    echo "BORG PRUNE ARGS:   ${BORGMACHINE_PRUNE_ARGS[*]:-}"
+    echo "BORG PRE HOOK:     ${BORGMACHINE_SCRIPT_PRE_HOOK}"
+    echo "BORG ARCHIVE NAME: ${BORGMACHINE_ARCHIVE_NAME}"
+    # echo "BORG LOG FILE:     ${_BORG_LOG_FILE}"
+    echo "BORG ARGS:         ${BORGMACHINE_CREATE_ARGS[*]:-}"
     exit
   fi
 
@@ -464,6 +471,7 @@ main() {
   shift
 
   export BORGMACHINE_REPO
+  export BORG_REPO="$BORGMACHINE_REPO"
 
   if [[ $BORGMACHINE_SCRIPT_PRE_HOOK != "" ]]; then
     "$BORGMACHINE_SCRIPT_PRE_HOOK" "$@" || exit 1
@@ -486,13 +494,13 @@ main() {
     borg_path=$(pwd | sed -e 's/^\///')
     # Remove the invalid {extra} format key and scope listing to borg_path when non-empty.
     if [[ -n "$borg_path" ]]; then
-      borg list "::$BORG_SELECTED_ARCHIVE" --format '{path}{NL}' "$borg_path"
+      _borg_nolog list "::$BORG_SELECTED_ARCHIVE" --format '{path}{NL}' "$borg_path"
     else
-      borg list "::$BORG_SELECTED_ARCHIVE" --format '{path}{NL}'
+      _borg_nolog list "::$BORG_SELECTED_ARCHIVE" --format '{path}{NL}'
     fi
     ;;
   borg)
-    borg "$@"
+    "$_BORGMACHINE_BORG_EXE" "$@"
     ;;
   *)
     echo "Error: the command '$cmd' is invalid." >&2
