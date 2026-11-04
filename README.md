@@ -636,14 +636,14 @@ Run arbitrary Borg subcommands directly against the profile repository without s
 borgmachine workstation borg info
 ```
 
-#### Script: findup
+#### Script: find-up
 
 Search upward through the directory hierarchy starting from the current physical directory until a matching entry is found or root (`/`) is reached. Prints the absolute path of the first match found.
 
 Usage:
 
 ```bash
-findup [OPTION] [--] RELATIVE_PATH
+find-up [OPTION] [--] RELATIVE_PATH
 ```
 
 Options:
@@ -656,14 +656,14 @@ Options:
 Example 1: Find the root of a Git repository from a deep subdirectory:
 
 ```bash
-git_dir="$(findup -d .git)"
+git_dir="$(find-up -d .git)"
 project_root="${git_dir%/*}"
 ```
 
 Example 2: Locate the nearest project configuration file (such as `pyproject.toml`):
 
 ```bash
-if config_file="$(findup pyproject.toml)"; then
+if config_file="$(find-up pyproject.toml)"; then
   printf 'Using config: %s\n' "$config_file"
 fi
 ```

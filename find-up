@@ -11,7 +11,7 @@
 #
 # Usage:
 # ------
-# findup [OPTION] [--] RELATIVE_PATH
+# find-up [OPTION] [--] RELATIVE_PATH
 #
 # Options:
 # -a, --any         Match any entry, including dangling symlinks.
@@ -22,11 +22,11 @@
 # Examples:
 # ---------
 # 1. Find the root of a Git repository from a deep subdirectory:
-#    git_dir="$(findup -d .git)"
+#    git_dir="$(find-up -d .git)"
 #    project_root="${git_dir%/*}"
 #
 # 2. Locate the nearest project configuration file (e.g., pyproject.toml):
-#    if config_file="$(findup pyproject.toml)"; then
+#    if config_file="$(find-up pyproject.toml)"; then
 #      printf 'Using config: %s\n' "$config_file"
 #    fi
 #
@@ -65,7 +65,7 @@ _find_dominating_file() (
     -f | --file) next_type='f' ;;
     -d | --directory) next_type='d' ;;
     -h | --help)
-      printf '%s\n' 'Usage: findup-file [OPTION] [--] RELATIVE_PATH
+      printf '%s\n' 'Usage: find-up-file [OPTION] [--] RELATIVE_PATH
 
 Search the current directory, then its physical ancestors.
 Print the absolute path of the nearest matching entry.
