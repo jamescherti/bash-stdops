@@ -9,14 +9,14 @@
 # ------------
 # Run a command at most once per specified time interval (in seconds).
 #
-# Usage: run-every <seconds> <timestamp_file> <command...>
+# Usage: run-interval <seconds> <timestamp_file> <command...>
 #
 # Examples:
 #   # Run a backup script at most once per hour (3600 seconds):
-#   run-every 3600 ~/.cache/backup.last-run /usr/local/bin/backup
+#   run-interval 3600 ~/.cache/backup.last-run /usr/local/bin/backup
 #
 #   # Update dotfiles in ~/.bashrc at most once per day (86400 seconds):
-#   run-every 86400 ~/.cache/dotfiles-sync.last-run git -C ~/dotfiles pull -q
+#   run-interval 86400 ~/.cache/dotfiles-sync.last-run git -C ~/dotfiles pull -q
 #
 # This is a one-shot wrapper, not a background daemon or scheduler.
 #
@@ -57,7 +57,7 @@ set -euo pipefail
 
 main() (
   if [[ $# -lt 3 ]]; then
-    printf 'Usage: run-every <seconds> <reference_file> <command...>\n' >&2
+    printf 'Usage: run-interval <seconds> <reference_file> <command...>\n' >&2
     return 1
   fi
 

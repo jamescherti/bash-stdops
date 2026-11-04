@@ -500,14 +500,14 @@ The second execution outputs the following error message:
 Error: Another instance of '/usr/local/bin/backup.sh' is running.
 ```
 
-#### Script: run-every
+#### Script: run-interval
 
 Run a command at most once per specified time interval (in seconds).
 
 Usage:
 
 ```bash
-run-every <seconds> <timestamp_file> <command...>
+run-interval <seconds> <timestamp_file> <command...>
 ```
 
 Note: This is a one-shot wrapper, not a background daemon or scheduler.
@@ -515,13 +515,13 @@ Note: This is a one-shot wrapper, not a background daemon or scheduler.
 Examples 1: Run a backup script at most once per hour (3600 seconds):
 
 ```bash
-run-every 3600 ~/.cache/backup.last-run /usr/local/bin/backup
+run-interval 3600 ~/.cache/backup.last-run /usr/local/bin/backup
 ```
 
 Example 2: Update dotfiles in `~/.bashrc` at most once per day (86400 seconds):
 
 ```bash
-run-every 86400 ~/.cache/dotfiles-sync.last-run git -C ~/dotfiles pull -q
+run-interval 86400 ~/.cache/dotfiles-sync.last-run git -C ~/dotfiles pull -q
 ```
 
 How it works:
