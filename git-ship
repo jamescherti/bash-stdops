@@ -1,0 +1,172 @@
+#!/bin/bash
+#
+# Requirements:
+#   - git
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Fast-forward merges the current branch into the default branch (e.g., main)
+# and pushes default branch to origin.
+#
+# Example:
+#   When working on the 'develop' branch in a repository where 'main' is the
+#   default branch:
+#
+#   $ git checkout develop
+#   $ git commit -am "Implement new feature"
+#   $ git-ship
+#
+#   Running git-ship will:
+#     1. Verify the working tree is clean.
+#     2. Show the diff between 'main' and 'develop'.
+#     3. Prompt for confirmation to merge 'develop' into 'main'.
+#     4. Run: git checkout 'main'
+#     5. Run: git merge 'develop'
+#     5. Run: git push
+#     6. Run: git checkout 'develop'
+#
+# Before modifying any branches, it verifies that the working tree is clean,
+# displays the full diff, commit log, and diffstat, and prompts for user
+# confirmation.
+#
+# License:
+# --------
+# Copyright (C) 2012-2026 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euo pipefail
+
+git-is-clean
+
+# Step 1: Find the default branch
+# Attempt to resolve origin/HEAD first
+#
+# || true guards against non-zero exit under pipefail when origin/HEAD is not
+# || set so execution reaches the fallback check.
+DEFAULT_BRANCH=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null \
+  | sed 's|^origin/||' || true)
+
+# Fall back to main or master if origin/HEAD is not configured
+if [ -z "$DEFAULT_BRANCH" ] || [ "$DEFAULT_BRANCH" = "HEAD" ]; then
+  if git rev-parse --verify main >/dev/null 2>&1 \
+    || git rev-parse --verify origin/main >/dev/null 2>&1; then
+    DEFAULT_BRANCH="main"
+  elif git rev-parse --verify master >/dev/null 2>&1 \
+    || git rev-parse --verify origin/master >/dev/null 2>&1; then
+    DEFAULT_BRANCH="master"
+  else
+    echo "Error: Default branch could not be determined." >&2
+    exit 1
+  fi
+fi
+
+# Determine the best reference to compare against (local or remote tracking)
+if git rev-parse --verify "$DEFAULT_BRANCH" >/dev/null 2>&1; then
+  COMPARE_REF="$DEFAULT_BRANCH"
+elif git rev-parse --verify "origin/$DEFAULT_BRANCH" >/dev/null 2>&1; then
+  COMPARE_REF="origin/$DEFAULT_BRANCH"
+else
+  echo "Error: Resolved default branch '$DEFAULT_BRANCH' does not" \
+    "exist locally or on origin." >&2
+  exit 1
+fi
+
+# Step 2: Identify references and commit SHAs
+CURRENT_REF=$(git rev-parse --abbrev-ref HEAD)
+CURRENT_SHA=$(git rev-parse HEAD)
+TARGET_SHA=$(git rev-parse "$COMPARE_REF")
+
+# Reject detached HEAD because CURRENT_REF resolves to "HEAD", which becomes the
+# target branch after checkout.
+if [ "$CURRENT_REF" = "HEAD" ]; then
+  echo "Error: Cannot ship from a detached HEAD state." >&2
+  exit 1
+fi
+
+# Fail if the current branch name matches the default branch name
+if [ "$CURRENT_REF" = "$DEFAULT_BRANCH" ]; then
+  echo "Error: Current branch is already the" \
+    "default branch '$DEFAULT_BRANCH'." >&2
+  exit 1
+fi
+
+# Fail if the current commit hash matches the target branch commit hash
+if [ "$CURRENT_SHA" = "$TARGET_SHA" ]; then
+  echo "Error: Current reference is already at the same" \
+    "commit as '$DEFAULT_BRANCH'." >&2
+  exit 1
+fi
+
+# Verify COMPARE_REF is an ancestor of HEAD to prevent no-op merges when behind
+# or prompting on diverged branches.
+if ! git merge-base --is-ancestor "$TARGET_SHA" "$CURRENT_SHA"; then
+  echo "Error: '$COMPARE_REF' cannot be fast-forwarded to '$CURRENT_REF'" \
+    "(branches have diverged or '$CURRENT_REF' is behind)." >&2
+  exit 1
+fi
+
+# Step 3: Show differences and request confirmation
+printf "\nDiff between '%s' and '%s':\n" "$COMPARE_REF" "$CURRENT_REF"
+git diff "${COMPARE_REF}..HEAD"
+
+echo "Changes to be merged from '$CURRENT_REF' into '$DEFAULT_BRANCH'" \
+  "(comparing against '$COMPARE_REF'):"
+echo "--------------------------------------------------------"
+echo "Incoming Commits:"
+git log "${COMPARE_REF}..HEAD" --oneline
+
+echo ""
+echo "Diff Stat:"
+echo "----------"
+git diff --stat "${COMPARE_REF}..HEAD"
+echo "--------------------------------------------------------"
+
+printf "Proceed with fast-forward merge and push of '%s' into '%s'? (y/N): " \
+  "$CURRENT_REF" "$DEFAULT_BRANCH"
+read -r response
+if [[ ! "$response" =~ ^[Yy]$ ]]; then
+  echo "Aborted: Operation canceled by user." >&2
+  exit 1
+fi
+
+# Step 4: Perform the merge using standard checkout
+echo "Checking out '$DEFAULT_BRANCH' and merging '$CURRENT_REF'..."
+git checkout "$DEFAULT_BRANCH"
+
+if ! git merge --ff-only "$CURRENT_REF"; then
+  echo "Error: Fast-forward failed. '$DEFAULT_BRANCH' and " \
+    "'$CURRENT_REF' have diverged." >&2
+  git checkout "$CURRENT_REF"
+  exit 1
+fi
+
+# Step 5: Push the updated default branch to remote and restore original branch
+echo "Pushing '$DEFAULT_BRANCH' to origin..."
+if ! git push origin "$DEFAULT_BRANCH"; then
+  echo "Error: Failed to push '$DEFAULT_BRANCH' to origin." >&2
+  git checkout "$CURRENT_REF"
+  exit 1
+fi
+
+echo "Restoring original branch '$CURRENT_REF'..."
+git checkout "$CURRENT_REF"
+
+echo "Successfully merged and pushed '$DEFAULT_BRANCH'."

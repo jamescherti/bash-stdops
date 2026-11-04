@@ -358,6 +358,32 @@ Usage:
 git-rh
 ```
 
+#### git-ship
+
+Fast-forward merges the current branch into the default branch (e.g., main) and pushes default branch to origin.
+
+##### Example
+
+When working on the `develop` branch in a repository where `main` is the default branch:
+
+```
+$ git checkout develop
+$ git commit -am "Implement new feature"
+$ git-ship
+```
+
+Running `git-ship` will:
+
+1. Verify the working tree is clean.
+2. Show the diff between `main` and `develop`.
+3. Prompt for confirmation to merge `develop` into `main`.
+4. Run: git checkout `main`
+5. Run: git merge `develop`
+5. Run: git push
+6. Run: git checkout `develop`
+
+Note: Before modifying any branches, it verifies that the working tree is clean, displays the full diff, commit log, and diffstat, and prompts for user confirmation.
+
 #### git-author
 
 The git-author script displays the Git user's name and email by retrieving `user.name` and `user.email` from Git configuration.
