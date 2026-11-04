@@ -14,8 +14,8 @@
 # findup [OPTION] [--] RELATIVE_PATH
 #
 # Options:
-# -a, --any         Match any entry, including dangling symlinks.
-# -f, --file        Match regular files (default).
+# -a, --any         Match any entry (default).
+# -f, --file        Match regular files.
 # -d, --directory   Match directories.
 # -h, --help        Display help and exit.
 #
@@ -57,7 +57,7 @@
 #
 
 _find_dominating_file() (
-  local type='f' selected_type='' next_type filename candidate
+  local type='a' selected_type='' next_type filename candidate
 
   while (($# > 0)); do
     case "$1" in
@@ -65,13 +65,13 @@ _find_dominating_file() (
     -f | --file) next_type='f' ;;
     -d | --directory) next_type='d' ;;
     -h | --help)
-      printf '%s\n' 'Usage: findup-file [OPTION] [--] RELATIVE_PATH
+      printf '%s\n' 'Usage: findup [OPTION] [--] RELATIVE_PATH
 
 Search the current directory, then its physical ancestors.
 Print the absolute path of the nearest matching entry.
 
-  -a, --any        Match any entry, including dangling symbolic links.
-  -f, --file       Match regular files (default).
+  -a, --any        Match any entry, including dangling symbolic links (default).
+  -f, --file       Match regular files.
   -d, --directory  Match directories.
   -h, --help       Display this help.
 

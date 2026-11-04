@@ -648,8 +648,8 @@ findup [OPTION] [--] RELATIVE_PATH
 
 Options:
 
-- `-a, --any`: Match any entry, including dangling symlinks.
-- `-f, --file`: Match regular files (default).
+- `-a, --any`: Match any entry (default).
+- `-f, --file`: Match regular files.
 - `-d, --directory`: Match directories.
 - `-h, --help`: Display help and exit.
 
