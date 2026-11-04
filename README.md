@@ -500,6 +500,37 @@ The second execution outputs the following error message:
 Error: Another instance of '/usr/local/bin/backup.sh' is running.
 ```
 
+#### Script: run-every
+
+Run a command at most once per specified time interval (in seconds).
+
+Usage:
+
+```bash
+run-every <seconds> <timestamp_file> <command...>
+```
+
+Note: This is a one-shot wrapper, not a background daemon or scheduler.
+
+Examples 1: Run a backup script at most once per hour (3600 seconds):
+
+```bash
+run-every 3600 ~/.cache/backup.last-run /usr/local/bin/backup
+```
+
+Example 2: Update dotfiles in `~/.bashrc` at most once per day (86400 seconds):
+
+```bash
+run-every 86400 ~/.cache/dotfiles-sync.last-run git -C ~/dotfiles pull -q
+```
+
+How it works:
+
+* First run: If `<timestamp_file>` does not exist, it creates the file (and any missing parent directories) and runs the command immediately.
+* Subsequent runs: Checks the modification time of `<timestamp_file>`. If fewer than `<seconds>` have passed since the last run, it prints `[IGNORED]` and exits with status 0.
+* State tracking: The timestamp is updated right before the command starts, meaning failed runs still reset the cooldown timer. When the command runs, its exit status is passed through.
+* Concurrency: Uses `<timestamp_file>.lock` to prevent overlapping runs. If another instance is still running, new invocations print `[IGNORED]` and exit with status 0.
+
 #### Script: haide
 
 The haide script utilizes AIDE (Advanced Intrusion Detection Environment) to monitor the file integrity of the user's home directory, ensuring no files are modified, added, or deleted without the user's knowledge. Key functions handle database setup, integrity checks, and user-approved updates. The script filters non-critical changes, ensuring meaningful alerts while maintaining a secure and reliable monitoring process.

@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+#
+# Requirements: flock
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Run a command at most once per specified time interval (in seconds).
+#
+# Usage: run-every <seconds> <timestamp_file> <command...>
+#
+# Examples:
+#   # Run a backup script at most once per hour (3600 seconds):
+#   run-every 3600 ~/.cache/backup.last-run /usr/local/bin/backup
+#
+#   # Update dotfiles in ~/.bashrc at most once per day (86400 seconds):
+#   run-every 86400 ~/.cache/dotfiles-sync.last-run git -C ~/dotfiles pull -q
+#
+# This is a one-shot wrapper, not a background daemon or scheduler.
+#
+# How it works:
+# - First run: If <timestamp_file> does not exist, it creates the file (and any
+#   missing parent directories) and runs the command immediately.
+# - Subsequent runs: Checks the modification time of <timestamp_file>. If fewer
+#   than <seconds> have passed since the last run, it prints "[IGNORED]" and
+#   exits with status 0.
+# - State tracking: The timestamp is updated right before the command starts,
+#   meaning failed runs still reset the cooldown timer. When the command runs,
+#   its exit status is passed through.
+# - Concurrency: Uses <timestamp_file>.lock to prevent overlapping runs. If
+#   another instance is still running, new invocations print "[IGNORED]" and
+#   exit with status 0.
+#
+# License:
+# --------
+# Copyright (C) 2012-2026 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+set -euo pipefail
+
+main() (
+  if [[ $# -lt 3 ]]; then
+    printf 'Usage: run-every <seconds> <reference_file> <command...>\n' >&2
+    return 1
+  fi
+
+  local interval="$1"
+  local reference_file="$2"
+  shift 2
+  local command=("$@")
+  local LC_ALL=C
+
+  if [[ ! "$interval" =~ ^0*[1-9][0-9]*$ ]]; then
+    printf 'Error: <seconds> must be a positive integer.\n' >&2
+    return 1
+  fi
+
+  interval=${interval#"${interval%%[!0]*}"}
+
+  if [[ -z "$reference_file" ]]; then
+    printf 'Error: <reference_file> must not be empty.\n' >&2
+    return 1
+  fi
+  case "$reference_file" in
+  /*) ;;
+  *) reference_file="./$reference_file" ;;
+  esac
+
+  if ! command -v flock >/dev/null 2>&1; then
+    printf 'Error: flock is required.\n' >&2
+    return 1
+  fi
+
+  local reference_dir=${reference_file%/*}
+  mkdir -p "${reference_dir:-/}"
+  exec 9>>"${reference_file}.lock"
+
+  local status
+  if flock -n -E 75 9; then
+    :
+  else
+    status=$?
+    if [[ $status -eq 75 ]]; then
+      printf '[IGNORED] %s\n' "${command[*]}"
+      return 0
+    fi
+    return "$status"
+  fi
+
+  if [[ -e "$reference_file" || -L "$reference_file" ]]; then
+    if [[ ! -f "$reference_file" ]]; then
+      printf 'Error: reference path is not a regular file: %s\n' "$reference_file" >&2
+      return 1
+    fi
+
+    local last_run
+    if stat --version >/dev/null 2>&1; then
+      last_run=$(stat -L -c %Y "$reference_file")
+    else
+      last_run=$(stat -L -f %m "$reference_file")
+    fi
+
+    local current_time
+    current_time=$(date +%s)
+    if ((current_time < last_run || current_time - last_run < interval)); then
+      printf '[IGNORED] %s\n' "${command[*]}"
+      return 0
+    fi
+  fi
+
+  touch "$reference_file"
+  "${command[@]}" 9>&-
+)
+
+main "$@"
