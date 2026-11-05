@@ -32,11 +32,9 @@
 
 set -euf -o pipefail
 
-# export BORG_PASSPHRASE=''  # Allow the user to define this variable
-export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes
+# export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes
 
 # Variables that can be modified
-# _BORG_ENCRYPTION=none
 BORGMACHINE_REPO=""
 BORGMACHINE_PROFILE=""
 BORGMACHINE_SCRIPT_PRE_HOOK=""
@@ -71,14 +69,13 @@ if [[ -z "$_BORGMACHINE_BORG_EXE" ]]; then
   exit 1
 fi
 
-# check if stdout is a terminal...
+# Check if stdout is a terminal...
 GREEN=""
 NOCOLOR=""
 _NCOLORS=""
 if test -t 1; then
-  # see if it supports colors...
-  # Prevent set -e from aborting the script when TERM is unset or unsupported by
-  # tput.
+  # see if it supports colors... Prevent set -e from aborting the script when
+  # TERM is unset or unsupported by tput.
   _NCOLORS=$(tput colors 2>/dev/null || true)
 
   if [[ -n "$_NCOLORS" ]] && [[ "$_NCOLORS" -ge 8 ]]; then
@@ -86,13 +83,6 @@ if test -t 1; then
     NOCOLOR="\033[0m"
   fi
 fi
-
-_borg_log() {
-  # local line
-  # line="$(date +%Y-%m-%d-%T): $*"
-  echo "$*"
-  # echo "$line" >>"$_BORG_LOG_FILE"
-}
 
 _borg_nolog() {
   # Keep stderr separate from stdout so JSON/list parsers do not consume
@@ -103,7 +93,7 @@ _borg_nolog() {
 _borg_run() {
   # local RED="\033[1;31m"
   echo -e "${GREEN}"
-  _borg_log "[CMD] $*"
+  echo "[CMD] $*"
   echo -e "${NOCOLOR}"
   # Propagate the borg exit status instead of returning 0 unconditionally when
   # called with || or if !.
@@ -123,13 +113,13 @@ _borg_init() {
     chmod 640 "$_BORG_LOG_FILE"
   fi
 
-  #if ! grep -q segments_per_dir "$BORGMACHINE_REPO/config" >/dev/null 2>&1; then
-  #    _borg_log "Error: you need to init the backup path '$BORGMACHINE_REPO' with:" >&2
-  #    _borg_log "borg init --encryption=$_BORG_ENCRYPTION $BORGMACHINE_REPO" >&2
-  #    return 1
-  #fi
+  if ! grep -q segments_per_dir "$BORGMACHINE_REPO/config" >/dev/null 2>&1; then
+    echo "Error: you need to init the backup path '$BORGMACHINE_REPO' with:" \
+      "borg init --encryption=none $BORGMACHINE_REPO" >&2
+    return 1
+  fi
 
-  _borg_log "[BACKUP PATH] $BORGMACHINE_REPO"
+  echo "[BACKUP PATH] $BORGMACHINE_REPO"
   return 0
 }
 
@@ -138,7 +128,8 @@ _borg_init() {
 #
 _borg_archive_exists() {
   local borg_list_archives
-  readarray -t borg_list_archives < <(_borg_nolog list --format "{archive}{NEWLINE}")
+  readarray -t borg_list_archives \
+    < <(_borg_nolog list --format "{archive}{NEWLINE}")
   if [[ ${#borg_list_archives[@]} -eq 0 ]]; then
     return 1
   fi
@@ -170,8 +161,11 @@ _borg_select_archives() {
   echo
 
   while true; do
-    read -r -p "Archive [default: $BORG_MOST_RECENT_ARCHIVE]: " \
-      BORG_SELECTED_ARCHIVE
+    if ! read -r -p "Archive [default: $BORG_MOST_RECENT_ARCHIVE]: " \
+      BORG_SELECTED_ARCHIVE; then
+      echo >&2
+      exit 1
+    fi
     if [[ "$BORG_SELECTED_ARCHIVE" = "" ]]; then
       BORG_SELECTED_ARCHIVE="$BORG_MOST_RECENT_ARCHIVE"
     fi
@@ -210,7 +204,9 @@ _borg_restore() {
   trap 'borg_restore_atexit' EXIT
   trap 'borg_restore_atexit 130' INT TERM HUP QUIT
 
-  if [[ $# -eq 0 ]]; then
+  # Reject empty string arguments before calling readlink, which otherwise exits
+  # 1 without an error message.
+  if [[ $# -eq 0 ]] || [[ -z "$1" ]]; then
     echo "Error: you have to specify the file or the directory" \
       "in the first argument" >&2
     exit 1
@@ -219,7 +215,8 @@ _borg_restore() {
   local borg_filename="$1"
   local borg_real_filename
   borg_real_filename=$(readlink -e --canonicalize-missing "$borg_filename")
-  if [[ -e "$borg_real_filename" ]]; then
+  # Also check -L so existing broken symlinks at the target path are detected.
+  if [[ -e "$borg_real_filename" ]] || [[ -L "$borg_real_filename" ]]; then
     echo "Error: $borg_real_filename exists already." >&2
     exit 1
   else
@@ -229,6 +226,12 @@ _borg_restore() {
 
   local borg_real_dirname
   borg_real_dirname=$(dirname "$borg_real_filename")
+  # Verify the destination parent directory exists before prompting for an
+  # archive.
+  if [[ ! -d "$borg_real_dirname" ]]; then
+    echo "Error: Directory '$borg_real_dirname' does not exist." >&2
+    exit 1
+  fi
 
   #
   # Remove leading slash
@@ -257,10 +260,10 @@ _borg_restore() {
   #
   # Extract file/dir
   #
-  # Check that the extracted path exists before moving it, and leave the temp
-  # directory before deleting it.
+  # Check that the extracted path exists (including dangling symlinks via -L)
+  # before moving it, and leave the temp directory before deleting it.
   _borg_run extract "::$BORG_SELECTED_ARCHIVE" "$borg_path" || true
-  if [[ -e "$borg_path" ]]; then
+  if [[ -e "$borg_path" ]] || [[ -L "$borg_path" ]]; then
     mv "$borg_path" "$borg_real_filename"
   fi
   cd "$borg_real_dirname"
@@ -274,7 +277,7 @@ _borg_restore() {
   #
   # Print result
   #
-  if [[ -e "$borg_real_filename" ]]; then
+  if [[ -e "$borg_real_filename" ]] || [[ -L "$borg_real_filename" ]]; then
     echo "Restore successful: $borg_real_filename"
     return 0
   else
@@ -290,7 +293,8 @@ _prune_and_compact() {
   _borg_run prune \
     --show-rc \
     --glob-archives "${BORGMACHINE_ARCHIVE_NAME}-*" \
-    ${BORGMACHINE_PRUNE_ARGS[@]+"${BORGMACHINE_PRUNE_ARGS[@]}"} || prune_exit="$?"
+    ${BORGMACHINE_PRUNE_ARGS[@]+"${BORGMACHINE_PRUNE_ARGS[@]}"} \
+    || prune_exit="$?"
 
   if [[ ${prune_exit} -gt 1 ]]; then
     echo "ERROR: Borg prune finished with an error." >&2
@@ -320,6 +324,12 @@ _borg_backup() {
     echo "[ARCHIVE NAME] suffix added: $borg_archive_name_suffix"
   fi
 
+  # Reject empty BORGMACHINE_INCLUDE arrays before running borg create.
+  if [[ ${#BORGMACHINE_INCLUDE[@]} -eq 0 ]]; then
+    echo "Error: BORGMACHINE_INCLUDE is empty." >&2
+    exit 1
+  fi
+
   local item
   for item in ${BORGMACHINE_INCLUDE[@]+"${BORGMACHINE_INCLUDE[@]}"}; do
     if ! [[ $item =~ ^/ ]]; then
@@ -332,10 +342,6 @@ _borg_backup() {
       exit 1
     fi
   done
-
-  # Read last log
-  # local previous_borg_archive_name
-  # previous_borg_archive_name=$(_borg_nolog list --last 1 --format '{archive}{NEWLINE}')
 
   # Defer prune and compact until after the backup succeeds so failed backups do
   # not remove existing recovery points.
@@ -360,36 +366,15 @@ _borg_backup() {
   # Check if the size is too big
   _borg_nolog info "$borg_archive_name"
 
-  # local deduplicated_size
-  # deduplicated_size=$(_borg_nolog info "$borg_archive_name" --json | jq '.archives[0].stats.deduplicated_size')
-  #
-  # deduplicated_size=$((deduplicated_size / 1000)) # kb
-  #
-  # if [[ $deduplicated_size -gt 600000 ]]; then
-  #   echo >&2
-  #   echo "You can delete the archive with:" >&2
-  #   echo "BORG_REPO=$BORGMACHINE_REPO borg delete '$borg_archive_name'" >&2
-  #   echo "" >&2
-  #   echo "[WARNING] the archive '$borg_archive_name' is too big: $deduplicated_size Kb" >&2
-  #   echo
-  # fi
-
   # Save the list
   mkdir -p "$BORGMACHINE_REPORTS_PATH"
   _borg_nolog list --format '{path}{NL}' \
     "$borg_archive_name" | sed -e 's/^\(.\+\)$/\/\1/g' \
     >"$BORGMACHINE_REPORT_BACKED_UP_FILES_PATH"
 
-  # Prune and compact
-  # local errno=0
-  # _prune_and_compact || errno="$?"
-  # Run prune and compact only after the new archive and file report have been created.
+  # Prune and compact. Run prune and compact only after the new archive and file
+  # report have been created.
   _prune_and_compact || errno="$?"
-
-  # Does not work with remote
-  # local borg_repo_size
-  # borg_repo_size=$(du -hs "$BORGMACHINE_REPO")
-  # echo "Borg repo size: $borg_repo_size"
 
   exit "$errno"
 }
@@ -401,13 +386,20 @@ _borg_archive_size() {
   fi
 
   local list_archives
-  readarray -t list_archives < <(_borg_nolog list --format '{archive}{NL}') \
-    || return 1
+  readarray -t list_archives < <(_borg_nolog list --format '{archive}{NL}')
   local archive
-  for archive in "${list_archives[@]}"; do
+  for archive in ${list_archives[@]+"${list_archives[@]}"}; do
     local deduplicated_size
     deduplicated_size=$(_borg_nolog info "::$archive" --json \
-      | jq '.archives[0].stats.deduplicated_size')
+      | jq -r '.archives[0].stats.deduplicated_size')
+
+    # Verify deduplicated_size is an integer before arithmetic evaluation under
+    # set -u.
+    if [[ ! "$deduplicated_size" =~ ^[0-9]+$ ]]; then
+      echo "Error: Failed to parse deduplicated size for archive '$archive'." >&2
+      return 1
+    fi
+
     # Convert bytes to megabytes (MB) to match the printed Mb unit.
     deduplicated_size=$((deduplicated_size / 1000000)) # mb
     echo "$archive: ${deduplicated_size} Mb"
