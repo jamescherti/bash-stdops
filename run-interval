@@ -83,7 +83,7 @@ main() (
   *) reference_file="./$reference_file" ;;
   esac
 
-  if ! command -v flock >/dev/null 2>&1; then
+  if ! command -v flock &>/dev/null; then
     printf 'Error: flock is required.\n' >&2
     return 1
   fi
@@ -111,7 +111,7 @@ main() (
     fi
 
     local last_run
-    if stat --version >/dev/null 2>&1; then
+    if stat --version &>/dev/null; then
       last_run=$(stat -L -c %Y "$reference_file")
     else
       last_run=$(stat -L -f %m "$reference_file")

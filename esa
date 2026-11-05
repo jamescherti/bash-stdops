@@ -76,10 +76,10 @@ load-ssh-agent-pidfile() {
 kill-ssh-agent() {
   if [[ -f "$ESA_SSH_AGENT_PIDFILE" ]]; then
     # shellcheck disable=SC1090
-    source "$ESA_SSH_AGENT_PIDFILE" >/dev/null 2>&1 || return 0
+    source "$ESA_SSH_AGENT_PIDFILE" &>/dev/null || return 0
     if [[ -n "${SSH_AGENT_PID:-}" ]]; then
       # TODO: Make this ensure the PID is an ssh-agent.
-      kill "$SSH_AGENT_PID" >/dev/null 2>&1 || true
+      kill "$SSH_AGENT_PID" &>/dev/null || true
     fi
   fi
 }
@@ -113,7 +113,7 @@ reload-ssh-agent() {
 esa-start() {
   local errno=0
 
-  ssh-add -l >/dev/null 2>&1 || errno="$?"
+  ssh-add -l &>/dev/null || errno="$?"
   if [ "$errno" -eq "0" ] || [ "$errno" -eq "1" ]; then
     return 0
   fi
@@ -121,7 +121,7 @@ esa-start() {
   errno=0
   load-ssh-agent-pidfile
 
-  ssh-add -l >/dev/null 2>&1 || errno="$?"
+  ssh-add -l &>/dev/null || errno="$?"
   if [ "$errno" -eq "2" ]; then
     # errno=2 when ssh-add is unable to contact the authentication agent
     reload-ssh-agent
@@ -140,7 +140,7 @@ esa-stop() {
 esa-ssh-add() {
   local item
   for item in ssh-add ssh-keygen expect; do
-    if ! type -P "$item" >/dev/null 2>&1; then
+    if ! type -P "$item" &>/dev/null; then
       msg "No '$item' in ($PATH)" >&2
       return 1
     fi
@@ -213,7 +213,7 @@ main() {
 
   local item
   for item in chmod grep; do
-    if ! type -P "$item" >/dev/null 2>&1; then
+    if ! type -P "$item" &>/dev/null; then
       msg "no '$item' in ($PATH)" >&2
       return 1
     fi

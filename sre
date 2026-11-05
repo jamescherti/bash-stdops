@@ -169,34 +169,29 @@ sed_str_replace() {
   local text_after
 
   if [[ $USE_REGEX -ne 0 ]]; then
-    # Escape forward slashes
+    # Escape forward slashes in search string
     text_before=$(printf '%s' "$STRING_BEFORE" \
       | sed "${general_sed_options[@]}" -e 's/[/]/\\&/g')
+
+    # Mask ampersands and forward slashes to prevent sed failures
+    # or unintended regex backreferences in the replacement string.
     text_after=$(printf '%s' "$STRING_AFTER" \
-      | sed "${general_sed_options[@]}" -e 's/[/]/\\&/g')
+      | sed "${general_sed_options[@]}" -e 's/[\/&]/\\&/g')
   else
-    # Sed pattersn The sed regular expression '[]\/$*.^[]' contains special
-    # characters that have specific meanings in regular expressions and need to
-    # be escaped such as:
-    # - [ and ]: These are character class delimiters in regex. They are used to
-    #   define a set of characters but are not used as individual characters to
-    #   match.
-    # - \: The backslash itself needs escaping, so it becomes \\.
-    # - /: The delimiter for sed substitution commands.
-    # - $: Matches the end of a line in regex.
-    # - *: Matches zero or more occurrences of the preceding character or group.
-    # - .: Matches any single character except newline.
-    # - ^: Matches the beginning of a line in regex.
-    #
-    # The sed replacement pattern: '/\\&/': . \\& is used to escape each special
-    # character. Each special character matched by the pattern is replaced with
-    # \\&. Here, \\ is used to insert a literal backslash, and & represents the
-    # matched character.
+    # Exact Match Mode
+    # The sed regular expression '[]\\\/$*.^[]' matches: ] \ / $ * . ^ [
+    # Escaping these prevents them from being evaluated as regex metacharacters
     text_before=$(printf '%s' "$STRING_BEFORE" \
-      | sed "${general_sed_options[@]}" -e 's/[]\/$*.^[]/\\&/g')
+      | sed "${general_sed_options[@]}" -e 's/[]\\\/$*.^[]/\\&/g')
+
+    # For replacement, only \ / & are special and need escaping.
     text_after=$(printf '%s' "$STRING_AFTER" \
-      | sed "${general_sed_options[@]}" -e 's/[]\/$*.^[]/\\&/g')
+      | sed "${general_sed_options[@]}" -e 's/[\\/&]/\\&/g')
   fi
+
+  # Escape newlines to prevent 'unterminated s command' failures in sed
+  text_before="${text_before//$'\n'/\\n}"
+  text_after="${text_after//$'\n'/\\n}"
 
   local sed_ignore_case=""
   if [[ $IGNORE_CASE -ne 0 ]]; then

@@ -117,12 +117,12 @@ main() {
   local error=0
   local list_commits=()
 
-  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if ! git rev-parse --is-inside-work-tree &>/dev/null; then
     echo "Error: the current directory '$(pwd)' is not a Git repository." >&2
     exit 1
   fi
 
-  if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
+  if ! git rev-parse --verify HEAD &>/dev/null; then
     echo
     echo "Error: no commits were found in the directory '$(pwd)'." >&2
     exit 1
@@ -152,7 +152,7 @@ main() {
     fi
 
     # Check the GPG signature
-    if git verify-commit "$commit" >/dev/null 2>&1; then
+    if git verify-commit "$commit" &>/dev/null; then
       touch "$ACCEPT_DIR/$commit"
     else
       if [[ $GIT_CHECK_GPG_AUTO_YES -eq 1 ]]; then

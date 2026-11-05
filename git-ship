@@ -66,11 +66,11 @@ DEFAULT_BRANCH=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null \
 
 # Fall back to main or master if origin/HEAD is not configured
 if [ -z "$DEFAULT_BRANCH" ] || [ "$DEFAULT_BRANCH" = "HEAD" ]; then
-  if git rev-parse --verify main >/dev/null 2>&1 \
-    || git rev-parse --verify origin/main >/dev/null 2>&1; then
+  if git rev-parse --verify main &>/dev/null \
+    || git rev-parse --verify origin/main &>/dev/null; then
     DEFAULT_BRANCH="main"
-  elif git rev-parse --verify master >/dev/null 2>&1 \
-    || git rev-parse --verify origin/master >/dev/null 2>&1; then
+  elif git rev-parse --verify master &>/dev/null \
+    || git rev-parse --verify origin/master &>/dev/null; then
     DEFAULT_BRANCH="master"
   else
     echo "Error: Default branch could not be determined." >&2
@@ -79,9 +79,9 @@ if [ -z "$DEFAULT_BRANCH" ] || [ "$DEFAULT_BRANCH" = "HEAD" ]; then
 fi
 
 # Determine the best reference to compare against (local or remote tracking)
-if git rev-parse --verify "$DEFAULT_BRANCH" >/dev/null 2>&1; then
+if git rev-parse --verify "$DEFAULT_BRANCH" &>/dev/null; then
   COMPARE_REF="$DEFAULT_BRANCH"
-elif git rev-parse --verify "origin/$DEFAULT_BRANCH" >/dev/null 2>&1; then
+elif git rev-parse --verify "origin/$DEFAULT_BRANCH" &>/dev/null; then
   COMPARE_REF="origin/$DEFAULT_BRANCH"
 else
   echo "Error: Resolved default branch '$DEFAULT_BRANCH' does not" \

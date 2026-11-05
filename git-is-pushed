@@ -38,7 +38,7 @@ set -e
 TARGET_DIR=$(realpath "${1:-.}")
 
 # Check if the current branch has a tracking remote branch configured
-if ! git -C "$TARGET_DIR" rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
+if ! git -C "$TARGET_DIR" rev-parse --abbrev-ref '@{u}' &>/dev/null; then
   echo \
     "Error: $TARGET_DIR: The current branch has no remote upstream branch." >&2
   exit 1

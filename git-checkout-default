@@ -51,7 +51,7 @@ error_handler() {
 }
 
 require_git_repository() {
-  git rev-parse --git-dir >/dev/null 2>&1 \
+  git rev-parse --git-dir &>/dev/null \
     || {
       echo "Error: Not a git repository." >&2
       exit 1
@@ -59,7 +59,7 @@ require_git_repository() {
 }
 
 require_command() {
-  command -v "$1" >/dev/null 2>&1 \
+  command -v "$1" &>/dev/null \
     || {
       echo "Error: Required command '$1' not found in PATH." >&2
       exit 1

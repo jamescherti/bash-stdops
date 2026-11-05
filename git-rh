@@ -61,7 +61,7 @@ if [[ -z "${status_output}" ]]; then
   exit 0
 fi
 
-if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
+if ! git rev-parse --verify HEAD &>/dev/null; then
   echo "Error: Repository does not have any commits yet (HEAD is unborn)." >&2
   exit 1
 fi

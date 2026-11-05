@@ -113,7 +113,7 @@ _borg_init() {
     chmod 640 "$_BORG_LOG_FILE"
   fi
 
-  if ! grep -q segments_per_dir "$BORGMACHINE_REPO/config" >/dev/null 2>&1; then
+  if ! grep -q segments_per_dir "$BORGMACHINE_REPO/config" &>/dev/null; then
     echo "Error: you need to init the backup path '$BORGMACHINE_REPO' with:" \
       "borg init --encryption=none $BORGMACHINE_REPO" >&2
     return 1
@@ -380,7 +380,7 @@ _borg_backup() {
 }
 
 _borg_archive_size() {
-  if ! command -v jq >/dev/null 2>&1; then
+  if ! command -v jq &>/dev/null; then
     echo "Error: 'jq' command is required to parse archive size." >&2
     return 1
   fi

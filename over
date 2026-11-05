@@ -34,7 +34,7 @@
 
 set -euf -o pipefail
 
-if type -P notify-send >/dev/null 2>&1; then
+if type -P notify-send &>/dev/null; then
   notify-send --urgency=critical "[TASK OVER] $*" || true
 fi
 

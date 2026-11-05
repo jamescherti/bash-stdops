@@ -98,7 +98,7 @@ main() {
 
   shift $((OPTIND - 1))
 
-  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if ! git rev-parse --is-inside-work-tree &>/dev/null; then
     echo "Error: Not in a Git repository." >&2
     exit 1
   fi
