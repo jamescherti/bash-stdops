@@ -2,7 +2,7 @@
 ![License](https://img.shields.io/github/license/jamescherti/bash-stdops)
 
 - Author: James Cherti <[https://www.jamescherti.com/](https://www.jamescherti.com/)>
-- License: GPL
+- License: GPL 3.0 or later
 
 The **[bash-stdops](https://github.com/jamescherti/bash-stdops)** project is a collection of helpful Bash scripts that simplify various operations, including file searching, text replacement, and content modification.
 
