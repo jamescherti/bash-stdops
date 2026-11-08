@@ -2,6 +2,7 @@
 #
 # Requirements:
 #   - git
+#   - bash 4.0+ (for associative arrays)
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
@@ -73,8 +74,8 @@ IFS=$'\n\t'
 
 # Global configuration variables
 GIT_CHECK_GPG_DATA_DIR="${GIT_CHECK_GPG_DATA_DIR:-$HOME/.git-check-gpg}"
-IGNORE_DIR="$GIT_CHECK_GPG_DATA_DIR/ignore"
-ACCEPT_DIR="$GIT_CHECK_GPG_DATA_DIR/accept"
+IGNORE_FILE="$GIT_CHECK_GPG_DATA_DIR/ignore.txt"
+ACCEPT_FILE="$GIT_CHECK_GPG_DATA_DIR/accept.txt"
 
 GIT_CHECK_GPG_INTERACTIVE=0
 GIT_CHECK_GPG_AUTO_YES=0
@@ -116,6 +117,9 @@ main() {
   local commit=""
   local error=0
   local list_commits=()
+  local hash=""
+  local -A ignored_commits=()
+  local -A accepted_commits=()
 
   if ! git rev-parse --is-inside-work-tree &>/dev/null; then
     echo "Error: the current directory '$(pwd)' is not a Git repository." >&2
@@ -135,28 +139,44 @@ main() {
     exit 1
   fi
 
-  # Ensure the configuration directories exist
-  mkdir -p "$IGNORE_DIR" "$ACCEPT_DIR"
+  # Ensure the configuration directory and files exist
+  mkdir -p "$GIT_CHECK_GPG_DATA_DIR"
+  touch "$IGNORE_FILE" "$ACCEPT_FILE"
+
+  # Load existing hashes into associative arrays for O(1) lookup
+  while IFS= read -r hash; do
+    if [[ -n "$hash" ]]; then
+      ignored_commits["$hash"]=1
+    fi
+  done <"$IGNORE_FILE"
+
+  while IFS= read -r hash; do
+    if [[ -n "$hash" ]]; then
+      accepted_commits["$hash"]=1
+    fi
+  done <"$ACCEPT_FILE"
 
   for commit in "${list_commits[@]}"; do
     amount_commits=$((amount_commits + 1))
 
     # Skip commits that were previously ignored
-    if [[ -f "$IGNORE_DIR/$commit" ]]; then
+    if [[ -n "${ignored_commits[$commit]:-}" ]]; then
       continue
     fi
 
     # Skip checking commits that were previously verified and accepted
-    if [[ -f "$ACCEPT_DIR/$commit" ]]; then
+    if [[ -n "${accepted_commits[$commit]:-}" ]]; then
       continue
     fi
 
     # Check the GPG signature
     if git verify-commit "$commit" &>/dev/null; then
-      touch "$ACCEPT_DIR/$commit"
+      echo "$commit" >>"$ACCEPT_FILE"
+      accepted_commits["$commit"]=1
     else
       if [[ $GIT_CHECK_GPG_AUTO_YES -eq 1 ]]; then
-        touch "$IGNORE_DIR/$commit"
+        echo "$commit" >>"$IGNORE_FILE"
+        ignored_commits["$commit"]=1
         continue
       elif [[ $GIT_CHECK_GPG_INTERACTIVE -eq 1 ]]; then
         printf '%.0s=' {1..80}
@@ -172,7 +192,8 @@ main() {
           response </dev/tty
 
         if [[ $response =~ ^[Yy]$ ]]; then
-          touch "$IGNORE_DIR/$commit"
+          echo "$commit" >>"$IGNORE_FILE"
+          ignored_commits["$commit"]=1
           continue
         fi
       else
