@@ -235,14 +235,6 @@ path-is /Path/TO/FILE text
 
 ### Script category: git
 
-#### git-checkout-default
-
-The git-checkout-default script automatically checks out the default branch of the current Git repository, regardless of its name. It works in repositories where the default branch may be main, master, or any custom branch.
-
-The script first verifies that the current directory is a Git repository, determines the default branch from the remote origin, fetches the latest changes, and then switches to that branch.
-
-This ensures the local repository is aligned with the remote default branch without requiring manual specification of the branch name.
-
 #### git-check-gpg
 
 The `git-check-gpg` script validates GPG signatures for all commits in the current branch history.
@@ -296,6 +288,17 @@ Features:
 - Automatically squashes all new commits into one, retaining the message of
   the first commit.
 
+#### git-default-branch
+
+The git-default-branch script automatically detects and outputs the name of the default branch for the current Git repository, regardless of whether it is named main, master, or a custom branch.
+
+This allows automated workflows and other Git scripts to reliably identify the primary branch of a local repository without requiring manual specification or hardcoded branch names.
+
+#### git-checkout-default-branch
+
+The git-checkout-default-branch script automatically checks out the default branch of the current Git repository, regardless of its name. It works in repositories where the default branch may be main, master, or any custom branch.
+
+This ensures the local repository is aligned with the remote default branch without requiring manual specification of the branch name.
 
 #### git-finder
 

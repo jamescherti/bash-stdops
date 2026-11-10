@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - git
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# The git-default-branch script automatically detects and outputs the name of the
+# default branch for the current Git repository, regardless of whether it is
+# named main, master, or a custom branch.
+#
+# This allows automated workflows and other Git scripts to reliably identify the
+# primary branch of a local repository without requiring manual specification or
+# hardcoded branch names.
+#
+# License:
+# --------
+# Copyright (C) 2012-2026 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+set -Eeuo pipefail
+
+readonly REMOTE="${REMOTE:-origin}"
+
+# shellcheck disable=SC2317
+error_handler() {
+  local errno="$?"
+  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
+}
+
+require_git_repository() {
+  git rev-parse --git-dir &>/dev/null \
+    || {
+      echo "Error: Not a git repository." >&2
+      exit 1
+    }
+}
+
+get_default_branch() {
+  git symbolic-ref --quiet --short "refs/remotes/${REMOTE}/HEAD" 2>/dev/null \
+    | sed "s@^${REMOTE}/@@"
+}
+
+fallback_default_branch() {
+  local candidate
+  for candidate in main master; do
+    if git show-ref --verify --quiet "refs/remotes/${REMOTE}/${candidate}"; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+main() {
+  trap error_handler ERR
+  require_git_repository
+
+  local default_branch
+  if ! default_branch="$(get_default_branch)" || [ -z "$default_branch" ]; then
+    if default_branch="$(fallback_default_branch)"; then
+      echo "Warning: Default branch not detected from remote HEAD. Falling" \
+        "back to ${default_branch}." >&2
+    else
+      echo "Error: Could not determine default branch" \
+        "for remote '${REMOTE}'." >&2
+      exit 1
+    fi
+  fi
+
+  echo "$default_branch"
+}
+
+main "$@"

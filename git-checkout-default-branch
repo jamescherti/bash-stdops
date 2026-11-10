@@ -2,19 +2,18 @@
 #
 # Requirements:
 #   - git
+#   - git-default-branch
+#   - git-is-clean
 #
 # Author: James Cherti
 # URL: https://github.com/jamescherti/bash-stdops
 #
 # Description:
 # ------------
-# The git-checkout-default script automatically checks out the default branch of
-# the current Git repository, regardless of its name. It works in repositories
-# where the default branch may be main, master, or any custom branch.
-#
-# The script first verifies that the current directory is a Git repository,
-# determines the default branch from the remote origin, fetches the latest
-# changes, and then switches to that branch.
+# The git-checkout-default-branch script automatically checks out the default
+# branch of the current Git repository, regardless of its name. It works in
+# repositories where the default branch may be main, master, or any custom
+# branch.
 #
 # This ensures the local repository is aligned with the remote default branch
 # without requiring manual specification of the branch name.
@@ -40,8 +39,6 @@
 
 set -Eeuo pipefail
 
-readonly REMOTE="${REMOTE:-origin}"
-
 # shellcheck disable=SC2317
 error_handler() {
   local errno="$?"
@@ -59,27 +56,11 @@ require_git_repository() {
 }
 
 require_command() {
-  command -v "$1" &>/dev/null \
+  type -P "$1" &>/dev/null \
     || {
       echo "Error: Required command '$1' not found in PATH." >&2
       exit 1
     }
-}
-
-get_default_branch() {
-  git symbolic-ref --quiet --short "refs/remotes/${REMOTE}/HEAD" 2>/dev/null \
-    | sed "s@^${REMOTE}/@@"
-}
-
-fallback_default_branch() {
-  local candidate
-  for candidate in main master; do
-    if git show-ref --verify --quiet "refs/remotes/${REMOTE}/${candidate}"; then
-      printf '%s\n' "$candidate"
-      return 0
-    fi
-  done
-  return 1
 }
 
 get_current_branch() {
@@ -87,19 +68,20 @@ get_current_branch() {
 }
 
 main() {
+  trap error_handler ERR
   require_git_repository
   require_command git-is-clean
+  require_command git-default-branch
 
   local default_branch
-  if ! default_branch="$(get_default_branch)" || [ -z "$default_branch" ]; then
-    if default_branch="$(fallback_default_branch)"; then
-      echo "Warning: Default branch not detected from remote HEAD. Falling" \
-        "back to ${default_branch}."
-    else
-      echo "Error: Could not determine default branch" \
-        "for remote '${REMOTE}'." >&2
-      exit 1
-    fi
+  if ! default_branch="$(git-default-branch)"; then
+    # git-default-branch will print its own error messages to stderr
+    exit 1
+  fi
+
+  if [ -z "$default_branch" ]; then
+    echo "Error: git-default-branch returned an empty string." >&2
+    exit 1
   fi
 
   git-is-clean || exit 1
