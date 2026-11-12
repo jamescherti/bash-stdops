@@ -582,7 +582,7 @@ BORGMACHINE_REPO="/mnt/backup/borg-repo"
 BORGMACHINE_INCLUDE=(
   /etc
   /root
-  /home/perso/Documents
+  /home/user/Documents
 )
 
 # Additional flags passed to 'borg create'
