@@ -69,12 +69,20 @@ main() {
   for file in "$script_dir"/*; do
     base_file="${file##*/}"
 
-    # Check if it is a regular file, is executable, and is not an installer script
+    # Check if it is a regular file, is executable, and is not an installer
+    # script
     [[ -f "$file" ]] || continue
     case "$base_file" in
-    "$script_name" | install.sh | uninstall.sh) continue ;;
+    "$script_name" | install.sh | uninstall.sh | README.md | LICENSE)
+      continue
+      ;;
+
+    # Exception
     .bash-stdops.inc.sh) ;;
-    *) [[ -x "$file" ]] || continue ;;
+
+    *)
+      [[ -x "$file" ]] || continue
+      ;;
     esac
 
     if [[ "$action" == "install" ]]; then
