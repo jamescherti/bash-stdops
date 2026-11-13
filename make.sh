@@ -49,38 +49,40 @@ main() {
   fi
 
   local script_dir
-  script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
   local script_name
   script_name=$(basename "${BASH_SOURCE[0]}")
 
-  if ! [[ -f haide ]]; then
+  if [[ ! -f "$script_dir/haide" ]]; then
     echo "Error: Invalid directory." >&2
     exit 1
   fi
 
+  local bin_dir="$PREFIX/bin"
   if [[ "$action" == "install" ]]; then
-    install -d "${PREFIX}/bin"
+    /usr/bin/install -d -- "$bin_dir"
   fi
 
   shopt -s dotglob nullglob
-  local base_file
-  for file in "$script_dir"/* .bash-stdops.inc.sh; do
+  local file base_file
+  for file in "$script_dir"/*; do
     base_file="${file##*/}"
 
     # Check if it is a regular file, is executable, and is not an installer script
-    if [[ $file = ".bash-stdops.inc.sh" ]] \
-      || [[ -f "$file" && -x "$file" && "$base_file" != "$script_name" &&
-        "$base_file" != "install.sh" && "$base_file" != "uninstall.sh" ]]; then
-      if [[ "$action" == "install" ]]; then
-        printf "%s\n" "[INSTALL] ${PREFIX}/bin/$base_file"
-        install -m 755 "$file" "${PREFIX}/bin/"
-      elif [[ "$action" == "uninstall" ]]; then
-        if [[ -f "${PREFIX}/bin/$base_file" ]]; then
-          printf "%s\n" "[UNINSTALL] ${PREFIX}/bin/$base_file"
-          rm -f "${PREFIX}/bin/$base_file"
-        fi
-      fi
+    [[ -f "$file" ]] || continue
+    case "$base_file" in
+    "$script_name" | install.sh | uninstall.sh) continue ;;
+    .bash-stdops.inc.sh) ;;
+    *) [[ -x "$file" ]] || continue ;;
+    esac
+
+    if [[ "$action" == "install" ]]; then
+      printf '[INSTALL] %s/%s\n' "$bin_dir" "$base_file"
+      /usr/bin/install -m 755 -- "$file" "$bin_dir/"
+    elif [[ -f "$bin_dir/$base_file" ]]; then
+      printf '[UNINSTALL] %s/%s\n' "$bin_dir" "$base_file"
+      rm -f -- "$bin_dir/$base_file"
     fi
   done
   shopt -u dotglob nullglob
