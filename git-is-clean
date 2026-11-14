@@ -32,15 +32,18 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-set -u
-set -e
+set -euo pipefail
 
 TARGET_DIR=$(realpath "${1:-.}")
 
-# Identify any changes in the working tree, index, or untracked files
-OUTPUT=$(git -C "$TARGET_DIR" status --porcelain) || true
+if ! OUTPUT=$(git -C "$TARGET_DIR" status --porcelain); then
+  printf 'Error: %s: Could not check Git status.\n' "$TARGET_DIR" >&2
+  exit 1
+fi
+
 if [[ -n "$OUTPUT" ]]; then
-  echo "Error: $TARGET_DIR: Uncommitted modifications, deletions, or" \
-    "untracked files detected." >&2
+  printf 'Error: %s: Uncommitted modifications, deletions, or ' \
+    "$TARGET_DIR" >&2
+  printf 'untracked files detected.\n' >&2
   exit 1
 fi

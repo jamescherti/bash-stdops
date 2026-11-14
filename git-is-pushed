@@ -32,8 +32,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-set -u
-set -e
+set -euo pipefail
 
 TARGET_DIR=$(realpath "${1:-.}")
 
