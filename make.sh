@@ -33,7 +33,7 @@ else
   PREFIX="${PREFIX:-/usr/local}"
 fi
 
-set -eu -o pipefail
+set -euo pipefail
 
 main() {
   if [[ $# -ne 1 ]]; then

@@ -47,7 +47,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-set -eu -o pipefail
+set -euo pipefail
 
 # shellcheck disable=SC2317
 error_handler() {
