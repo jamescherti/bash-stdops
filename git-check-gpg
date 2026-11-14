@@ -70,7 +70,6 @@
 #
 
 set -euo pipefail
-IFS=$'\n\t'
 
 # Global configuration variables
 GIT_CHECK_GPG_DATA_DIR="${GIT_CHECK_GPG_DATA_DIR:-$HOME/.git-check-gpg}"
