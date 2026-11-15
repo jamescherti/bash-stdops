@@ -32,7 +32,7 @@ set -euo pipefail
 
 OUTPUT_TMP=""
 
-# shellcheck disable=SC2329
+# shellcheck disable=SC2317
 atexit() {
   trap - EXIT INT TERM
   local errno="$?"

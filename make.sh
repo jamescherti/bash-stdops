@@ -37,19 +37,20 @@ set -euo pipefail
 
 main() {
   if [[ $# -ne 1 ]]; then
-    echo "Usage: $0 {install|uninstall}" >&2
+    echo "Usage: $0 {install|uninstall|check}" >&2
     exit 1
   fi
 
   local action="$1"
-  if [[ "$action" != "install" && "$action" != "uninstall" ]]; then
+  if [[ "$action" != "install" && "$action" != "uninstall" &&
+    "$action" != "check" ]]; then
     echo "Error: Invalid argument '$action'." >&2
-    echo "Usage: $0 {install|uninstall}" >&2
+    echo "Usage: $0 {install|uninstall|check}" >&2
     exit 1
   fi
 
   local script_dir
-  script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+  script_dir=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
   local script_name
   script_name=$(basename "${BASH_SOURCE[0]}")
@@ -57,6 +58,38 @@ main() {
   if [[ ! -f "$script_dir/haide" ]]; then
     echo "Error: Invalid directory." >&2
     exit 1
+  fi
+
+  if [[ "$action" == "check" ]]; then
+    if ! command -v shellcheck >/dev/null 2>&1; then
+      echo "Error: shellcheck is not installed." >&2
+      exit 1
+    fi
+
+    local -a bash_scripts=()
+    local file first_line
+
+    shopt -s dotglob nullglob
+    for file in "$script_dir"/*; do
+      [[ -f "$file" ]] || continue
+
+      first_line=""
+      IFS= read -r first_line <"$file" || true
+
+      if [[ "$file" == *.sh || "$first_line" == '#!'*bash* ]]; then
+        bash_scripts+=("$file")
+      fi
+    done
+    shopt -u dotglob nullglob
+
+    if [[ ${#bash_scripts[@]} -eq 0 ]]; then
+      echo "Error: No Bash scripts found." >&2
+      exit 1
+    fi
+
+    shellcheck --shell=bash -- "${bash_scripts[@]}"
+    echo "Success."
+    return
   fi
 
   local bin_dir="$PREFIX/bin"
