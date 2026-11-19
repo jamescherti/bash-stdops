@@ -27,7 +27,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-if [ "$(id -u)" -ne "0" ]; then
+if ((EUID != 0)); then
   PREFIX="$HOME/.local"
 else
   PREFIX="${PREFIX:-/usr/local}"

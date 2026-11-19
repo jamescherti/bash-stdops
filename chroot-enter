@@ -60,7 +60,7 @@ cleanup() {
 }
 
 require_root() {
-  if [[ "$(id -u)" -ne 0 ]]; then
+  if ((EUID != 0)); then
     printf 'Error: root privileges required\n' >&2
     exit 1
   fi
