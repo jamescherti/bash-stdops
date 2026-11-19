@@ -300,6 +300,12 @@ The git-checkout-default-branch script automatically checks out the default bran
 
 This ensures the local repository is aligned with the remote default branch without requiring manual specification of the branch name.
 
+#### git-prune-branches
+
+Remove local Git branches that have no same-named branch on origin.
+
+By default, the script lists the branches it would delete. Pass --delete to force-delete them locally, including unmerged and never-pushed branches. Branches checked out in any worktree are skipped.
+
 #### git-finder
 
 This script recursively locates all Git repositories starting from a specified directory or the current directory if none is provided.

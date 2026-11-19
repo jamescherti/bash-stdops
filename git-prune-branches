@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+#
+# Requirements:
+#   - git (Version 2.43 or later for git show-ref --exists)
+#
+# Author: James Cherti
+# URL: https://github.com/jamescherti/bash-stdops
+#
+# Description:
+# ------------
+# Remove local Git branches that have no same-named branch on origin.
+#
+# By default, the script lists the branches it would delete. Pass --delete to
+# force-delete them locally, including unmerged and never-pushed branches.
+# Branches checked out in any worktree are skipped.
+#
+# License:
+# --------
+# Copyright (C) 2012-2026 James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+set -eufo pipefail
+
+# shellcheck disable=SC2329
+error_handler() {
+  local errno="$?"
+  echo "Error: ${BASH_SOURCE[1]}:${BASH_LINENO[0]}" \
+    "(${BASH_COMMAND} exited with status $errno)" >&2
+  exit "${errno}"
+}
+
+trap "error_handler" ERR
+set -o errtrace
+
+delete_local_branches() {
+  local mode="$1"
+  local branches branch status
+
+  # Outside a repository, report the Git error. A missing origin is a no-op.
+  git rev-parse --git-dir >/dev/null || return 1
+  git remote get-url origin >/dev/null || return 1
+
+  # Refresh origin's remote-tracking refs and remove stale ones so the branch
+  # comparison reflects what is on origin. Stop if the fetch fails.
+  git fetch --prune origin || exit 1
+
+  # Do not delete the currently checked-out branch. Also skip branches checked
+  # out in linked worktrees and symbolic refs.
+  local format='%(if)%(worktreepath)%(symref)%(then)%(else)'
+  format+='%(refname:lstrip=2)%(end)'
+
+  # Finish enumerating branches before acting so a failure stops deletion.
+  branches=$(git for-each-ref --format="$format" refs/heads)
+
+  local nothing_to_do=1
+  while IFS= read -r branch; do
+    [[ -n $branch ]] || continue
+
+    # Delete local branches that do not exist on origin. Only status 2 means the
+    # remote-tracking ref is missing.
+    if git show-ref --exists "refs/remotes/origin/$branch" 2>/dev/null; then
+      continue
+    else
+      status=$?
+      if ((status != 2)); then
+        printf 'Error: could not check refs/remotes/origin/%s\n' "$branch" >&2
+        return "$status"
+      fi
+    fi
+
+    if [[ $mode = "--delete" ]]; then
+      git branch -D -- "$branch"
+    else
+      echo "[DRY-RUN] Delete branch: $branch"
+    fi
+
+    nothing_to_do=0
+  done <<<"$branches"
+
+  if [[ $nothing_to_do -ne 0 ]]; then
+    echo "Nothing to do."
+  fi
+}
+
+main() {
+  # Require an explicit --delete argument before removing local branches.
+  local mode="${1---dry-run}"
+  if (($# > 1)) || [[ $mode != --dry-run && $mode != --delete ]]; then
+    printf 'Usage: %s [--dry-run|--delete]\n' "${0##*/}" >&2
+    return 2
+  fi
+
+  delete_local_branches "$mode" || exit 1
+}
+
+main "$@"
